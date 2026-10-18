@@ -1,0 +1,57 @@
+@import '@fontsource-variable/inter';
+@import 'tailwindcss';
+
+/*
+ * Sairandhri design tokens (Variant 2 — white sidebar, logo red accents).
+ * Use these via Tailwind classes: bg-brand, text-ink, border-line, bg-page …
+ * Red = brand only. Warnings use `warn` (orange) so they never read as brand.
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand (from the logo) */
+  --color-brand: #b5121b;
+  --color-brand-hover: #8c0d15;
+  --color-brand-tint: #fdecec;
+  --color-brand-soft: #f7c9cb;
+
+  /* Neutrals */
+  --color-ink: #1a1a1d;
+  --color-ink-soft: #52525b;
+  --color-muted: #71717a;
+  --color-line: #e5e3df;
+  --color-page: #f7f6f4;
+  --color-card: #ffffff;
+
+  /* Status */
+  --color-success: #15803d;
+  --color-success-tint: #dcfce7;
+  --color-warn: #c2410c;
+  --color-warn-tint: #ffe8d9;
+  --color-pending: #7a5400;
+  --color-pending-tint: #fff3d6;
+  --color-info: #1d4ed8;
+  --color-info-tint: #e0ecff;
+  --color-danger: #b91c1c;
+  --color-danger-tint: #fee2e2;
+
+  /* Shape */
+  --radius-card: 12px;
+  --radius-control: 8px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-page font-sans text-sm text-ink antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+}
