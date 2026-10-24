@@ -1,6 +1,5 @@
-import { IconKeyboard, IconList, IconPrinter } from '@tabler/icons-react'
-import { useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { IconList, IconPrinter } from '@tabler/icons-react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -17,20 +16,15 @@ import { JobBillTotals } from '../components/JobBillTotals'
 import { SaleTotals } from '../components/SaleTotals'
 import { EditingBanner } from '../components/EditingBanner'
 import { StepCard } from '../components/StepCard'
-import { getBillingMode, setBillingMode } from '../fast/billingMode'
 import { lineError, useBilling } from '../hooks/useBilling'
 
 // /billing — the counter, ONE page for every bill (step by step; phones and tablets).
 //   Shop bill     → items only (SDB/…); a named customer may pay part (credit), a walk-in pays in full.
 //   Stitching job → choosing a garment in "Anything to stitch?" turns the same bill into a job bill (JOB/…).
-// On a computer, "Fast bill" switches to the keyboard table screen (same rules, see fast/FastBillPage).
 export function BillingPage() {
   const navigate = useNavigate()
   const b = useBilling()
   const wide = useMediaQuery('(min-width: 1024px)') // laptop: two columns; phone / tablet: one column in step order
-  // This computer chose Fast bill last time → open it (keeping ?customer= etc.).
-  const { search } = useLocation()
-  useEffect(() => { if (wide && getBillingMode() === 'fast') navigate(`/billing/fast${search}`, { replace: true }) }, [wide, search, navigate])
 
   const customerStep = (
     <StepCard step={1} title="Customer">
@@ -97,7 +91,6 @@ export function BillingPage() {
         title={b.editing ? `Edit ${b.editing.docNo}` : 'New bill'}
         actions={
           <>
-            {wide && <Button icon={IconKeyboard} onClick={() => { setBillingMode('fast'); navigate('/billing/fast') }}>Fast bill (keyboard)</Button>}
             <Button icon={IconList} onClick={() => navigate(b.isJob ? '/jobs' : '/sales')}>{b.isJob ? 'All jobs' : 'All bills'}</Button>
           </>
         }
