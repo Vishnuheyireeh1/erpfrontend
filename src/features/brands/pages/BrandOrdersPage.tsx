@@ -37,7 +37,7 @@ const columns: Column<BrandOrderSummary>[] = [
     render: (o) => (
       <span className="block min-w-0">
         <span className="block font-medium text-brand">{o.docNo}</span>
-        <span className="block truncate text-xs text-muted">{o.theirOrderNo ? `Their no. ${o.theirOrderNo}` : `Received ${formatDate(o.docDate)}`}</span>
+        <span className="block truncate text-xs text-muted">{o.theirOrderNo ? `Order / bill no. ${o.theirOrderNo}` : `Received ${formatDate(o.docDate)}`}</span>
       </span>
     ),
   },
@@ -111,7 +111,7 @@ export function BrandOrdersPage() {
           onChange={(v) => { setParams(v === 'open' ? {} : { view: v }); setPage(1) }}
         />
       </div>
-      <Input icon={IconSearch} aria-label="Search brand orders" placeholder="Order no., brand, their order no. or customer name" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} className="mb-3 md:w-96" />
+      <Input icon={IconSearch} aria-label="Search brand orders" placeholder="Order no., brand, order / bill no. or customer name" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} className="mb-3 md:w-96" />
       <DateRange value={range} onChange={(r) => { setRange(r); setPage(1) }} order={order} onOrder={(o) => { setOrder(o); setPage(1) }} className="mb-4" />
       <Card bodyClassName="p-0">
         {q.error ? (

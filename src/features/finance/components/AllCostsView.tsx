@@ -28,8 +28,8 @@ type Props = {
   onCancel: (row: CostRow) => void
 }
 
-const auto: Record<string, string> = { SALARY: 'From Staff & salary', WORKER_PAY: 'From the job', BRAND_PAY: 'From the brand order', BRAND_CLOTH: 'From the brand order', JOB_COST: 'From the job', MATERIAL: 'From the job', ADJUST: 'From Stock' }
-const link = (r: CostRow) => (r.source === 'SALARY' ? '/employees?tab=salary' : r.source === 'ADJUST' ? `/stock/documents/${r.refId}` : r.source === 'EXPENSE' ? null : r.source === 'BRAND_PAY' || r.source === 'BRAND_CLOTH' ? `/brand-orders/${r.refId}` : `/jobs/${r.refId}`)
+const auto: Record<string, string> = { SALARY: 'From Staff & salary', WORKER_PAY: 'From the job', BRAND_PAY: 'From the brand order', BRAND_CLOTH: 'From the brand order', JOB_COST: 'From the job', BRAND_COST: 'From the brand order', MATERIAL: 'From the job', ADJUST: 'From Stock' }
+const link = (r: CostRow) => (r.source === 'SALARY' ? '/employees?tab=salary' : r.source === 'ADJUST' ? `/stock/documents/${r.refId}` : r.source === 'EXPENSE' ? null : r.source === 'BRAND_PAY' || r.source === 'BRAND_CLOTH' || r.source === 'BRAND_COST' ? `/brand-orders/${r.refId}` : `/jobs/${r.refId}`)
 
 // Expenses page: every cost of the dates in ONE list — typed expenses + salary + per-piece worker pay + job costs …
 // The three total cards (All / Direct / Indirect) are also the filter. Same totals as profit & loss.

@@ -57,7 +57,7 @@ export function JobCostsCard({ job, onAddCost, onEditCost, onAssign, onUseStock,
           <div className="flex flex-wrap gap-2">
             {job.status !== 'DELIVERED' && <Button icon={IconPackage} onClick={onUseStock}>Use from stock</Button>}
             <Button variant="primary" icon={IconUsers} onClick={onAssign}>Assign workers</Button>
-            <Button icon={IconPlus} onClick={onAddCost}>Other cost</Button>
+            <Button icon={IconPlus} onClick={onAddCost}>Add cost</Button>
           </div>
         )
       }

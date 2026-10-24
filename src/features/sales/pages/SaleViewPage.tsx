@@ -1,4 +1,4 @@
-import { IconArrowBackUp, IconArrowLeft, IconBan, IconCash, IconFileTypePdf, IconPlus, IconPrinter } from '@tabler/icons-react'
+import { IconArrowBackUp, IconArrowLeft, IconBan, IconCash, IconFileTypePdf, IconPencil, IconPlus, IconPrinter } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { useToast } from '@/components/ui/toast-context'
+import { todayISO } from '@/features/inventory/constants'
 import { CancelDocModal } from '@/features/purchase/components/CancelDocModal'
 import { qtyText } from '@/features/inventory/constants'
 import { useBusinessProfile } from '@/features/settings/hooks/useBusinessProfile'
@@ -49,6 +50,9 @@ export function SaleViewPage() {
   const state = saleState(b)
   const posted = b.status === 'POSTED'
   const canReturn = posted && b.lines.some((l) => Number(l.qty) > Number(l.returnedQty))
+  // Edit (same number): bills of this month with no returns — earlier months may already be in a GST return.
+  const thisMonth = todayISO().slice(0, 7)
+  const canEdit = posted && b.docDate.slice(0, 7) === thisMonth && !b.returns.some((r) => r.status === 'POSTED')
   const done = () => { setModal(''); q.reload() }
 
   const print = () => {
@@ -74,6 +78,7 @@ export function SaleViewPage() {
             <Button icon={IconFileTypePdf} loading={pdfBusy} onClick={pdf}>PDF</Button>
             {posted && b.dueAmount > 0.004 && b.customerId && <Button icon={IconCash} onClick={() => setModal('receive')}>Receive balance</Button>}
             {canReturn && <Button icon={IconArrowBackUp} onClick={() => setModal('return')}>Goods returned</Button>}
+            {canEdit && <Button icon={IconPencil} onClick={() => navigate(`/billing?edit=${b.id}`)}>Edit bill</Button>}
             {posted && <Button variant="danger" icon={IconBan} onClick={() => setModal('cancel')}>Cancel bill</Button>}
             <Button variant="primary" icon={IconPlus} onClick={() => navigate('/billing')}>New bill</Button>
           </>

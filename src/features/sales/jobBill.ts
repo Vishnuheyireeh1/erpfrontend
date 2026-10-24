@@ -1,6 +1,6 @@
 import type { NewJob } from '@/features/jobs/api/jobs.api'
 import { calcJob } from '@/features/jobs/jobUtils'
-import { toJobInput, toProductInput, type ItemDraft } from '@/features/jobs/jobDrafts'
+import { toJobInput, toProductInput, type CostDraft, type ItemDraft } from '@/features/jobs/jobDrafts'
 import { calcSale } from './calc'
 import type { SaleLineDraft } from './components/SaleLineRow'
 import { tenderInput, type TenderRow } from './tenders'
@@ -11,7 +11,7 @@ import { tenderInput, type TenderRow } from './tenders'
 const num = (v: string) => Number(v) || 0
 
 // Totals preview: sold items (counter GST rules, own line discounts) + stitching (discount and job GST apply here).
-export function jobBillTotals(input: { lines: SaleLineDraft[]; stitch: ItemDraft[]; discount: string; gstRate: number; apparelRule: boolean; taxMode: 'INTRA' | 'INTER'; gstRegistered: boolean }) {
+export function jobBillTotals(input: { lines: SaleLineDraft[]; stitch: ItemDraft[]; charges: CostDraft[]; discount: string; gstRate: number; apparelRule: boolean; taxMode: 'INTRA' | 'INTER'; gstRegistered: boolean }) {
   const sold = input.lines.filter((l) => !l.included)
   const items = calcSale({
     lines: sold.map((l) => ({ qty: num(l.qty), rate: num(l.rate), discountPct: num(l.discountPct), productGstRate: Number(l.item.product.taxRate?.rate ?? 0), hsnCode: l.item.product.hsnCode ?? null })),
@@ -20,7 +20,7 @@ export function jobBillTotals(input: { lines: SaleLineDraft[]; stitch: ItemDraft
   const job = calcJob({
     items: input.stitch.map((d) => ({ qty: num(d.qty), chargeRate: num(d.chargeRate), labourRate: num(d.labourRate) })),
     itemsTotal: items.grandTotal,
-    costs: [],
+    costs: input.charges.filter((c) => num(c.charge) > 0).map((c) => ({ charge: num(c.charge) })),
     discount: num(input.discount),
     gstRate: input.gstRate,
   })
@@ -29,9 +29,9 @@ export function jobBillTotals(input: { lines: SaleLineDraft[]; stitch: ItemDraft
 
 export function jobFromBill(b: {
   customerId: number; docDate: string; deliveryDate: string; discount: string; notes: string; gstApplied: boolean; bookNo: string
-  stitch: ItemDraft[]; lines: SaleLineDraft[]; tenders: TenderRow[]; useAdvance: boolean
+  stitch: ItemDraft[]; charges: CostDraft[]; lines: SaleLineDraft[]; tenders: TenderRow[]; useAdvance: boolean
 }): NewJob {
-  const base = toJobInput({ expectedDate: b.deliveryDate, gstApplied: b.gstApplied, discount: b.discount, notes: b.notes, internalNotes: '', bookNo: b.bookNo }, b.stitch, [])
+  const base = toJobInput({ expectedDate: b.deliveryDate, gstApplied: b.gstApplied, discount: b.discount, notes: b.notes, internalNotes: '', bookNo: b.bookNo }, b.stitch, b.charges)
   return {
     ...base,
     customerId: b.customerId,

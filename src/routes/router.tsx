@@ -44,6 +44,7 @@ import { BrandBillPage } from '@/features/brands/pages/BrandBillPage'
 import { BrandPage } from '@/features/brands/pages/BrandPage'
 import { BrandReportsPage } from '@/features/brands/pages/BrandReportsPage'
 import { BillingPage } from '@/features/sales/pages/BillingPage'
+import { FastBillPage } from '@/features/sales/fast/FastBillPage'
 import { CustomerPage } from '@/features/sales/pages/CustomerPage'
 import { CustomersPage } from '@/features/sales/pages/CustomersPage'
 import { ReceiptViewPage } from '@/features/sales/pages/ReceiptViewPage'
@@ -78,6 +79,7 @@ const builtRoutes = [
   { path: 'suppliers', element: <SuppliersPage /> },
   { path: 'suppliers/:id', element: <SupplierPage /> },
   { path: 'billing', element: <BillingPage /> },
+  { path: 'billing/fast', element: <FastBillPage /> },
   { path: 'sales', element: <SalesListPage /> },
   { path: 'sales/receipts/:id', element: <ReceiptViewPage /> },
   { path: 'sales/returns/:id', element: <SalesReturnViewPage /> },

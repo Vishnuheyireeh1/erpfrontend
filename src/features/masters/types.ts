@@ -1,5 +1,5 @@
 // Must match the backend's /api/masters/:master keys.
-export type MasterKey = 'categories' | 'brands' | 'units' | 'sizes' | 'colours' | 'taxRates'
+export type MasterKey = 'categories' | 'units' | 'sizes' | 'colours' | 'taxRates'
 
 export type MasterRow = {
   id: number

@@ -56,7 +56,6 @@ export function JobFormSummary({ totals, meta, onMeta, gstRegistered, gstRate, i
           )}
           <div>
             <p className="mb-1.5 text-sm font-medium text-ink">Paid now</p>
-            {totals.itemsTotal > 0 && <p className="mb-2 text-xs text-warn">Items {formatINR(totals.itemsTotal)} must be paid in full now; stitching can be paid at hand over.</p>}
             <TenderInputs rows={tenders} onChange={onTenders} />
           </div>
         </div>

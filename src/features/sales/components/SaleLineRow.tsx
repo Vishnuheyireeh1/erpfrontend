@@ -8,11 +8,20 @@ import { formatINR } from '@/lib/format'
 import { unitWord } from '../units'
 
 // included = shop material used for the stitching on this bill (not charged); only when the bill has stitching.
-export type SaleLineDraft = { key: string; item: StockItem; qty: string; rate: string; discountPct: string; focus?: boolean; included?: boolean }
+// discAmt = a ₹ discount as typed (kept so the box shows it; the bill keeps the %). discMode = which one the line box takes.
+export type SaleLineDraft = { key: string; item: StockItem; qty: string; rate: string; discountPct: string; focus?: boolean; included?: boolean; discAmt?: string; discMode?: 'pct' | 'amt' }
+
+// ₹ discount → % of qty × rate (the bill stores the %).
+function pctFromAmt(amt: string, qty: string, rate: string) {
+  const gross = (Number(qty) || 0) * (Number(rate) || 0)
+  const pct = gross > 0 ? Math.round(((Number(amt) || 0) / gross) * 1_000_000) / 10_000 : 0
+  return amt === '' || !pct ? '' : String(Math.min(100, pct))
+}
+const r2 = (n: number) => Math.round(n * 100) / 100
 
 // Grid shared with the header row on the billing page: table row on laptop+, card on phone.
 export const saleGridClass =
-  'grid grid-cols-3 gap-3 @2xl:grid-cols-[minmax(0,1fr)_88px_100px_60px_40px_92px_28px] @2xl:items-center @2xl:gap-2'
+  'grid grid-cols-3 gap-3 @2xl:grid-cols-[minmax(0,1fr)_88px_100px_118px_40px_92px_28px] @2xl:items-center @2xl:gap-2'
 
 type Props = { line: SaleLineDraft; amount: number; gstRate: number; error?: string; stitching?: boolean; onChange: (patch: Partial<SaleLineDraft>) => void; onRemove: () => void }
 
@@ -27,7 +36,16 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
   useEffect(() => {
     if (line.focus) qtyRef.current?.focus()
   }, [line.focus])
-  const field = (label: string, key: 'qty' | 'rate' | 'discountPct', suffix?: string, props: { step?: string; max?: number; placeholder?: string; ref?: Ref<HTMLInputElement> } = {}) => (
+  const amtMode = line.discMode === 'amt'
+  // Qty / rate changed while a ₹ discount is set → keep the ₹, re-work the %.
+  const change = (key: 'qty' | 'rate', v: string) => {
+    const next = { ...line, [key]: v }
+    const keepAmt = amtMode && line.discAmt ? { discountPct: pctFromAmt(line.discAmt, next.qty, next.rate) } : {}
+    onChange(key === 'qty' ? { qty: v, focus: false, ...keepAmt } : { rate: v, ...keepAmt })
+  }
+  const shownAmt = line.discAmt ?? (Number(line.discountPct) ? String(r2(((Number(line.qty) || 0) * (Number(line.rate) || 0) * Number(line.discountPct)) / 100)) : '')
+  const setMode = (m: 'pct' | 'amt') => onChange(m === 'amt' ? { discMode: m, discAmt: shownAmt } : { discMode: m, discAmt: undefined })
+  const field = (label: string, key: 'qty' | 'rate', suffix?: string, props: { step?: string; max?: number; placeholder?: string; ref?: Ref<HTMLInputElement> } = {}) => (
     <label className="flex min-w-0 flex-col gap-1">
       <span className="text-xs text-muted @2xl:sr-only">{label}</span>
       <span className="relative block">
@@ -38,9 +56,9 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
           {...props}
           aria-label={label}
           value={line[key]}
-          onChange={(e) => onChange(key === 'qty' ? { qty: e.target.value, focus: false } : { [key]: e.target.value })}
+          onChange={(e) => change(key, e.target.value)}
           onFocus={(e) => e.target.select()}
-          className={cn(controlClass(key !== 'discountPct' ? error : undefined), 'h-9', suffix && 'pr-9')}
+          className={cn(controlClass(error), 'h-9', suffix && 'pr-9')}
         />
         {suffix && <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted">{suffix}</span>}
       </span>
@@ -68,7 +86,29 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
       </div>
       {field(unitWord(unit), 'qty', unit, { step: decimal ? '0.01' : '1', placeholder: decimal ? '0.0' : '1', ref: qtyRef })}
       {field(`Rate ₹ per ${unit}`, 'rate', `/${unit}`, { step: '0.01' })}
-      {field('Disc %', 'discountPct', undefined, { max: 100 })}
+      <label className="col-span-3 flex min-w-0 flex-col gap-1 @md:col-span-1">
+        <span className="text-xs text-muted @2xl:sr-only">Discount</span>
+        <span className="flex h-9 min-w-0">
+          <input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={amtMode ? undefined : 100}
+            step="0.01"
+            aria-label={amtMode ? 'Discount ₹' : 'Discount %'}
+            value={amtMode ? shownAmt : line.discountPct}
+            onChange={(e) => onChange(amtMode ? { discAmt: e.target.value, discountPct: pctFromAmt(e.target.value, line.qty, line.rate) } : { discountPct: e.target.value })}
+            onFocus={(e) => e.target.select()}
+            className={cn(controlClass(), 'h-9 min-w-0 rounded-r-none')}
+          />
+          <span className="inline-flex shrink-0 overflow-hidden rounded-r-control border border-l-0 border-line text-xs" role="group" aria-label="Discount in % or ₹">
+            {([['pct', '%'], ['amt', '₹']] as const).map(([m, t]) => (
+              <button key={m} type="button" aria-pressed={(amtMode ? 'amt' : 'pct') === m} onClick={() => setMode(m)}
+                className={cn('w-7', (amtMode ? 'amt' : 'pct') === m ? 'bg-brand text-white' : 'bg-card text-ink-soft hover:bg-page')}>{t}</button>
+            ))}
+          </span>
+        </span>
+      </label>
       <div className="hidden text-right text-xs text-muted @2xl:block">{gstRate}%</div>
       <div className="col-span-3 flex items-center justify-between @2xl:col-span-1 @2xl:justify-end">
         <span className="text-xs text-muted @2xl:hidden">Amount · GST {gstRate}% included</span>

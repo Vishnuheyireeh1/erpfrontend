@@ -20,7 +20,7 @@ type Props = {
   advanceAvailable: number // customer's unused advance + return credit
   useAdvance: boolean
   onUseAdvance: (v: boolean) => void
-  // Stitching on this bill: only the items must be paid now (this amount); the rest is the balance on delivery.
+  // Stitching on this bill: the items total (shown for the quick-advance buttons); anything unpaid is the job balance.
   jobItemsTotal?: number | null
 }
 
@@ -40,10 +40,9 @@ export function BillPaymentPanel({ customer, meta, onMeta, tenders, onTenders, g
     else onTenders([...tenders, { key: `fill${Date.now()}`, mode: 'CASH', amount: String(remaining), reference: '' }])
   }
 
-  // Stitching job: one-tap advance amounts (never less than the items, which are paid now).
-  const minNow = isJob ? Math.max(0, Math.round(((jobItemsTotal ?? 0) - advanceUsed) * 100) / 100) : toPay
+  // Stitching job: one-tap advance amounts.
   const quick: [string, number][] = isJob && toPay > 0
-    ? ([['₹500', 500], ['₹1,000', 1000], [`Half ${formatINR(Math.ceil(toPay / 2))}`, Math.ceil(toPay / 2)], [`Full ${formatINR(toPay)}`, toPay]] as [string, number][]).filter(([, a], i) => a >= minNow && (a < toPay || i === 3))
+    ? ([['₹500', 500], ['₹1,000', 1000], [`Half ${formatINR(Math.ceil(toPay / 2))}`, Math.ceil(toPay / 2)], [`Full ${formatINR(toPay)}`, toPay]] as [string, number][]).filter(([, a], i) => a < toPay || i === 3)
     : []
   const payExactly = (amount: number) => onTenders(tenders.map((t, i) => ({ ...t, amount: i === 0 ? String(amount) : '' })))
 
@@ -92,14 +91,13 @@ export function BillPaymentPanel({ customer, meta, onMeta, tenders, onTenders, g
           {pay.change > 0 && <div className="flex justify-between text-base font-semibold text-success"><span>Give change</span><span>{formatINR(pay.change)}</span></div>}
           {pay.due > 0 && (
             <div className="flex justify-between font-medium text-warn">
-              <span>{isJob ? 'Balance — collect at hand over' : 'Still to pay'}</span>
+              <span>{isJob ? 'Balance — collect at hand over' : 'Balance (credit)'}</span>
               <span>{formatINR(pay.due)}</span>
             </div>
           )}
-          {isJob && pay.paid + advanceUsed < jobItemsTotal - 0.004 && (
-            <p className="text-xs text-danger">Items {formatINR(jobItemsTotal)} must be paid now. Stitching can be an advance — the rest is paid at hand over.</p>
-          )}
-          {!isJob && pay.due > 0 && <p className="text-xs text-danger">Readymade / material bills are paid in full. Only stitching jobs can keep a balance.</p>}
+          {!isJob && pay.due > 0 && (customer || meta.walkInName.trim() || meta.walkInPhone.trim()
+            ? <p className="text-xs text-warn">On credit — {formatINR(pay.due)} goes on the customer's balance (collect later with Receive money).</p>
+            : <p className="text-xs text-danger">A walk-in bill is paid in full. Add the customer's name and phone to give credit.</p>)}
         </div>
       )}
 

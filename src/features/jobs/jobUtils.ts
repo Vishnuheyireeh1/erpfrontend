@@ -11,7 +11,7 @@ export const statusTones: Record<JobStatus, Tone> = {
 }
 // Workshop stages that can be chosen directly (Delivered / Cancelled have their own actions).
 export const stages: JobStatus[] = ['PENDING', 'CUTTING', 'STITCHING', 'TRIAL', 'READY']
-export const chargeKinds = ['Embroidery', 'Lining', 'Lace / border', 'Hand work', 'Buttons / zip', 'Other']
+export const chargeKinds = ['Urgent charge', 'Embroidery', 'Lining', 'Lace / border', 'Hand work', 'Buttons / zip', 'Alteration', 'Other']
 
 export const isOpen = (s: JobStatus) => s !== 'DELIVERED' && s !== 'CANCELLED'
 

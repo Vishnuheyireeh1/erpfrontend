@@ -1,4 +1,4 @@
-import type { ItemDraft } from '@/features/jobs/jobDrafts'
+import type { CostDraft, ItemDraft } from '@/features/jobs/jobDrafts'
 import type { BillMeta } from './components/BillPaymentPanel'
 import type { SaleLineDraft } from './components/SaleLineRow'
 import type { TenderRow } from './tenders'
@@ -10,10 +10,10 @@ import type { Customer } from './types'
 
 const KEY = 'sairandhri.billing.draft'
 
-export type BillDraft = { lines: SaleLineDraft[]; customer: Customer | null; meta: BillMeta; tenders: TenderRow[]; useAdvance: boolean; stitch?: ItemDraft[]; deliveryDate?: string }
+export type BillDraft = { lines: SaleLineDraft[]; customer: Customer | null; meta: BillMeta; tenders: TenderRow[]; useAdvance: boolean; stitch?: ItemDraft[]; charges?: CostDraft[]; deliveryDate?: string }
 
 const isEmpty = (d: BillDraft) =>
-  !d.lines.length && !d.stitch?.length && !d.customer && !d.meta.walkInName && !d.meta.walkInPhone && !d.meta.billDiscount && !d.meta.notes && !d.tenders.some((t) => Number(t.amount) > 0)
+  !d.lines.length && !d.stitch?.length && !d.charges?.length && !d.customer && !d.meta.walkInName && !d.meta.walkInPhone && !d.meta.billDiscount && !d.meta.notes && !d.tenders.some((t) => Number(t.amount) > 0)
 
 export function readBillDraft(): BillDraft | null {
   try {

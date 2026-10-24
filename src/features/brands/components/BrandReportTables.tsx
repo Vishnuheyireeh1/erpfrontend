@@ -33,6 +33,7 @@ export const profitCols: Column<ProfitRow>[] = [
   { key: 'billed', header: 'Billed (before GST)', align: 'right', render: (r) => formatINR(r.billed) },
   { key: 'cloth', header: 'Our cloth', align: 'right', render: (r) => formatINR(r.ourCloth) },
   { key: 'pay', header: 'Tailor pay', align: 'right', render: (r) => formatINR(r.tailorPay) },
+  { key: 'other', header: 'Other costs', align: 'right', render: (r) => formatINR(r.otherCosts) },
   { key: 'profit', header: 'Profit', align: 'right', mobile: 'badge', render: (r) => <span className={cn('font-semibold', r.profit < 0 ? 'text-danger' : 'text-success')}>{formatINR(r.profit)}</span> },
 ]
 

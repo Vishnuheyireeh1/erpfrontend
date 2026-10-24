@@ -142,7 +142,7 @@ export function PurchaseFormPage() {
         ) : (
           <>
             <div className={cn(billGridClass, 'hidden px-4 py-2 text-xs font-medium text-muted lg:grid')}>
-              <span>Item</span><span>Qty</span><span>Rate ₹</span><span>Disc %</span><span>GST %</span><span className="text-right">Amount</span><span />
+              <span>Item</span><span>Qty</span><span>Rate ₹</span><span>Disc %</span><span>Disc ₹</span><span>GST %</span><span className="text-right">Amount</span><span />
             </div>
             {lines.map((l, i) => (
               <BillLineRow key={l.key} line={l} total={totals.rows[i]?.total ?? 0} error={showErrors ? lineError(l) : undefined} onChange={(p) => change(l.key, p)} onRemove={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} />

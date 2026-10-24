@@ -68,5 +68,5 @@ export type OrderBillRef = { id: number; docNo: string; docDate: string; grandTo
 // Reports
 export type SummaryRow = { brandId: number; code: string; name: string; orders: number; piecesOrdered: number; piecesDelivered: number; billed: number; income: number; received: number; pending: number }
 export type PendingRow = { orderId: number; docNo: string; brand: string; theirOrderNo: string | null; due: string; late: boolean; piece: string; endCustomer: string | null; qty: number; tailor: string | null; stage: 'IN_WORK' | 'READY'; value: number }
-export type ProfitRow = { orderId: number; docNo: string; docDate: string; brand: string; status: string; pieces: number; delivered: number; billed: number; ourCloth: number; tailorPay: number; profit: number }
+export type ProfitRow = { orderId: number; docNo: string; docDate: string; brand: string; status: string; pieces: number; delivered: number; billed: number; ourCloth: number; tailorPay: number; otherCosts: number; profit: number }
 export type ClothRow = ClothLine & { orderId: number; docNo: string; brand: string; orderStatus: string }

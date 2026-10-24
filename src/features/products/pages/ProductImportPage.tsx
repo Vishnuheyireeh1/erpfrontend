@@ -65,7 +65,7 @@ export function ProductImportPage() {
         <EmptyState
           icon={IconCircleCheck}
           title={`${done.products.toLocaleString('en-IN')} products imported`}
-          description={`${done.variants.toLocaleString('en-IN')} variants with barcodes are ready.${done.stock ? ` Opening stock ${done.stock.docNo}: ${done.stock.items.toLocaleString('en-IN')} items, value ₹${done.stock.value.toLocaleString('en-IN')}.` : ' No opening stock — add it under Stock.'} New: ${done.created.brands} brands, ${done.created.sizes} sizes, ${done.created.colours} colours.`}
+          description={`${done.variants.toLocaleString('en-IN')} variants with barcodes are ready.${done.stock ? ` Opening stock ${done.stock.docNo}: ${done.stock.items.toLocaleString('en-IN')} items, value ₹${done.stock.value.toLocaleString('en-IN')}.` : ' No opening stock — add it under Stock.'} New: ${done.created.sizes} sizes, ${done.created.colours} colours.`}
           action={<Button variant="primary" onClick={() => navigate('/products')}>View products</Button>}
         />
       </Card>
@@ -108,7 +108,7 @@ export function ProductImportPage() {
 
           <div className="mt-4">
             <Switch
-              label="Create missing brands, sizes and colours"
+              label="Create missing sizes and colours"
               hint="Off: unknown names are reported as problems. Categories and units must already exist."
               checked={createMissing}
               onChange={(v) => { setCreateMissing(v); setCheck(null) }}

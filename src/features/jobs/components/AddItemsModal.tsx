@@ -17,7 +17,7 @@ import { ProductLinesEditor } from './ProductLinesEditor'
 // usedOnly: "Use from stock" on the job costs — lines start as used for stitching (not billed).
 type Props = { job: Job; usedOnly?: boolean; onClose: () => void; onDone: () => void }
 
-// Items bought on a job (at booking or when collecting). Sold items are paid in full now; used fabric is not billed.
+// Items bought on a job (at booking or when collecting). Sold items can be paid now or left on the job balance; used fabric is not billed.
 export function AddItemsModal({ job, usedOnly = false, onClose, onDone }: Props) {
   const toast = useToast()
   const advance = useApiQuery(['advance', job.customerId], () => customerApi.advance(job.customerId))
@@ -36,7 +36,6 @@ export function AddItemsModal({ job, usedOnly = false, onClose, onDone }: Props)
     setShowErrors(true)
     if (rows.length === 0) return toast.error('Scan or search the items')
     if (rows.some(productError)) return toast.error('Fix the highlighted items')
-    if (paying + fromAdvance < total - 0.004) return toast.error(`Items ${formatINR(total)} must be paid in full now`)
     setBusy(true)
     try {
       await jobsApi.addItems(job.id, { lines: toProductInput(rows), tenders: tenderInput(tenders), useAdvance: useAdvance && available > 0 })
@@ -54,7 +53,7 @@ export function AddItemsModal({ job, usedOnly = false, onClose, onDone }: Props)
       onClose={onClose}
       size="lg"
       title={usedOnly ? `Use from stock — ${job.docNo}` : `Add items — ${job.docNo}`}
-      description={usedOnly ? 'Fabric, lining, buttons… used for this stitching. Stock goes down; the cost counts in job costing.' : 'Readymade items or fabric. Items sold are paid in full now and printed on the job bill.'}
+      description={usedOnly ? 'Fabric, lining, buttons… used for this stitching. Stock goes down; the cost counts in job costing.' : 'Readymade items or fabric. Items sold are printed on the job bill — paid now or added to the balance.'}
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>{usedOnly && total === 0 ? 'Use from stock' : `Save${total > 0 ? ` · ${formatINR(total)}` : ''}`}</Button></>}
     >
       <ProductLinesEditor rows={rows} onChange={setRows} showErrors={showErrors} defaultIncluded={usedOnly} />

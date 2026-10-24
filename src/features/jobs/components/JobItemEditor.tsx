@@ -5,7 +5,9 @@ import { Select } from '@/components/ui/Select'
 import { Switch } from '@/components/ui/Switch'
 import type { TailorOption } from '@/features/workshop/api/workshop.api'
 import type { GarmentType } from '@/features/workshop/types'
+import { staffApi } from '@/features/staff/api/staff.api'
 import { cn } from '@/lib/cn'
+import { useApiQuery } from '@/lib/useApiQuery'
 import { formatINR } from '@/lib/format'
 import { garmentPatch, labourFor, type ItemDraft } from '../jobDrafts'
 
@@ -23,10 +25,12 @@ type Props = {
   // Brand orders: "Brand's own cloth" instead of the customer's, and extra fields (e.g. who the piece is for).
   ownFabricLabel?: string
   extra?: ReactNode
+  showMeasuredBy?: boolean // job garments: who took the measurements (staff, optional)
 }
 
 // One garment on the job: type, pieces, price, tailor, measurements and design notes.
-export function JobItemEditor({ index, draft, garments, tailors, latestFor, error, onChange, onRemove, simple, ownFabricLabel = "Customer's own cloth", extra }: Props) {
+export function JobItemEditor({ index, draft, garments, tailors, latestFor, error, onChange, onRemove, simple, ownFabricLabel = "Customer's own cloth", extra, showMeasuredBy = false }: Props) {
+  const staff = useApiQuery(showMeasuredBy ? 'staff-options' : 'staff-options-off', () => (showMeasuredBy ? staffApi.options() : Promise.resolve([])))
   const [open, setOpen] = useState(!draft.id)
   const [more, setMore] = useState(false)
   const garment = garments.find((g) => String(g.id) === draft.garmentTypeId)
@@ -112,6 +116,10 @@ export function JobItemEditor({ index, draft, garments, tailors, latestFor, erro
                 ))}
               </div>
             </div>
+          )}
+          {showMeasuredBy && (
+            <Select label="Measured by (optional)" className="max-w-xs" value={draft.measuredById ?? ''} onChange={(e) => onChange({ measuredById: e.target.value })}
+              options={[{ value: '', label: 'Not recorded' }, ...(staff.data ?? []).map((s) => ({ value: String(s.id), label: `${s.name}${s.role ? ` · ${s.role}` : ''}` }))]} />
           )}
           <Textarea label="How to stitch (design)" rows={2} value={draft.instructions} onChange={(e) => onChange({ instructions: e.target.value })} placeholder="Boat neck, puff sleeve, lining inside…" />
           <Switch label={ownFabricLabel} checked={draft.ownFabric} onChange={(v) => onChange({ ownFabric: v })} />

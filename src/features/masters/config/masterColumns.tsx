@@ -32,7 +32,6 @@ export const masterColumns: Record<MasterKey, Col[]> = {
     },
     statusCol,
   ],
-  brands: [nameCol, statusCol],
   units: [
     nameCol,
     { key: 'code', header: 'Code', mobile: 'subtitle' },

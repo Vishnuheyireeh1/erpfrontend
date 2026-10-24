@@ -5,11 +5,12 @@ import type { StockItem } from '@/features/inventory/types'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
 
-export type BillLine = { key: string; item: StockItem; qty: string; rate: string; discountPct: string; gstRate: string }
+// discAmt = a ₹ discount typed on the line (kept so the box shows it); the bill keeps the matching %.
+export type BillLine = { key: string; item: StockItem; qty: string; rate: string; discountPct: string; gstRate: string; discAmt?: string }
 
 // Grid shared with the header row in PurchaseFormPage: table row on laptop+, card on phone.
 export const billGridClass =
-  'grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[minmax(0,2fr)_90px_110px_80px_80px_110px_32px] lg:items-center lg:gap-2'
+  'grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[minmax(0,2fr)_90px_110px_80px_90px_80px_110px_32px] lg:items-center lg:gap-2'
 
 type Props = { line: BillLine; total: number; error?: string; onChange: (patch: Partial<BillLine>) => void; onRemove: () => void }
 
@@ -17,6 +18,7 @@ export function BillLineRow({ line, total, error, onChange, onRemove }: Props) {
   const { item } = line
   const unit = item.product.unit.code
   const box = (err?: string) => cn(controlClass(err), 'h-9')
+  const discRupees = Math.round((Number(line.qty) || 0) * (Number(line.rate) || 0) * (Number(line.discountPct) || 0)) / 100
   const field = (label: string, key: 'qty' | 'rate' | 'discountPct' | 'gstRate', props: { step?: string; max?: number } = {}) => (
     <label className="flex min-w-0 flex-col gap-1">
       <span className="text-xs text-muted lg:sr-only">{label}</span>
@@ -26,7 +28,7 @@ export function BillLineRow({ line, total, error, onChange, onRemove }: Props) {
         min={0}
         {...props}
         value={line[key]}
-        onChange={(e) => onChange({ [key]: e.target.value })}
+        onChange={(e) => onChange({ [key]: e.target.value, ...(key === 'gstRate' ? {} : { discAmt: undefined }) })}
         className={box(key === 'qty' || key === 'rate' ? error : undefined)}
       />
     </label>
@@ -45,6 +47,23 @@ export function BillLineRow({ line, total, error, onChange, onRemove }: Props) {
       {field(`Qty (${unit})`, 'qty', { step: item.product.unit.allowDecimal ? '0.001' : '1' })}
       {field('Rate ₹', 'rate', { step: '0.01' })}
       {field('Disc %', 'discountPct', { max: 100 })}
+      <label className="flex min-w-0 flex-col gap-1">
+        <span className="text-xs text-muted lg:sr-only">Disc ₹</span>
+        <input
+          type="number"
+          inputMode="decimal"
+          min={0}
+          aria-label="Discount ₹"
+          value={line.discAmt ?? (discRupees ? String(discRupees) : '')}
+          onChange={(e) => {
+            // ₹ off this line (before GST) → the same discount as a %.
+            const gross = (Number(line.qty) || 0) * (Number(line.rate) || 0)
+            const pct = gross > 0 ? Math.min(100, Math.round(((Number(e.target.value) || 0) / gross) * 1_000_000) / 10_000) : 0
+            onChange({ discAmt: e.target.value, discountPct: pct ? String(pct) : '0' })
+          }}
+          className={box()}
+        />
+      </label>
       {field('GST %', 'gstRate', { max: 40 })}
       <div className="flex flex-col gap-1 lg:text-right">
         <span className="text-xs text-muted lg:sr-only">Amount (incl. GST)</span>

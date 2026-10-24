@@ -38,6 +38,8 @@ export const salesApi = {
   list: (p: DocFilters) => api.get<Paged<BillRow> & { summary: { sales: number; received: number; returned: number } }>(`/sales?${qs({ ...p, pageSize: 20 })}`),
   get: (id: number) => api.get<{ item: Sale }>(`/sales/${id}`).then((r) => r.item),
   create: (body: NewSale) => api.post<{ item: Sale }>('/sales', body).then((r) => r.item),
+  // Edit a bill of this month (same number); tenders = money taken now on top of what was already paid.
+  update: (id: number, body: NewSale) => api.put<{ item: Sale }>(`/sales/${id}`, body).then((r) => r.item),
   cancel: (id: number, reason: string) => api.post<{ item: Sale }>(`/sales/${id}/cancel`, { reason }).then((r) => r.item),
   setBookNo: (id: number, bookNo: string | null) => api.put<{ item: Sale; warning: string | null }>(`/sales/${id}/book-no`, { bookNo }),
 

@@ -55,7 +55,7 @@ export function BrandBillPage() {
       <Card className="mb-5">
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div><p className="text-xs text-muted">Brand</p><Link to={`/brands/${bill.brand.id}`} className="text-brand hover:underline">{bill.brand.name}</Link>{bill.brandGstin && <p className="font-mono text-xs">{bill.brandGstin}</p>}</div>
-          <div><p className="text-xs text-muted">Order</p><Link to={`/brand-orders/${bill.order.id}`} className="text-brand hover:underline">{bill.order.docNo}</Link>{bill.order.theirOrderNo && <p className="text-xs text-muted">Their no. {bill.order.theirOrderNo}</p>}</div>
+          <div><p className="text-xs text-muted">Order</p><Link to={`/brand-orders/${bill.order.id}`} className="text-brand hover:underline">{bill.order.docNo}</Link>{bill.order.theirOrderNo && <p className="text-xs text-muted">Order / bill no. {bill.order.theirOrderNo}</p>}</div>
           <div><p className="text-xs text-muted">Total</p><p className="text-lg font-semibold">{formatINR(Number(bill.grandTotal))}</p></div>
           <div>
             <p className="text-xs text-muted">Status</p>

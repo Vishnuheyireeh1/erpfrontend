@@ -14,6 +14,7 @@ import { formatDate, formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { brandOrderApi } from '../api/brandOrder.api'
 import { BrandClothCard } from '../components/BrandClothCard'
+import { BrandCostsCard } from '../components/BrandCostsCard'
 import { BrandMaterialsModal } from '../components/BrandMaterialsModal'
 import { DeliverModal } from '../components/DeliverModal'
 import { OrderBillsCard } from '../components/OrderBillsCard'
@@ -45,7 +46,7 @@ export function BrandOrderViewPage() {
       </button>
       <PageHeader
         title={order.docNo}
-        subtitle={`${order.brandName}${order.theirOrderNo ? ` · their no. ${order.theirOrderNo}` : ''} · received ${formatDate(order.docDate)}`}
+        subtitle={`${order.brandName}${order.theirOrderNo ? ` · order / bill no. ${order.theirOrderNo}` : ''} · received ${formatDate(order.docDate)}`}
         actions={
           <>
             {open && order.inWork + order.ready > 0 && <Button variant="primary" icon={IconTruckDelivery} onClick={() => setModal('deliver')}>Deliver & bill</Button>}
@@ -64,7 +65,6 @@ export function BrandOrderViewPage() {
           </div>
           <div><p className="text-xs text-muted">Brand</p><p>{order.brand.name}<span className="block text-xs text-muted">{order.brand.phone ?? ''}{order.brand.phone ? ' · ' : ''}{gstLabel(order.brand.gstRate)} usually</span></p></div>
           <div><p className="text-xs text-muted">Entered by</p>{order.createdBy}</div>
-          {order.labelNote && <div className="col-span-2 sm:col-span-4"><p className="text-xs text-muted">Label / emblem</p>{order.labelNote}</div>}
           {order.notes && <div className="col-span-2 sm:col-span-4"><p className="text-xs text-muted">Notes</p>{order.notes}</div>}
           {order.status === 'CANCELLED' && <div className="col-span-2 rounded-control bg-page p-3 sm:col-span-4">Cancelled{order.cancelledBy ? ` by ${order.cancelledBy}` : ''} — {order.cancelReason}</div>}
         </div>
@@ -82,6 +82,7 @@ export function BrandOrderViewPage() {
 
       <BrandPiecesCard order={order} onChanged={q.reload} onAddItems={setItemsFor} />
       <OrderBillsCard order={order} />
+      <BrandCostsCard order={order} onChanged={q.reload} />
       <BrandClothCard order={order} onChanged={q.reload} />
 
       {modal === 'cancel' && (

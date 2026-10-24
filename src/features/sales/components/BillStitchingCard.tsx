@@ -62,7 +62,7 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
           />
 
           {drafts.map((d, i) => (
-            <JobItemEditor
+            <JobItemEditor showMeasuredBy
               key={d.key}
               simple
               index={i}

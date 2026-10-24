@@ -13,15 +13,15 @@ import { AddWorkInline } from './AddWorkInline'
 import { WorkerRow, type WorkPick } from './WorkerRow'
 
 type Row = { id: number; stitch: WorkPick; works: Record<number, WorkPick> }
-type Props = { job: Job; onClose: () => void; onDone: () => void; onAddWork: () => void }
+type Props = { job: Job; onClose: () => void; onDone: () => void }
 
 const none: WorkPick = { tailorId: '', rate: '0', note: '' }
 
 // Job work → "Assign workers" (workshop, after the counter billed the job). Per garment: who stitches it, and who did
 // each other work (Cutting, Lining, Embroidery … — the work the staff do, ticked in Staff & salary). Per-piece people:
 // their usual pay fills in (change + note). Salaried people: no pay. "+ Add work" shows / creates another work here.
-// Money paid out in cash → "Other cost".
-export function AssignWorkersModal({ job, onClose, onDone, onAddWork }: Props) {
+// Money paid out for the job is added on the job page (Job work & costs → Add cost), not here.
+export function AssignWorkersModal({ job, onClose, onDone }: Props) {
   const toast = useToast()
   const workers = useApiQuery('tailor-options', () => tailorApi.options())
   const garments = useApiQuery('garments', () => garmentApi.list())
@@ -72,7 +72,7 @@ export function AssignWorkersModal({ job, onClose, onDone, onAddWork }: Props) {
 
   return (
     <Modal open onClose={onClose} size="lg" title={`Assign workers — ${job.docNo}`} description={`${job.customerName} · ready by ${new Date(job.expectedDate).toLocaleDateString('en-IN')}`}
-      footer={<><Button onClick={onAddWork} className="sm:mr-auto">+ Other cost (paid in cash)</Button><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></>}>
+      footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></>}>
       <div className="flex flex-col gap-3">
         {all.length === 0 && !workers.loading && <p className="rounded-control bg-warn-tint px-3 py-2 text-sm text-warn">No workers yet — in Staff & salary, turn on "Does job work" for your tailors.</p>}
         {job.items.map((i, n) => {

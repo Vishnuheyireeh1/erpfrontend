@@ -157,7 +157,7 @@ export function JobViewPage() {
       {modal === 'items' && <AddItemsModal job={job} onClose={() => setModal('')} onDone={done} />}
       {modal === 'stock' && <AddItemsModal job={job} usedOnly onClose={() => setModal('')} onDone={done} />}
       {modal === 'cost' && <AddCostModal key={editCost?.id ?? 'new'} job={job} entry={editCost} onClose={() => setModal('')} onDone={done} />}
-      {modal === 'assign' && <AssignWorkersModal job={job} onClose={() => setModal('')} onDone={done} onAddWork={() => { setEditCost(null); setModal('cost') }} />}
+      {modal === 'assign' && <AssignWorkersModal job={job} onClose={() => setModal('')} onDone={done} />}
       {modal === 'return' && (
         <SalesReturnModal
           source={{

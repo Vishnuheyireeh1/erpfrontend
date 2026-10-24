@@ -11,6 +11,7 @@ import { cn } from '@/lib/cn'
 import { formatDate, formatINR } from '@/lib/format'
 import { brandOrderApi } from '../api/brandOrder.api'
 import { stageLabel, stageTone, type BrandOrder, type BrandPiece } from '../types'
+import { BrandTailorModal } from './BrandTailorModal'
 
 type Props = { order: BrandOrder; onChanged: () => void; onAddItems: (piece: BrandPiece) => void }
 
@@ -19,6 +20,7 @@ export function BrandPiecesCard({ order, onChanged, onAddItems }: Props) {
   const toast = useToast()
   const [picked, setPicked] = useState<number[]>([])
   const [busy, setBusy] = useState(false)
+  const [tailorFor, setTailorFor] = useState<BrandPiece | null>(null)
   const open = order.status === 'OPEN'
   const toggle = (id: number) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
   const chosen = order.items.filter((i) => picked.includes(i.id))
@@ -71,6 +73,7 @@ export function BrandPiecesCard({ order, onChanged, onAddItems }: Props) {
                   </div>
                   <p className="mt-1 text-sm text-ink-soft">
                     {formatINR(Number(i.chargeRate))} per piece · Tailor: {i.tailor ? `${i.tailor.name}${Number(i.labourRate) ? ` (pay ${formatINR(Number(i.labourRate))}/pc)` : ' (salaried)'}` : <span className="text-warn">not given yet</span>}
+                    {canTick && <button type="button" onClick={() => setTailorFor(i)} className="ml-2 font-medium text-brand hover:underline">{i.tailor ? 'Change tailor' : 'Assign tailor'}</button>}
                     {i.brandCloth && <> · <Badge tone="info">Brand's cloth</Badge></>}
                     {i.billId && <> · <Link to={`/brand-bills/${i.billId}`} className="text-brand hover:underline">{order.bills.find((b) => b.id === i.billId)?.docNo ?? 'Bill'}</Link></>}
                   </p>
@@ -104,6 +107,7 @@ export function BrandPiecesCard({ order, onChanged, onAddItems }: Props) {
           )
         })}
       </ul>
+      {tailorFor && <BrandTailorModal order={order} piece={tailorFor} onClose={() => setTailorFor(null)} onDone={() => { setTailorFor(null); onChanged() }} />}
     </Card>
   )
 }

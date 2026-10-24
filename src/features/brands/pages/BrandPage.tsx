@@ -21,7 +21,7 @@ import { gstLabel, type BrandOrderSummary } from '../types'
 type Tab = 'statement' | 'orders' | 'bills' | 'payments'
 const orderCols: Column<BrandOrderSummary>[] = [
   { key: 'doc', header: 'Order', mobile: 'title', render: (o) => <span className="font-medium text-brand">{o.docNo}</span> },
-  { key: 'date', header: 'Received', mobile: 'subtitle', render: (o) => `${formatDate(o.docDate)}${o.theirOrderNo ? ` · their ${o.theirOrderNo}` : ''}` },
+  { key: 'date', header: 'Received', mobile: 'subtitle', render: (o) => `${formatDate(o.docDate)}${o.theirOrderNo ? ` · order / bill no. ${o.theirOrderNo}` : ''}` },
   { key: 'due', header: 'Due', mobile: 'hidden', render: (o) => formatDate(o.expectedDate) },
   { key: 'pieces', header: 'Pieces', render: (o) => `${o.pieces} (${o.delivered} delivered)` },
   { key: 'value', header: 'Value', align: 'right', render: (o) => formatINR(o.value) },

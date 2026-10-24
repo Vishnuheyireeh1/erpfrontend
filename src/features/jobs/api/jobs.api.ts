@@ -19,6 +19,7 @@ export type JobItemInput = {
   measurements: Record<string, string>
   instructions?: string
   ownFabric: boolean
+  measuredById?: number | null
 }
 export type JobInput = {
   expectedDate: string
@@ -30,7 +31,7 @@ export type JobInput = {
   items: JobItemInput[]
   costs: { kind: string; description?: string; charge: number }[] // extra charges on the bill
 }
-// Shop item on a job: sold at rate (GST included, paid in full now) or included in the stitching.
+// Shop item on a job: sold at rate (GST included; paid now or left on the balance) or included in the stitching.
 export type JobProductInput = { variantId: number; qty: number; rate: number; discountPct: number; included: boolean }
 export type NewJob = JobInput & { customerId: number; docDate: string; parentJobId?: number | null; tenders: TenderInput[]; useAdvance: boolean; products: JobProductInput[] }
 export type CostBody = { categoryId: number; date: string; description?: string; qty: number; rate: number; paidBy: CostPaidBy; mode: string | null; tailorId: number | null }
@@ -57,6 +58,7 @@ export const jobsApi = {
     if (!res.ok) throw new ApiError(res.status, data.message ?? 'Could not upload the photo')
     return data.imagePath as string
   },
+  setMeasuredBy: (id: number, itemId: number, staffId: number | null) => api.post<{ item: Job }>(`/jobs/${id}/items/${itemId}/measured-by`, { staffId }).then((r) => r.item),
   removePhoto: (id: number, itemId: number) => api.delete(`/jobs/${id}/items/${itemId}/photo`),
   addCost: (id: number, body: CostBody) => api.post<{ item: Job }>(`/jobs/${id}/costs`, body).then((r) => r.item),
   updateCost: (id: number, entryId: number, body: CostBody) => api.put<{ item: Job }>(`/jobs/${id}/costs/${entryId}`, body).then((r) => r.item),

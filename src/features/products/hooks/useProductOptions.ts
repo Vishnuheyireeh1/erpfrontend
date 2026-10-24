@@ -4,14 +4,13 @@ import type { Option } from '../types'
 
 export type ProductOptions = {
   categories: Option[]
-  brands: Option[]
   units: Option[]
   taxRates: Option[]
   sizes: Option[]
   colours: Option[]
 }
 
-const EMPTY: ProductOptions = { categories: [], brands: [], units: [], taxRates: [], sizes: [], colours: [] }
+const EMPTY: ProductOptions = { categories: [], units: [], taxRates: [], sizes: [], colours: [] }
 
 // Loads every dropdown the product screens need, in parallel, once.
 export function useProductOptions() {

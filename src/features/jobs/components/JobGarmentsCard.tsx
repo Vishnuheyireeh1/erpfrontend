@@ -3,7 +3,9 @@ import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/toast-context'
+import { staffApi } from '@/features/staff/api/staff.api'
 import { orderedValues } from '@/features/workshop/api/workshop.api'
+import { useApiQuery } from '@/lib/useApiQuery'
 import { ApiError } from '@/lib/api'
 import { formatINR } from '@/lib/format'
 import { jobsApi } from '../api/jobs.api'
@@ -18,6 +20,20 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
   const [uploadFor, setUploadFor] = useState<number | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
   const canPhoto = job.status !== 'CANCELLED'
+  const staff = useApiQuery('staff-options', () => staffApi.options())
+  // Who took the measurements — can be filled any time after booking.
+  const setMeasurer = async (itemId: number, value: string) => {
+    setBusy(itemId)
+    try {
+      await jobsApi.setMeasuredBy(job.id, itemId, value ? Number(value) : null)
+      toast.success('Saved')
+      onChanged()
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Could not save')
+    } finally {
+      setBusy(null)
+    }
+  }
 
   const pick = (itemId: number) => {
     setUploadFor(itemId)
@@ -66,6 +82,14 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
                   {formatINR(Number(i.chargeRate))} per piece · Tailor: {i.tailor ? `${i.tailor.name} (pay ${formatINR(Number(i.labourRate))}/pc)` : <span className="text-warn">not given yet</span>}
                   {i.ownFabric && <> · <Badge tone="info">Customer's cloth</Badge></>}
                 </p>
+                <label className="mb-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-muted">Measured by</span>
+                  <select value={i.measuredById ?? ''} disabled={!canPhoto || busy === i.id} onChange={(e) => setMeasurer(i.id, e.target.value)} className="h-8 rounded-control border border-line bg-card px-2 text-sm">
+                    <option value="">Not recorded</option>
+                    {i.measuredBy && !(staff.data ?? []).some((s) => s.id === i.measuredBy!.id) && <option value={i.measuredBy.id}>{i.measuredBy.name}</option>}
+                    {(staff.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </label>
                 {values.length > 0 ? (
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
                     {values.map(([k, v]) => (

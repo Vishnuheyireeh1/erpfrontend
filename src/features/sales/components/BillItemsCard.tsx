@@ -30,7 +30,7 @@ export function BillItemsCard({ step, stitching, lines, calc, errorOf, onAdd, on
         // Rows lay out by the items area's own width (it changes when the right side is dragged).
         <div className="@container">
           <div className={cn(saleGridClass, 'hidden px-4 py-2 text-xs font-medium text-muted @2xl:grid')}>
-            <span>Item</span><span>Qty / metres</span><span>Rate ₹</span><span>Disc %</span><span className="text-right">GST</span><span className="text-right">Amount</span><span />
+            <span>Item</span><span>Qty / metres</span><span>Rate ₹</span><span>Discount</span><span className="text-right">GST</span><span className="text-right">Amount</span><span />
           </div>
           {lines.map((l, i) => (
             <SaleLineRow

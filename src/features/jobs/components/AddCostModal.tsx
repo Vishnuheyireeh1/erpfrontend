@@ -33,12 +33,15 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
   const [categoryId, setCategoryId] = useState(entry ? String(entry.categoryId) : '')
   const [tailorId, setTailorId] = useState(entry?.tailorId ? String(entry.tailorId) : '')
   const [qty, setQty] = useState(entry ? String(Number(entry.qty)) : String(pieces || 1))
-  const [rate, setRate] = useState(entry ? String(Number(entry.rate)) : '')
+  // A paid-out cost is edited as one amount (qty 1).
+  const [rate, setRate] = useState(entry ? String(Number(entry.paidBy === 'PAID' ? entry.amount : entry.rate)) : '')
   const [paidBy, setPaidBy] = useState<CostPaidBy>(entry?.paidBy ?? 'WORKER')
   const [mode, setMode] = useState<string>(entry?.mode ?? 'CASH')
   const [date, setDate] = useState(entry?.date.slice(0, 10) ?? todayISO())
   const [description, setDescription] = useState(entry?.description ?? '')
   const [busy, setBusy] = useState(false)
+  // New cost / a paid-out line → the simple form: what, amount, how paid. Work by our people is set in Assign workers.
+  const simple = !entry || entry.paidBy === 'PAID'
   const amount = Math.round((Number(qty) || 0) * (Number(rate) || 0) * 100) / 100
   const worker = (workers.data ?? []).find((w) => String(w.id) === tailorId)
 
@@ -54,7 +57,22 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
     if (w) setPaidBy(w.payType === 'PIECE' ? 'WORKER' : 'SALARIED')
   }
   const save = async () => {
-    if (!categoryId) return toast.error('Choose the work done')
+    if (!categoryId) return toast.error('Choose what the cost is for')
+    if (simple) {
+      if (!(Number(rate) > 0)) return toast.error('Enter the amount')
+      setBusy(true)
+      try {
+        const body = { categoryId: Number(categoryId), date, description: description.trim() || undefined, qty: 1, rate: Number(rate), paidBy: 'PAID' as CostPaidBy, mode, tailorId: null }
+        if (entry) await jobsApi.updateCost(job.id, entry.id, body)
+        else await jobsApi.addCost(job.id, body)
+        toast.success(entry ? 'Cost saved' : `Cost ${formatINR(Number(rate))} added`)
+        onDone()
+      } catch (err) {
+        toast.error(err instanceof ApiError ? err.message : 'Could not save')
+        setBusy(false)
+      }
+      return
+    }
     if (!(Number(qty) > 0) || rate === '') return toast.error('Enter the pieces and rate')
     if (paidBy === 'WORKER' && !tailorId) return toast.error('Choose who did the work')
     if (paidBy === 'WORKER' && worker?.payType === 'SALARY') return toast.error(`${worker.name} is on salary — choose "Salaried staff"`)
@@ -70,6 +88,19 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
       setBusy(false)
     }
   }
+
+  if (simple) return (
+    <Modal open onClose={onClose} title={`${entry ? 'Change cost' : 'Add cost'} — ${job.docNo}`} description="Money the shop paid for this job (e.g. outside embroidery). The customer's bill does not change."
+      footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>{entry ? 'Save' : `Add${Number(rate) > 0 ? ` ${formatINR(Number(rate))}` : ''}`}</Button></>}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Select label="For" required placeholder={cats.loading ? 'Loading…' : 'Choose'} value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={active.map((c) => ({ value: String(c.id), label: c.name }))} />
+        <Input label="Amount ₹" type="number" inputMode="decimal" min={0} value={rate} onChange={(e) => setRate(e.target.value)} autoFocus={!entry} />
+        <Select label="Paid by" value={mode} onChange={(e) => setMode(e.target.value)} options={paymentModeOptions} />
+        <Input label="Date" type="date" max={todayISO()} value={date} onChange={(e) => setDate(e.target.value)} />
+        <Input label="Details (optional)" className="sm:col-span-2" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. neck embroidery by Ramla" />
+      </div>
+    </Modal>
+  )
 
   return (
     <Modal

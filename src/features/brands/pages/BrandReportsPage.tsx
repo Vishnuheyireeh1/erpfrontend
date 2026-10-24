@@ -62,7 +62,7 @@ export function BrandReportsPage() {
         <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 rounded-card bg-card p-3 text-sm shadow-sm">
           {kind === 'summary' && <><span>Billed <b>{formatINR(t.billed)}</b></span><span>Received <b className="text-success">{formatINR(t.received)}</b></span><span>Pending today <b className="text-warn">{formatINR(t.pending)}</b></span><span>Pieces delivered <b>{t.piecesDelivered}</b></span></>}
           {kind === 'pending-work' && <><span>Pieces <b>{t.pieces}</b></span><span>Ready <b className="text-success">{t.ready}</b></span><span>Late <b className="text-danger">{t.late}</b></span><span>Value <b>{formatINR(t.value)}</b></span></>}
-          {kind === 'profit' && <><span>Billed <b>{formatINR(t.billed)}</b></span><span>Our cloth <b>{formatINR(t.ourCloth)}</b></span><span>Tailor pay <b>{formatINR(t.tailorPay)}</b></span><span>Profit <b className="text-success">{formatINR(t.profit)}</b></span></>}
+          {kind === 'profit' && <><span>Billed <b>{formatINR(t.billed)}</b></span><span>Our cloth <b>{formatINR(t.ourCloth)}</b></span><span>Tailor pay <b>{formatINR(t.tailorPay)}</b></span><span>Other costs <b>{formatINR(t.otherCosts)}</b></span><span>Profit <b className="text-success">{formatINR(t.profit)}</b></span></>}
         </div>
       )}
       <Card bodyClassName="p-0">

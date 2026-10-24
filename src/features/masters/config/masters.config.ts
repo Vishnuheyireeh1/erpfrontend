@@ -4,7 +4,6 @@ import {
   IconReceiptTax,
   IconRuler,
   IconShirt,
-  IconTag,
   type Icon,
 } from '@tabler/icons-react'
 import type { FieldDef, MasterKey } from '../types'
@@ -39,14 +38,6 @@ export const masters: MasterMeta[] = [
       { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Optional notes' },
       active,
     ],
-  },
-  {
-    key: 'brands',
-    label: 'Brands',
-    singular: 'brand',
-    icon: IconTag,
-    description: 'Brands of products you make or buy.',
-    fields: [{ name: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Sairandhri Originals' }, active],
   },
   {
     key: 'units',

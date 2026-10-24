@@ -62,13 +62,6 @@ export function BasicInfoCard({ form, errors, options, set }: Props) {
           hint="How it's counted when bought and sold"
         />
         <Select
-          label="Brand"
-          placeholder="No brand"
-          options={toOptions(options.brands)}
-          value={form.brandId}
-          onChange={(e) => set('brandId', e.target.value)}
-        />
-        <Select
           label="GST rate"
           placeholder="Not set"
           options={toOptions(options.taxRates)}

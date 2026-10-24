@@ -99,11 +99,10 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
                 options={(brands.data?.items ?? []).map((b) => ({ value: String(b.id), label: b.name }))}
                 hint={!brands.loading && !brands.data?.items.length ? 'Add the brand first in Workshop → Brands' : undefined} />
             )}
-            <Input label="Their order no." value={form.theirOrderNo} maxLength={40} onChange={(e) => set({ theirOrderNo: e.target.value })} placeholder="e.g. ZK-1123" />
+            <Input label="Order no. / Bill number" value={form.theirOrderNo} maxLength={40} onChange={(e) => set({ theirOrderNo: e.target.value })} placeholder="e.g. ZK-1123" />
             {!order && <Input label="Received on" type="date" max={todayISO()} value={form.docDate} onChange={(e) => set({ docDate: e.target.value })} />}
             <Input label="Due date" type="date" min={form.docDate} value={form.expectedDate} onChange={(e) => set({ expectedDate: e.target.value })} />
-            <Input label="Label / emblem note" className="sm:col-span-2" maxLength={300} value={form.labelNote} onChange={(e) => set({ labelNote: e.target.value })} placeholder="e.g. their label at back neck — labels given by the brand" />
-            <Textarea label="Notes" rows={1} className="sm:col-span-2" maxLength={1000} value={form.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Packing, delivery instructions…" />
+            <Textarea label="Notes" rows={1} className="sm:col-span-2 lg:col-span-4" maxLength={1000} value={form.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Packing, delivery instructions…" />
           </div>
         </Card>
 

@@ -102,7 +102,7 @@ export function tailorSlipText(job: Job, p: BusinessProfile, cols: number) {
   const W = Math.max(40, cols)
   const L = head(job, p, W, '* TAILOR SLIP *')
   job.items.forEach((i, n) => {
-    L.push(`${n + 1}. ${i.qty} x ${i.description}${i.tailor ? `   Tailor: ${i.tailor.name}` : ''}${i.ownFabric ? '   (customer cloth)' : ''}`)
+    L.push(`${n + 1}. ${i.qty} x ${i.description}${i.tailor ? `   Tailor: ${i.tailor.name}` : ''}${i.measuredBy ? `   Measured by: ${i.measuredBy.name}` : ''}${i.ownFabric ? '   (customer cloth)' : ''}`)
     const values = orderedValues(i.measurements, i.garmentType.fields).map(([k, v]) => `${k}: ${v}`)
     // Two or three measurements per line, in columns.
     const cell = Math.max(18, Math.floor((W - 3) / 3))

@@ -129,8 +129,6 @@ function JobForm({ job }: { job: Job | null }) {
     if (whoError) return setError(whoError)
     if (items.some(itemError)) return setError('Fix the highlighted garments')
     if (products.some(productError)) return setError('Fix the highlighted items')
-    const advanceUse = useAdvance ? Math.min(advance.data?.total ?? 0, totals.grandTotal) : 0
-    if (!job && tenderInput(tenders).reduce((s, t) => s + t.amount, 0) + advanceUse < itemsTotal - 0.004) return setError(`Items ₹${itemsTotal.toLocaleString('en-IN')} must be paid in full now — enter the payment`)
     if (meta.expectedDate < (job ? job.docDate.slice(0, 10) : meta.docDate)) return setError('Ready-by date is before the order date')
     setSaving(true)
     try {
@@ -182,7 +180,7 @@ function JobForm({ job }: { job: Job | null }) {
           <Card title={`Garments (${items.length})`}>
             <div className="flex flex-col gap-4">
               {items.map((d, i) => (
-                <JobItemEditor
+                <JobItemEditor showMeasuredBy
                   key={d.key}
                   index={i}
                   draft={d}

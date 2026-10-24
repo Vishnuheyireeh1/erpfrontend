@@ -18,6 +18,7 @@ export type ItemDraft = {
   measurements: Record<string, string>
   instructions: string
   ownFabric: boolean
+  measuredById?: string // staff who took the measurements ('' = not recorded)
 }
 // Extra charge on the bill (embroidery ₹500 …). Shop costs are added on the job page.
 export type CostDraft = { key: string; kind: string; description: string; charge: string }
@@ -70,8 +71,9 @@ export function toJobInput(f: { expectedDate: string; gstApplied: boolean; disco
       measurements: Object.fromEntries(Object.entries(d.measurements).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v)),
       instructions: d.instructions.trim() || undefined,
       ownFabric: d.ownFabric,
+      measuredById: d.measuredById ? Number(d.measuredById) : null,
     })),
-    costs: costs.filter((c) => Number(c.charge) > 0).map((c) => ({ kind: c.kind, description: c.description.trim() || undefined, charge: Number(c.charge) })),
+    costs: costs.filter((c) => Number(c.charge) > 0 && c.kind.trim()).map((c) => ({ kind: c.kind.trim(), description: c.description.trim() || undefined, charge: Number(c.charge) })),
   }
 }
 
@@ -81,7 +83,7 @@ export function fromJob(job: Job) {
     items: job.items.map<ItemDraft>((i) => ({
       key: `i${++seq}`, id: i.id, garmentTypeId: String(i.garmentTypeId), description: i.description, qty: String(i.qty),
       chargeRate: String(Number(i.chargeRate)), tailorId: i.tailorId ? String(i.tailorId) : '', labourRate: String(Number(i.labourRate)),
-      measurements: { ...i.measurements }, instructions: i.instructions ?? '', ownFabric: i.ownFabric,
+      measurements: { ...i.measurements }, instructions: i.instructions ?? '', ownFabric: i.ownFabric, measuredById: i.measuredById ? String(i.measuredById) : '',
     })),
     costs: job.costs.map<CostDraft>((c) => ({ key: `c${++seq}`, kind: c.kind, description: c.description ?? '', charge: String(Number(c.charge)) })),
   }

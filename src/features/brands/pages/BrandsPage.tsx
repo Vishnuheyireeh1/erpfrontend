@@ -1,4 +1,4 @@
-import { IconPlus, IconSearch } from '@tabler/icons-react'
+import { IconArrowLeft, IconPlus, IconSearch } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -64,6 +64,9 @@ export function BrandsPage() {
 
   return (
     <>
+      <button type="button" onClick={() => navigate('/brand-orders')} className="mb-2 inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+        <IconArrowLeft size={16} /> Brand orders
+      </button>
       <PageHeader
         title="Brands"
         subtitle={q.data ? `Pending from brands: ${formatINR(q.data.totalDue)}` : 'Other brands you stitch for, with their label.'}

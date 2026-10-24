@@ -34,12 +34,14 @@ export type JobItem = {
   measurements: Record<string, string>
   instructions: string | null
   ownFabric: boolean
+  measuredById: number | null
+  measuredBy: { id: number; name: string } | null
   imagePath: string | null
   garmentType: { name: string; fields: string[] }
   tailor: { id: number; name: string; payType: 'PIECE' | 'SALARY' } | null
 }
 
-// Shop item on a job: sold (billed, paid in full) or included (used for the stitching, not billed).
+// Shop item on a job: sold (billed; paid now or on the balance) or included (used for the stitching, not billed).
 export type JobMaterial = {
   id: number
   variantId: number

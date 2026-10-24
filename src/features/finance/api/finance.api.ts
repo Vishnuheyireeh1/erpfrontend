@@ -48,6 +48,7 @@ export const dayBookKinds: Record<string, { label: string; link?: (id: number) =
   JOURNAL: { label: 'Journal entry (accounts)', link: () => '/accounts?tab=journal' },
   TAILOR_PAYMENT: { label: 'Paid to tailor' },
   JOB_COST: { label: 'Job cost paid', link: (id) => `/jobs/${id}` },
+  BRAND_COST: { label: 'Brand order cost paid', link: (id) => `/brand-orders/${id}` },
   SALARY: { label: 'Salary paid' },
   FEE: { label: 'Training fee received', link: (id) => `/training/students/${id}` },
   PRODUCTION_COST: { label: 'Production cost paid', link: (id) => `/production/${id}` },
@@ -60,7 +61,7 @@ export const dayBookKinds: Record<string, { label: string; link?: (id: number) =
 export type CostKind = 'DIRECT' | 'INDIRECT' | 'ASSET'
 export type CostRow = {
   key: string
-  source: 'EXPENSE' | 'SALARY' | 'WORKER_PAY' | 'BRAND_PAY' | 'BRAND_CLOTH' | 'JOB_COST' | 'MATERIAL' | 'ADJUST'
+  source: 'EXPENSE' | 'SALARY' | 'WORKER_PAY' | 'BRAND_PAY' | 'BRAND_CLOTH' | 'JOB_COST' | 'BRAND_COST' | 'MATERIAL' | 'ADJUST'
   refId: number
   date: string
   docNo: string

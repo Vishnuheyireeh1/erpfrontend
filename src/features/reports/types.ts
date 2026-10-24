@@ -39,6 +39,10 @@ export type HsnSummary = { from: string; to: string; items: HsnRow[]; total: Tax
 
 // ---- Analysis reports ----
 export type CategorySales = { category: string; qty: number; amount: number; profit: number }
+// Reports → Profit by item.
+export type ItemKind = 'STITCHING' | 'SALE' | 'BRAND'
+export type ItemProfitRow = { kind: ItemKind; item: string; pieces: number; avgRate: number; total: number; tailor: number; embroidery: number; other: number; cloth: number; profit: number; marginPct: number }
+export type ItemProfit = { from: string; to: string; kind: ItemKind | null; rows: ItemProfitRow[]; totals: Omit<ItemProfitRow, 'kind' | 'item' | 'avgRate' | 'marginPct'> }
 export type SalesByCategory = { from: string; to: string; items: CategorySales[]; goods: number; stitching: { amount: number; jobs: number }; total: number }
 export type CustomerSales = { customerId: number | null; name: string; phone: string | null; bills: number; jobs: number; returns: number; total: number; visits: number; lastVisit: string }
 export type SalesByCustomer = { from: string; to: string; items: CustomerSales[]; total: number; customers: number }

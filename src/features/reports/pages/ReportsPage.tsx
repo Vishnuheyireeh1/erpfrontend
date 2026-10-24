@@ -4,6 +4,7 @@ import { Tabs } from '@/components/ui/Tabs'
 import { SalesByCategoryView, SalesByCustomerView } from '../components/CategoryCustomerReports'
 import { GstRegisterView, HsnView } from '../components/GstRegisterView'
 import { GstSummaryView } from '../components/GstSummaryView'
+import { ItemProfitView } from '../components/ItemProfitView'
 import { PurchaseReportView } from '../components/PurchaseReportView'
 import { SalesByTypeView } from '../components/SalesByTypeView'
 import { ItemsSoldView, SalesByDayView } from '../components/SalesReports'
@@ -13,6 +14,7 @@ const tabs = [
   { key: 'sales', label: 'Sales by day' },
   { key: 'types', label: 'Sales by type' },
   { key: 'items', label: 'Items sold' },
+  { key: 'item-profit', label: 'Profit by item' },
   { key: 'category', label: 'By category' },
   { key: 'customer', label: 'By customer' },
   { key: 'owes', label: 'Who owes' },
@@ -51,6 +53,7 @@ export function ReportsPage() {
       {tab === 'sales' && <SalesByDayView />}
       {tab === 'types' && <SalesByTypeView />}
       {tab === 'items' && <ItemsSoldView />}
+      {tab === 'item-profit' && <ItemProfitView />}
       {tab === 'category' && <SalesByCategoryView />}
       {tab === 'customer' && <SalesByCustomerView />}
       {tab === 'owes' && <WhoOwesView />}

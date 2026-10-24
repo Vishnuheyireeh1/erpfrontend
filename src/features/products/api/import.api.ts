@@ -8,7 +8,7 @@ export type ImportCheck = {
   variantCount: number
   stockItems: number // rows with an Opening stock quantity
   stockValue: number
-  toCreate: { brands: string[]; sizes: string[]; colours: string[] }
+  toCreate: { sizes: string[]; colours: string[] }
   errors: ImportError[]
   errorCount: number
 }
@@ -18,7 +18,7 @@ export type ImportDone = {
   products: number
   variants: number
   stock: { docNo: string; items: number; value: number } | null // opening stock document made with the import
-  created: { brands: number; sizes: number; colours: number }
+  created: { sizes: number; colours: number }
 }
 
 // Multipart upload (file + option) — returns parsed JSON or throws ApiError.

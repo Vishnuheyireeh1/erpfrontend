@@ -5,7 +5,7 @@ import { MasterPanel } from '../components/MasterPanel'
 import { masterByKey, masters } from '../config/masters.config'
 import type { MasterKey } from '../types'
 
-// /masters?tab=brands — the tab lives in the URL so refresh / back keep it.
+// /masters?tab=units — the tab lives in the URL so refresh / back keep it.
 export function MastersPage() {
   const [params, setParams] = useSearchParams()
   const tabParam = params.get('tab') as MasterKey | null

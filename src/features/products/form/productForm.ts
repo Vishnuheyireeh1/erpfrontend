@@ -21,7 +21,6 @@ export type ProductFormState = {
   name: string
   type: ProductType | ''
   categoryId: string
-  brandId: string
   unitId: string
   taxRateId: string
   hsnCode: string
@@ -45,7 +44,7 @@ export function emptyVariant(sizeId: number | null = null, colourId: number | nu
 
 export function emptyForm(): ProductFormState {
   return {
-    name: '', type: '', categoryId: '', brandId: '', unitId: '', taxRateId: '', hsnCode: '', fabric: '',
+    name: '', type: '', categoryId: '', unitId: '', taxRateId: '', hsnCode: '', fabric: '',
     description: '', isActive: true, hasVariants: false, sizeIds: [], colourIds: [], variants: [emptyVariant()],
   }
 }
@@ -67,7 +66,7 @@ export function fromProduct(product: Product): ProductFormState {
   const p = { ...product, variants: sortVariants(product.variants) }
   const hasVariants = p.variants.some((v) => v.sizeId || v.colourId)
   return {
-    name: p.name, type: p.type, categoryId: str(p.categoryId), brandId: str(p.brandId), unitId: str(p.unitId),
+    name: p.name, type: p.type, categoryId: str(p.categoryId), unitId: str(p.unitId),
     taxRateId: str(p.taxRateId), hsnCode: str(p.hsnCode), fabric: str(p.fabric), description: str(p.description),
     isActive: p.isActive,
     hasVariants,
@@ -129,7 +128,7 @@ export function validateForm(f: ProductFormState): FormErrors {
 export function toPayload(f: ProductFormState) {
   const id = (v: string) => (v ? Number(v) : null)
   return {
-    name: f.name.trim(), type: f.type, categoryId: id(f.categoryId), brandId: id(f.brandId),
+    name: f.name.trim(), type: f.type, categoryId: id(f.categoryId),
     unitId: id(f.unitId), taxRateId: id(f.taxRateId), hsnCode: f.hsnCode.trim() || null,
     fabric: f.fabric.trim() || null, description: f.description.trim() || null, isActive: f.isActive,
     variants: f.variants.map((v) => ({

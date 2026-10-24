@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { BrandOrder, BrandOrderSummary } from '../types'
+import type { BrandOrder, BrandOrderSummary, CostPaidBy } from '../types'
 
 function qs(params: Record<string, string | number | boolean | undefined>) {
   const q = new URLSearchParams()
@@ -22,6 +22,7 @@ export type PieceInput = {
   labourRate: number
   materials: MaterialInput[]
 }
+export type CostInput = { categoryId: number; itemId: number | null; date: string; description?: string; qty: number; rate: number; paidBy: CostPaidBy; mode: string | null; tailorId: number | null }
 export type OrderInput = { theirOrderNo?: string; expectedDate: string; labelNote?: string; notes?: string; items: PieceInput[] }
 export type OrderListParams = { view?: string; search?: string; brandId?: number; from?: string; to?: string; order?: string; page?: number }
 
@@ -35,5 +36,8 @@ export const brandOrderApi = {
   stage: (id: number, itemIds: number[], stage: 'IN_WORK' | 'READY') => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/stage`, { itemIds, stage }).then(item),
   cancel: (id: number, reason: string) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/cancel`, { reason }).then(item),
   addMaterials: (id: number, itemId: number, lines: MaterialInput[]) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/materials`, { itemId, lines }).then(item),
+  setTailor: (id: number, itemId: number, tailorId: number | null, labourRate: number) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/items/${itemId}/tailor`, { tailorId, labourRate }).then(item),
+  addCost: (id: number, body: CostInput) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/costs`, body).then(item),
+  removeCost: (id: number, costId: number) => api.delete<{ item: BrandOrder }>(`/brand-orders/${id}/costs/${costId}`).then(item),
   removeMaterial: (id: number, materialId: number) => api.delete<{ item: BrandOrder }>(`/brand-orders/${id}/materials/${materialId}`).then(item),
 }

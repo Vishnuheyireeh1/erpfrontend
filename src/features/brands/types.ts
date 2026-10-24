@@ -96,7 +96,30 @@ export type BrandOrder = BrandOrderSummary & {
   bills: OrderBillRef[]
   clothEntries: ClothEntry[]
   cloth: ClothLine[]
+  costs: BrandCost[]
+  profit?: OrderProfit
 }
+
+export type CostPaidBy = 'WORKER' | 'SALARIED' | 'PAID'
+export type BrandCost = {
+  id: number
+  itemId: number | null
+  item: { id: number; description: string; endCustomer: string | null } | null
+  categoryId: number
+  category: { id: number; name: string }
+  date: string
+  description: string | null
+  qty: string
+  rate: string
+  amount: string
+  paidBy: CostPaidBy
+  mode: string | null
+  tailorId: number | null
+  tailor: { id: number; name: string } | null
+  createdBy: string
+}
+// Profit so far: billed (before GST) − our cloth − stitching pay (per piece, ready / delivered) − other costs.
+export type OrderProfit = { billed: number; ourCloth: number; tailorPay: number; otherCosts: number; profit: number }
 
 export const stageLabel: Record<PieceStage, string> = { IN_WORK: 'In work', READY: 'Ready', DELIVERED: 'Delivered' }
 export const stageTone: Record<PieceStage, 'pending' | 'success' | 'info'> = { IN_WORK: 'pending', READY: 'success', DELIVERED: 'info' }

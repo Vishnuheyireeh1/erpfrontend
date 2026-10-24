@@ -9,7 +9,6 @@ const n = (v: number) => v.toLocaleString('en-IN')
 
 function NewMasters({ toCreate }: { toCreate: ImportCheck['toCreate'] }) {
   const parts = [
-    ['brands', toCreate.brands],
     ['sizes', toCreate.sizes],
     ['colours', toCreate.colours],
   ].filter(([, list]) => list.length > 0) as [string, string[]][]
