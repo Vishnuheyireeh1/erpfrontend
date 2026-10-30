@@ -49,7 +49,7 @@ export function ItemPickerList(p: Props) {
   }
   return (
     <div ref={box} style={{ maxHeight: maxH }} className="absolute inset-x-0 top-12 z-40 flex flex-col rounded-card border border-line bg-card shadow-lg">
-      <p className="border-b border-line px-3 py-1.5 text-xs text-muted">{p.heading} · tick the items, then Add</p>
+      <p className="border-b border-line px-3 py-1.5 text-xs text-muted">{p.heading} · tick the items, then Add<span className="hidden sm:inline"> · keys: ↓ ↑ + Enter adds one</span></p>
       <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1" onScroll={scrolled} role="listbox" aria-multiselectable="true">
         {!p.loaded && p.loading && <li className="px-3 py-2 text-sm text-muted">Loading…</li>}
         {p.loaded && p.items.length === 0 && <li className="px-3 py-2 text-sm text-muted">{p.emptyText}</li>}

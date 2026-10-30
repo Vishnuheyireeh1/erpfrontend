@@ -15,6 +15,9 @@ type Props = {
   onRemove: (key: string) => void
 }
 
+// Esc in the item list → the first metre box still empty (Enter there walks to the next, then back to search).
+const toEmptyMetres = () => document.querySelector<HTMLInputElement>('input[data-need-qty]')?.focus()
+
 // Billing page: the items on the bill (scan / search, qty or metres, rate, discount).
 export function BillItemsCard({ step, stitching, lines, calc, errorOf, onAdd, onChange, onRemove }: Props) {
   return (
@@ -23,7 +26,7 @@ export function BillItemsCard({ step, stitching, lines, calc, errorOf, onAdd, on
       title={`Sale items${lines.length ? ` (${lines.length})` : ''}${stitching ? ' — optional' : ''}`}
       bodyClassName="p-0"
     >
-      <div className="border-b border-line p-4"><ItemPicker onPick={onAdd} placeholder="Scan barcode or type item name / code" /></div>
+      <div className="border-b border-line p-4"><ItemPicker onPick={onAdd} onDone={toEmptyMetres} placeholder="Scan barcode or type item name / code" /></div>
       {lines.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-muted">{stitching ? 'No items — that is fine for stitching only.' : 'Scan or search an item'}</p>
       ) : (

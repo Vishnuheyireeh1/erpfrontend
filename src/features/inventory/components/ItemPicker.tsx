@@ -9,7 +9,8 @@ import { itemTitle } from '../constants'
 import type { StockItem } from '../types'
 import { ItemPickerList } from './ItemPickerList'
 
-type Props = { onPick: (item: StockItem) => void; placeholder?: string }
+// onDone: Esc closed the open list (billing: go to the metre boxes still empty).
+type Props = { onPick: (item: StockItem) => void; placeholder?: string; onDone?: () => void }
 
 const PAGE = 20
 
@@ -17,8 +18,9 @@ const PAGE = 20
 //   • click the box → in-stock items A–Z; type → name, code, SKU, barcode, size, colour
 //   • tick one or many (across searches) → Add / Cancel
 //   • scanner gun (code + Enter) or the camera Scan button → exact match added at once
-// Keys: ↓ ↑ move, Space ticks, Enter adds the ticked items (or a typed code), Esc closes.
-export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item name / SKU' }: Props) {
+// Keys: ↓ ↑ move, Enter adds the highlighted item (list stays open for the next), Space ticks several →
+// Enter adds all the ticked ones, a typed code + Enter adds that item, Esc closes.
+export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item name / SKU', onDone }: Props) {
   const toast = useToast()
   const inputRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState('')
@@ -66,8 +68,10 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
 
   const onKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
-      if (open) e.preventDefault() // closing the list — not "back" on the billing page
-      return close()
+      if (!open) return close()
+      e.preventDefault() // closing the list — not "back" on the billing page
+      close()
+      return onDone?.()
     }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
@@ -93,7 +97,11 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
       if (found.count === 0) return toast.error(`No item found for "${code}"`)
     }
     if (selected.size) return addSelected()
-    if (active >= 0 && items[active]) toggle(items[active])
+    // Keyboard billing: Enter adds the highlighted item at once and the list stays open → ↓ + Enter for the next one.
+    if (active >= 0 && items[active]) {
+      onPick(items[active])
+      toast.success(`Added ${itemTitle(items[active])}`)
+    }
   }
 
   const onScanned = useCallback(async (code: string) => {
@@ -118,7 +126,8 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
           ref={inputRef}
           value={text}
           onChange={(e) => { setText(e.target.value); setOpen(true); setActive(-1); setLimit(PAGE) }}
-          // The list opens on typing, ↓ or a click — not just because the cursor landed here (billing starts here).
+          // Reaching the box (Enter / arrows / F2 / a click) opens the list — billing starts on the customer name, not here.
+          onFocus={() => { setOpen(true); setActive(-1) }}
           onClick={() => setOpen(true)}
           // Clicking elsewhere closes the list; ticked items stay ticked until Add / Cancel.
           onBlur={() => window.setTimeout(() => setOpen(false), 150)}

@@ -1,5 +1,5 @@
 import { IconX } from '@tabler/icons-react'
-import { useEffect, useRef, type Ref } from 'react'
+import { useEffect, useRef, type KeyboardEvent, type Ref } from 'react'
 import { controlClass } from '@/components/ui/controlClass'
 import { itemTitle, qtyText } from '@/features/inventory/constants'
 import type { StockItem } from '@/features/inventory/types'
@@ -32,9 +32,10 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
   const unit = item.product.unit.code
   const decimal = item.product.unit.allowDecimal
   const qtyRef = useRef<HTMLInputElement>(null)
-  // Newly added (or picked again) metre item → cursor into its quantity box.
+  // Newly added (or picked again) metre item → cursor into its quantity box,
+  // unless the item list is still open (keyboard picking several — Esc then comes to the empty metres).
   useEffect(() => {
-    if (line.focus) qtyRef.current?.focus()
+    if (line.focus && document.activeElement?.getAttribute('aria-expanded') !== 'true') qtyRef.current?.focus()
   }, [line.focus])
   const amtMode = line.discMode === 'amt'
   // Qty / rate changed while a ₹ discount is set → keep the ₹, re-work the %.
@@ -42,6 +43,16 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
     const next = { ...line, [key]: v }
     const keepAmt = amtMode && line.discAmt ? { discountPct: pctFromAmt(line.discAmt, next.qty, next.rate) } : {}
     onChange(key === 'qty' ? { qty: v, focus: false, ...keepAmt } : { rate: v, ...keepAmt })
+  }
+  // Enter → the next metre box still empty, else back to the item search.
+  const backToSearch = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    const self = e.currentTarget
+    const next = [...document.querySelectorAll<HTMLInputElement>('input[data-need-qty]')].find((el) => el !== self)
+    const target = next ?? document.querySelector<HTMLInputElement>('input[aria-label="Find item"]')
+    if (!target) return
+    e.preventDefault()
+    target.focus()
   }
   const shownAmt = line.discAmt ?? (Number(line.discountPct) ? String(r2(((Number(line.qty) || 0) * (Number(line.rate) || 0) * Number(line.discountPct)) / 100)) : '')
   const setMode = (m: 'pct' | 'amt') => onChange(m === 'amt' ? { discMode: m, discAmt: shownAmt } : { discMode: m, discAmt: undefined })
@@ -58,6 +69,9 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
           value={line[key]}
           onChange={(e) => change(key, e.target.value)}
           onFocus={(e) => e.target.select()}
+          // Qty / metres typed + Enter → back to the item search for the next item (rate: → arrow).
+          onKeyDown={key === 'qty' ? backToSearch : undefined}
+          data-need-qty={key === 'qty' && decimal && !(Number(line.qty) > 0) ? '' : undefined}
           className={cn(controlClass(error), 'h-9', suffix && 'pr-9')}
         />
         {suffix && <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted">{suffix}</span>}
