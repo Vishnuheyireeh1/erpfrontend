@@ -4,6 +4,7 @@ import { BottomNav } from './BottomNav'
 import { MobileDrawer } from './MobileDrawer'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
+import { useAppKeys } from './useAppKeys'
 
 const COLLAPSE_KEY = 'sairandhri.sidebarCollapsed'
 
@@ -28,6 +29,7 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+  useAppKeys() // Alt+M menu, Ctrl+K search, Alt+B billing
 
   const toggleCollapsed = () => {
     const next = !collapsed

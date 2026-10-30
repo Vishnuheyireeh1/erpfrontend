@@ -39,6 +39,7 @@ export type JobFilters = { view: string; search?: string; tailorId?: number; cus
 
 export const jobsApi = {
   list: (p: JobFilters) => api.get<Paged<JobSummary> & { counts: JobCounts }>(`/jobs?${qs({ ...p, pageSize: 20 })}`),
+  chargeKinds: () => api.get<{ items: string[] }>('/jobs/charge-kinds').then((r) => r.items),
   get: (id: number) => api.get<{ item: Job }>(`/jobs/${id}`).then((r) => r.item),
   create: (body: NewJob) => api.post<{ item: Job }>('/jobs', body).then((r) => r.item),
   update: (id: number, body: JobInput) => api.put<{ item: Job }>(`/jobs/${id}`, body).then((r) => r.item),

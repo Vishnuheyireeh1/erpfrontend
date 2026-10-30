@@ -7,6 +7,7 @@ function toQuery(p: ProductListParams) {
   const q = new URLSearchParams({ page: String(p.page), pageSize: String(p.pageSize), status: p.status })
   if (p.search) q.set('search', p.search)
   if (p.type) q.set('type', p.type)
+  if (p.productTypeId) q.set('productTypeId', String(p.productTypeId))
   if (p.categoryId) q.set('categoryId', String(p.categoryId))
   if (p.brandId) q.set('brandId', String(p.brandId))
   return q.toString()

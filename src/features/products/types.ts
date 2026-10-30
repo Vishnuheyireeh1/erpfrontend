@@ -1,7 +1,11 @@
 export type ProductType = 'RAW_MATERIAL' | 'READY_MADE' | 'FINISHED' | 'ACCESSORY' | 'SERVICE'
 
 // One row in the product list.
+// A product type from Masters (name + the built-in kind it works like).
+export type ProductTypeRef = { id: number; name: string; kind: ProductType }
+
 export type ProductListItem = {
+  productType?: ProductTypeRef | null
   id: number
   code: string
   name: string
@@ -25,6 +29,7 @@ export type ProductListItem = {
 export type ProductListParams = {
   search?: string
   type?: ProductType
+  productTypeId?: number
   categoryId?: number
   brandId?: number
   status: 'all' | 'active' | 'inactive'
@@ -53,6 +58,8 @@ export type Product = {
   id: number
   code: string
   name: string
+  productTypeId: number | null
+  productType?: ProductTypeRef | null
   type: ProductType
   categoryId: number
   brandId: number | null
@@ -76,4 +83,5 @@ export type Option = {
   code?: string
   allowDecimal?: boolean
   rate?: string
+  kind?: ProductType // product types
 }

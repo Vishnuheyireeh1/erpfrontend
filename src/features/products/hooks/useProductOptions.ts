@@ -3,6 +3,7 @@ import { productsApi } from '../api/products.api'
 import type { Option } from '../types'
 
 export type ProductOptions = {
+  productTypes: Option[]
   categories: Option[]
   units: Option[]
   taxRates: Option[]
@@ -10,7 +11,7 @@ export type ProductOptions = {
   colours: Option[]
 }
 
-const EMPTY: ProductOptions = { categories: [], units: [], taxRates: [], sizes: [], colours: [] }
+const EMPTY: ProductOptions = { productTypes: [], categories: [], units: [], taxRates: [], sizes: [], colours: [] }
 
 // Loads every dropdown the product screens need, in parallel, once.
 export function useProductOptions() {
@@ -30,7 +31,10 @@ export function useProductOptions() {
     }
   }, [])
 
-  return { options, ready }
+  // A row added from a form (e.g. + New type) — shown in the dropdown straight away.
+  const addOption = (key: keyof ProductOptions, opt: Option) => setOptions((o) => ({ ...o, [key]: [...o[key], opt] }))
+
+  return { options, ready, addOption }
 }
 
 // "Kurtis › Party wear kurtis" — sorted so subcategories follow their main category.

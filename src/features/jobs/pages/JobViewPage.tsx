@@ -1,4 +1,4 @@
-import { IconArrowLeft, IconBan, IconCash, IconFileTypePdf, IconNeedleThread, IconPencil, IconPlus, IconPrinter, IconProgress, IconReportMoney, IconTruckDelivery } from '@tabler/icons-react'
+import { IconArrowLeft, IconBan, IconCash, IconFileTypePdf, IconNeedleThread, IconPencil, IconPrinter, IconProgress, IconReportMoney, IconTruckDelivery } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -20,7 +20,6 @@ import { JobGarmentsCard } from '../components/JobGarmentsCard'
 import { AddCostModal } from '../components/AddCostModal'
 import { AssignWorkersModal } from '../components/AssignWorkersModal'
 import { JobNextStep } from '../components/JobNextStep'
-import { MoreMenu } from '@/components/ui/MoreMenu'
 import type { JobCostEntry } from '../types'
 import { AddItemsModal } from '../components/AddItemsModal'
 import { JobCostsCard } from '../components/JobCostsCard'
@@ -72,17 +71,18 @@ export function JobViewPage() {
           <>
             <Button icon={IconPrinter} onClick={() => print(false)} loading={pdfBusy}>Print bill</Button>
             <Button icon={IconNeedleThread} onClick={() => print(true)}>Tailor slip</Button>
-            {/* Everything else, in one short list — the main next step is in the card below. */}
-            <MoreMenu items={[
+            {/* Every action as its own button (no More menu) — only the ones that apply to this job's stage. */}
+            {[
               { label: 'Receive money', icon: IconCash, onClick: () => setModal('receive'), hidden: job.status === 'CANCELLED' || job.dueAmount <= 0.004 },
               { label: 'Change stage', icon: IconProgress, onClick: () => setModal('stage'), hidden: !open },
               { label: 'Edit job', icon: IconPencil, onClick: () => navigate(`/jobs/${job.id}/edit`), hidden: !open },
               { label: 'Hand over to customer', icon: IconTruckDelivery, onClick: () => setModal('deliver'), hidden: !open },
-              { label: 'Download PDF', icon: IconFileTypePdf, onClick: pdf },
-              { label: 'Job cost sheet', icon: IconReportMoney, onClick: () => print('cost') },
-              { label: 'New alteration job', icon: IconPlus, onClick: () => navigate(`/jobs/new?customer=${job.customerId}&parent=${job.id}`), hidden: job.status !== 'DELIVERED' },
+              { label: 'Download customer bill (PDF)', icon: IconFileTypePdf, onClick: pdf },
+              { label: 'Print job cost sheet', icon: IconReportMoney, onClick: () => print('cost') },
               { label: 'Cancel job', icon: IconBan, onClick: () => setModal('cancel'), danger: true, hidden: !open },
-            ]} />
+            ].filter((a) => !a.hidden).map((a) => (
+              <Button key={a.label} icon={a.icon} variant={a.danger ? 'danger' : 'secondary'} onClick={a.onClick}>{a.label}</Button>
+            ))}
           </>
         }
       />
@@ -133,7 +133,7 @@ export function JobViewPage() {
               <ul className="flex flex-col gap-1.5 text-sm">
                 {job.costs.map((c) => (
                   <li key={c.id} className="flex justify-between gap-3">
-                    <span>{c.kind}{c.description ? ` · ${c.description}` : ''}</span>
+                    <span>{c.kind}{c.description ? ` (${c.description})` : ''}</span>
                     <span className="font-medium">₹{Number(c.charge).toLocaleString('en-IN')}</span>
                   </li>
                 ))}

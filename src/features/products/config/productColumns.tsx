@@ -34,7 +34,7 @@ export const productColumns: Column<ProductListItem>[] = [
   {
     key: 'type',
     header: 'Type',
-    render: (p) => <Badge tone={productTypeMeta[p.type].tone}>{productTypeMeta[p.type].label}</Badge>,
+    render: (p) => <Badge tone={productTypeMeta[p.type].tone}>{p.productType?.name ?? productTypeMeta[p.type].label}</Badge>,
   },
   { key: 'variantCount', header: 'Variants', align: 'right' },
   {

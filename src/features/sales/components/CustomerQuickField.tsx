@@ -1,11 +1,12 @@
-import { IconUserCheck, IconX } from '@tabler/icons-react'
+import { IconX } from '@tabler/icons-react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Input } from '@/components/ui/Input'
-import { formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { useDebounce } from '@/lib/useDebounce'
 import { customerApi } from '../api/sales.api'
 import { phoneDigits } from '../customerQuick'
 import type { Customer } from '../types'
+import { CustomerPickList, Money } from './CustomerPickList'
 
 type Props = {
   value: Customer | null
@@ -18,22 +19,50 @@ type Props = {
   phoneRequired?: boolean // stitching → yes; shop bill → name alone is fine
 }
 
-const Money = ({ c }: { c: Customer }) => (
-  <>
-    {c.balance > 0.004 && <span className="text-warn"> · owes {formatINR(c.balance)}</span>}
-    {c.balance < -0.004 && <span className="text-success"> · advance {formatINR(-c.balance)}</span>}
-  </>
-)
+const STEP = 8 // customers per "Show more"
 
-// Customer on a bill / job: type name + phone. Saved customers that match show below — tap to use one.
-// Nobody chosen → a new customer is saved with the bill (see customerQuick.ts).
+// Customer on a bill / job: click the name or phone → saved customers drop down (latest first, scroll, "Show more").
+// Typing narrows the list; no match → a new customer is saved with the bill (see customerQuick.ts).
 export function CustomerQuickField({ value, onChange, name, phone, onName, onPhone, showErrors, phoneRequired = true }: Props) {
+  const box = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [field, setField] = useState<'name' | 'phone'>('name')
+  const [hi, setHi] = useState(-1)
   const digits = phoneDigits(phone)
-  // "+91 98470…" → search the last 10 digits (how the number is saved).
-  const search = useDebounce(digits.length >= 4 ? digits.slice(-10) : name.trim().length >= 2 ? name.trim() : '', 250)
-  const params = { search, status: 'active', page: 1, pageSize: 5 }
-  const matches = useApiQuery(params, () => (search && !value ? customerApi.list(params) : Promise.resolve(null)))
-  const items = matches.data?.items ?? []
+  // The box being typed in drives the search; "+91 98470…" → the last 10 digits (how the number is saved).
+  const term = useDebounce(field === 'phone' ? digits.slice(-10) : name.trim(), 250)
+  const [more, setMore] = useState({ term: '', n: 1 })
+  const n = more.term === term ? more.n : 1
+  const params = { search: term || undefined, match: 'start' as const, status: 'active', sort: (term ? 'name' : 'recent') as 'name' | 'recent', page: 1, pageSize: STEP * n }
+  const live = open && !value
+  const q = useApiQuery([params, live], () => (live ? customerApi.list(params) : Promise.resolve(null)))
+  const page = q.data ?? q.lastData
+  const items = page?.items ?? []
+  const hasMore = !!page && page.total > items.length
+
+  useEffect(() => {
+    if (!open) return
+    const away = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', away)
+    return () => document.removeEventListener('mousedown', away)
+  }, [open])
+
+  const pick = (c: Customer) => { onChange(c); setOpen(false); setHi(-1) }
+  const focus = (f: 'name' | 'phone') => { setField(f); setOpen(true); setHi(-1) }
+  const keys = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      if (open) e.preventDefault() // closing the list — not "back" on the billing page
+      return setOpen(false)
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      setOpen(true)
+      setHi((h) => Math.max(0, Math.min(items.length - 1, h + (e.key === 'ArrowDown' ? 1 : -1))))
+    } else if (e.key === 'Enter' && open && items[hi]) {
+      e.preventDefault()
+      pick(items[hi])
+    }
+  }
 
   if (value) {
     return (
@@ -50,29 +79,17 @@ export function CustomerQuickField({ value, onChange, name, phone, onName, onPho
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div ref={box} className="relative">
       <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-        <Input label="Name" required={phoneRequired} value={name} onChange={(e) => onName(e.target.value)} placeholder={phoneRequired ? undefined : 'Optional for a shop bill'} error={showErrors && phoneRequired && !name.trim() ? 'Enter the name' : undefined} />
-        <Input label="Phone" required={phoneRequired} inputMode="tel" value={phone} onChange={(e) => onPhone(e.target.value)} placeholder={phoneRequired ? undefined : 'Optional for a shop bill'}
+        <Input label="Customer name" required={phoneRequired} value={name} autoComplete="off" placeholder="Type the name or pick a saved customer" data-hotkey="customer-name" onFocus={() => focus('name')} onBlur={() => setOpen(false)} onKeyDown={keys}
+          onChange={(e) => { onName(e.target.value); focus('name') }} error={showErrors && phoneRequired && !name.trim() ? 'Enter the name' : undefined} />
+        <Input label="Customer phone" required={phoneRequired} inputMode="tel" value={phone} autoComplete="off" placeholder="10-digit mobile number" data-hotkey="customer-phone" onFocus={() => focus('phone')} onBlur={() => setOpen(false)} onKeyDown={keys}
+          onChange={(e) => { onPhone(e.target.value); focus('phone') }}
           error={showErrors && (phoneRequired || digits.length > 0) && (digits.length < 10 || digits.length > 12) ? 'Enter a 10-digit phone' : undefined} />
       </div>
-      {items.length > 0 && (
-        <div className="rounded-control border border-line bg-card p-1">
-          <p className="px-2 pt-1 text-xs text-muted">Saved customers</p>
-          <ul>
-            {items.map((c) => (
-              <li key={c.id}>
-                <button type="button" onClick={() => onChange(c)} className="flex w-full items-center gap-2 rounded-control px-2 py-1.5 text-left text-sm hover:bg-page">
-                  <IconUserCheck size={16} className="shrink-0 text-brand" aria-hidden />
-                  <span className="min-w-0 truncate">
-                    <span className="font-medium text-ink">{c.name}</span>
-                    <span className="text-xs text-muted"> · {c.phone || 'no phone'} · {c.code}<Money c={c} /></span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {open && (
+        <CustomerPickList items={items} loading={!page} searching={!!term} hasMore={hasMore} moreLoading={q.loading && !!page} highlight={hi}
+          onPick={pick} onMore={() => setMore({ term, n: n + 1 })} />
       )}
     </div>
   )

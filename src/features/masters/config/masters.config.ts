@@ -1,5 +1,6 @@
 import {
   IconCategory,
+  IconPackages,
   IconPalette,
   IconReceiptTax,
   IconRuler,
@@ -26,6 +27,18 @@ const active: FieldDef = {
 
 // One entry per tab on the Masters page (order = tab order).
 export const masters: MasterMeta[] = [
+  {
+    key: 'productTypes',
+    label: 'Product types',
+    singular: 'product type',
+    icon: IconPackages,
+    description: 'Kinds of products (Ready-made, Saree, Kids wear …) and how each one works.',
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Kids wear' },
+      { name: 'kind', label: 'How it works', type: 'kind', required: true, hint: "Service = no stock. Own-made = made in the shop. Can't change once products use it." },
+      active,
+    ],
+  },
   {
     key: 'categories',
     label: 'Categories',

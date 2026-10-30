@@ -19,7 +19,11 @@ export type ItemDraft = {
   instructions: string
   ownFabric: boolean
   measuredById?: string // staff who took the measurements ('' = not recorded)
+  charges?: ItemCharge[] // billing page: this garment's additional charges (empty amount = not charged)
 }
+// One additional charge inside a garment on the bill: picked from the garment type's options, or typed (a new one is
+// added to the garment's options when the bill is booked).
+export type ItemCharge = { key: string; name: string; amount: string; other?: boolean } // other = not in the garment's list yet
 // Extra charge on the bill (embroidery ₹500 …). Shop costs are added on the job page.
 export type CostDraft = { key: string; kind: string; description: string; charge: string }
 
@@ -41,8 +45,22 @@ export const garmentPatch = (gid: string, garments: GarmentType[], tailors: Tail
     chargeRate: String(Number(g?.defaultCharge ?? 0)),
     labourRate: String(Number(labourFor(tailors, garments, tailorId, gid))),
     measurements: { ...(latest ?? {}) },
+    charges: [], // added on the bill only when needed (+ Add charge)
   }
 }
+export const newItemCharge = (name = ''): ItemCharge => ({ key: `k${++seq}`, name, amount: '', other: !name })
+export const itemChargesTotal = (d: ItemDraft) => (d.charges ?? []).reduce((s, c) => s + (Number(c.amount) || 0), 0)
+
+// Charges typed on the bill that the garment doesn't list yet → [garmentTypeId, name] to add to it after booking.
+export const newGarmentCharges = (items: ItemDraft[]) => {
+  const seen = new Set<string>()
+  return items.flatMap((d) => (d.charges ?? []).filter((c) => c.other && c.name.trim() && Number(c.amount) > 0).map((c) => [Number(d.garmentTypeId), c.name.trim()] as const))
+    .filter(([g, n]) => !seen.has(`${g}|${n.toLowerCase()}`) && !!seen.add(`${g}|${n.toLowerCase()}`))
+}
+
+// Garments' charges with an amount → job bill charges, printed as "Lining (Blouse)".
+export const itemChargeCosts = (items: ItemDraft[]): CostDraft[] =>
+  items.flatMap((d) => (d.charges ?? []).filter((c) => Number(c.amount) > 0 && c.name.trim()).map((c) => ({ key: c.key, kind: c.name.trim(), description: d.description, charge: c.amount })))
 
 export function itemError(d: ItemDraft) {
   if (!d.garmentTypeId) return 'Choose the garment'

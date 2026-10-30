@@ -1,6 +1,7 @@
 import { Input, Textarea } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Switch } from '@/components/ui/Switch'
+import { productKindOptions } from '@/features/products/constants'
 import type { FieldDef, MasterRow } from '../types'
 
 type Props = {
@@ -54,6 +55,9 @@ export function MasterField({ field, value, error, parents, editingId, onChange 
             .map((p) => ({ value: String(p.id), label: p.name }))}
         />
       )
+
+    case 'kind':
+      return <Select {...common} placeholder="Choose" value={String(value)} onChange={(e) => onChange(e.target.value)} options={productKindOptions} />
 
     case 'colour': {
       const hex = String(value)

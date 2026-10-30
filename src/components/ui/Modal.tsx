@@ -27,7 +27,7 @@ export function Modal({ open, onClose, title, description, size = 'md', footer, 
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape' && !e.defaultPrevented) onClose() // an open dropdown inside closes first
     }
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'

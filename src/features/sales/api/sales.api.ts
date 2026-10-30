@@ -23,7 +23,7 @@ export type NewSale = {
 type DocFilters = { search?: string; customerId?: number; status?: string; kind?: BillKind; from?: string; to?: string; page: number }
 
 export const customerApi = {
-  list: (p: { search?: string; status?: string; withDues?: boolean; kind?: 'stitching' | 'shop'; page?: number; pageSize?: number }) =>
+  list: (p: { search?: string; status?: string; withDues?: boolean; kind?: 'stitching' | 'shop'; sort?: 'name' | 'recent'; match?: 'any' | 'start'; page?: number; pageSize?: number }) =>
     api.get<Paged<Customer> & { totalDue?: number }>(`/customers?${qs(p)}`),
   get: (id: number) => api.get<{ item: Customer }>(`/customers/${id}`).then((r) => r.item),
   create: (body: unknown) => api.post<{ item: Customer }>('/customers', body).then((r) => r.item),

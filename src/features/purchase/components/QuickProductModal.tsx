@@ -9,7 +9,6 @@ import { useToast } from '@/components/ui/toast-context'
 import { inventoryApi } from '@/features/inventory/api/inventory.api'
 import type { StockItem } from '@/features/inventory/types'
 import { productsApi } from '@/features/products/api/products.api'
-import { productTypeOptions } from '@/features/products/constants'
 import { categoryOptions, useProductOptions } from '@/features/products/hooks/useProductOptions'
 import { ApiError } from '@/lib/api'
 
@@ -41,16 +40,19 @@ function QtyBoxes({ sizes, colours, unit, qty, onQty }: { sizes: Opt[]; colours:
 export function QuickProductModal({ initialName = '', onClose, onCreated }: Props) {
   const toast = useToast()
   const { options, ready } = useProductOptions()
-  const [f, setF] = useState({ name: initialName, type: 'READY_MADE', categoryId: '', unitId: '', taxRateId: '', hsnCode: '', purchasePrice: '', sellingPrice: '', mrp: '' })
+  const [f, setF] = useState({ name: initialName, productTypeId: '', categoryId: '', unitId: '', taxRateId: '', hsnCode: '', purchasePrice: '', sellingPrice: '', mrp: '' })
   const [sizes, setSizes] = useState<number[]>([])
   const [colours, setColours] = useState<number[]>([])
   const [qty, setQty] = useState<Record<string, string>>({}) // per size / colour ("0-0" when none)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  // Default: the first type that works like Ready-made (bought from the supplier).
+  const typeId = f.productTypeId || String(options.productTypes.find((t) => t.kind === 'READY_MADE')?.id ?? '')
   const set = (k: keyof typeof f, v: string) => { setF((x) => ({ ...x, [k]: v })); setError('') }
 
   const save = async () => {
     if (!f.name.trim()) return setError('Enter the item name')
+    if (!typeId) return setError('Choose the type')
     if (!f.categoryId || !f.unitId) return setError('Choose the category and unit')
     if (!(Number(f.sellingPrice) > 0)) return setError('Enter the selling price')
     // Every size × colour picked = one variant (none picked = a single variant).
@@ -59,7 +61,7 @@ export function QuickProductModal({ initialName = '', onClose, onCreated }: Prop
     setSaving(true)
     try {
       const product = await productsApi.create({
-        name: f.name.trim(), type: f.type, categoryId: Number(f.categoryId), unitId: Number(f.unitId),
+        name: f.name.trim(), productTypeId: Number(typeId), categoryId: Number(f.categoryId), unitId: Number(f.unitId),
         taxRateId: f.taxRateId ? Number(f.taxRateId) : null, hsnCode: f.hsnCode.trim() || null,
         variants: combos.map((c) => ({ ...c, purchasePrice: Number(f.purchasePrice) || 0, sellingPrice: Number(f.sellingPrice), mrp: f.mrp ? Number(f.mrp) : null })),
       })
@@ -90,7 +92,7 @@ export function QuickProductModal({ initialName = '', onClose, onCreated }: Prop
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input label="Item name" required value={f.name} onChange={(e) => set('name', e.target.value)} className="sm:col-span-2" autoFocus />
-            <Select label="Type" value={f.type} onChange={(e) => set('type', e.target.value)} options={productTypeOptions} />
+            <Select label="Type" required placeholder="Choose" value={typeId} onChange={(e) => set('productTypeId', e.target.value)} options={options.productTypes.filter((t) => t.kind !== 'SERVICE').map((t) => ({ value: String(t.id), label: t.name }))} />
             <Select label="Category" required placeholder="Choose" value={f.categoryId} onChange={(e) => set('categoryId', e.target.value)} options={categoryOptions(options.categories)} />
             <Select label="Unit" required placeholder="Choose" value={f.unitId} onChange={(e) => set('unitId', e.target.value)} options={options.units.map((u) => ({ value: String(u.id), label: `${u.name} (${u.code})` }))} />
             <QtyBoxes sizes={options.sizes.filter((s) => sizes.includes(s.id))} colours={options.colours.filter((c) => colours.includes(c.id))} unit={options.units.find((u) => String(u.id) === f.unitId)?.code ?? ''} qty={qty} onQty={(k, v) => { setQty((q) => ({ ...q, [k]: v })); setError('') }} />

@@ -1,5 +1,6 @@
 import { IconPlus, IconX } from '@tabler/icons-react'
 import { controlClass } from '@/components/ui/controlClass'
+import { Select } from '@/components/ui/Select'
 import { paymentModeOptions } from '@/features/purchase/api/purchase.api'
 import { cn } from '@/lib/cn'
 import { newTender, type TenderRow } from '../tenders'
@@ -16,9 +17,7 @@ export function TenderInputs({ rows, onChange, max = 5 }: Props) {
     <div className="flex flex-col gap-2">
       {rows.map((r, i) => (
         <div key={r.key} className="grid grid-cols-[92px_minmax(0,1fr)_minmax(0,1fr)_32px] gap-2">
-          <select aria-label={`Payment ${i + 1} mode`} value={r.mode} onChange={(e) => set(r.key, { mode: e.target.value as PaymentMode })} className={box}>
-            {paymentModeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <Select aria-label={`Payment ${i + 1} mode`} value={r.mode} onChange={(e) => set(r.key, { mode: e.target.value as PaymentMode })} options={paymentModeOptions} />
           <input
             aria-label={`Payment ${i + 1} amount`}
             type="number"

@@ -1,4 +1,5 @@
 import { IconList, IconPrinter } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
@@ -6,17 +7,22 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Switch } from '@/components/ui/Switch'
 import { todayISO } from '@/features/inventory/constants'
-import { JobCostsEditor } from '@/features/jobs/components/JobCostsEditor'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { BillCustomerBar } from '../components/BillCustomerBar'
+import { BillingKeysBar } from '../components/BillingKeysBar'
 import { BillItemsCard } from '../components/BillItemsCard'
 import { BillPaymentPanel } from '../components/BillPaymentPanel'
+import { BillSummary } from '../components/BillSummary'
 import { BillStitchingCard } from '../components/BillStitchingCard'
 import { JobBillTotals } from '../components/JobBillTotals'
 import { SaleTotals } from '../components/SaleTotals'
 import { EditingBanner } from '../components/EditingBanner'
 import { StepCard } from '../components/StepCard'
 import { lineError, useBilling } from '../hooks/useBilling'
+import { useBillingKeys } from '../hooks/useBillingKeys'
+
+const KEYS_HELP = 'sairandhri.billing.keysHelp'
+const readKeysHelp = () => { try { return localStorage.getItem(KEYS_HELP) !== '0' } catch { return true } }
 
 // /billing — the counter, ONE page for every bill (step by step; phones and tablets).
 //   Shop bill     → items only (SDB/…); a named customer may pay part (credit), a walk-in pays in full.
@@ -25,9 +31,13 @@ export function BillingPage() {
   const navigate = useNavigate()
   const b = useBilling()
   const wide = useMediaQuery('(min-width: 1024px)') // laptop: two columns; phone / tablet: one column in step order
+  const [keysHelp, setKeysHelp] = useState(readKeysHelp)
+  const toggleKeysHelp = () => setKeysHelp((v) => { try { localStorage.setItem(KEYS_HELP, v ? '0' : '1') } catch { /* private mode */ } return !v })
+  // Keyboard billing (F2 item, F3 customer … F9 save) — see hooks/useBillingKeys.ts.
+  useBillingKeys({ onSave: b.save, onTogglePrint: () => b.toggleAutoPrint(!b.autoPrint), onToggleHelp: toggleKeysHelp })
 
   const customerStep = (
-    <StepCard step={1} title="Customer">
+    <StepCard step={1} title="Customer details">
       <BillCustomerBar customer={b.customer} onCustomer={b.setCustomer} meta={b.meta} onMeta={b.setMeta} needsCustomer={b.isJob} showErrors={b.showErrors} />
     </StepCard>
   )
@@ -46,7 +56,6 @@ export function BillingPage() {
   const stitchStep = (
     <>
       <BillStitchingCard step={3} drafts={b.stitch} onChange={(d) => { b.setStitch(d); b.setError('') }} customerId={b.customer?.id} deliveryDate={b.deliveryDate} minDate={b.meta.docDate} onDelivery={b.setDeliveryDate} showErrors={b.showErrors} />
-      {b.isJob && <Card title="Additional charges (optional)"><JobCostsEditor rows={b.charges} onChange={b.setCharges} /></Card>}
     </>
   )
   const paymentStep = (
@@ -68,6 +77,7 @@ export function BillingPage() {
   )
   const totalsCard = (
     <Card>
+      <BillSummary lines={b.lines} amountOf={(l, i) => b.lineCalc(l, i)?.amount} stitch={b.stitch} charges={b.isJob ? b.charges : []} />
       {b.isJob ? (
         <JobBillTotals items={b.jobT.items.grandTotal} stitching={b.jobT.job.stitchCharges} discount={b.jobT.job.discount} gst={b.jobT.job.gst} gstRate={b.jobGstRate} roundOff={b.jobT.job.roundOff} total={b.jobT.job.grandTotal} />
       ) : (
@@ -76,9 +86,9 @@ export function BillingPage() {
       {b.customer && b.taxMode === 'INTER' && <div className="mt-2"><Badge tone="info">Other state — IGST</Badge></div>}
       {b.error && <p role="alert" className="mt-4 rounded-control bg-danger-tint px-3 py-2 text-sm text-danger">{b.error}</p>}
       <div className="mt-4 flex flex-col gap-3">
-        <Switch label="Print after saving" checked={b.autoPrint} onChange={b.toggleAutoPrint} />
+        <Switch label="Print after saving (Ctrl+P)" checked={b.autoPrint} onChange={b.toggleAutoPrint} />
         <Button variant="primary" icon={IconPrinter} loading={b.saving} onClick={b.save} className="h-12 w-full text-base">
-          {b.isJob ? 'Book stitching job' : b.editing ? 'Save changes' : 'Save bill'}{b.grandTotal > 0 ? ` · ₹${b.grandTotal.toLocaleString('en-IN')}` : ''}
+          {b.isJob ? 'Book stitching job' : b.editing ? 'Save changes' : 'Save bill'}{b.grandTotal > 0 ? ` · ₹${b.grandTotal.toLocaleString('en-IN')}` : ''} (F9)
         </Button>
         {(b.lines.length > 0 || b.stitch.length > 0 || b.customer) && <Button onClick={b.clearAll}>Clear</Button>}
       </div>
@@ -109,6 +119,7 @@ export function BillingPage() {
           {totalsCard}
         </div>
       </div>
+      {wide && <BillingKeysBar open={keysHelp} onToggle={toggleKeysHelp} />}
     </>
   )
 }

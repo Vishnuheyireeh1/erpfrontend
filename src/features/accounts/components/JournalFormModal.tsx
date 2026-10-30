@@ -1,6 +1,7 @@
 import { IconPlus, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Select } from '@/components/ui/Select'
 import { controlClass } from '@/components/ui/controlClass'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -96,10 +97,8 @@ export function JournalFormModal({ accounts, locked, onClose, onSaved }: Props) 
         <div className="hidden grid-cols-[minmax(0,1fr)_8rem_8rem_2rem] gap-2 text-xs font-medium text-muted sm:grid"><span>Account</span><span className="text-right">Debit ₹</span><span className="text-right">Credit ₹</span><span /></div>
         {rows.map((r, i) => (
           <div key={r.key} className="grid grid-cols-2 gap-2 rounded-control border border-line p-2 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_2rem] sm:border-0 sm:p-0">
-            <select aria-label={`Line ${i + 1} account`} value={r.accountCode} onChange={(e) => set(r.key, { accountCode: e.target.value })} className={cn(controlClass(), 'col-span-2 h-10 sm:col-span-1')}>
-              <option value="">Choose the account…</option>
-              {groups.map((g) => <optgroup key={g.k} label={kindLabel[g.k]}>{g.items.map((a) => <option key={a.code} value={a.code}>{a.name}</option>)}</optgroup>)}
-            </select>
+            <Select aria-label={`Line ${i + 1} account`} value={r.accountCode} onChange={(e) => set(r.key, { accountCode: e.target.value })} className="col-span-2 sm:col-span-1" placeholder="Choose the account…"
+              options={groups.flatMap((g) => g.items.map((a) => ({ value: a.code, label: `${a.name} · ${kindLabel[g.k]}` })))} />
             <input aria-label={`Line ${i + 1} debit`} type="number" inputMode="decimal" min={0} placeholder="Debit" value={r.debit} onChange={(e) => set(r.key, { debit: e.target.value, credit: e.target.value ? '' : r.credit })} className={cn(controlClass(), 'h-10 text-right')} />
             <input aria-label={`Line ${i + 1} credit`} type="number" inputMode="decimal" min={0} placeholder="Credit" value={r.credit} onChange={(e) => set(r.key, { credit: e.target.value, debit: e.target.value ? '' : r.debit })} className={cn(controlClass(), 'h-10 text-right')} />
             <button type="button" aria-label={`Remove line ${i + 1}`} disabled={rows.length <= 2} onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))} className="col-span-2 flex h-10 items-center justify-center rounded-control text-muted hover:bg-page hover:text-danger disabled:opacity-30 sm:col-span-1"><IconX size={16} /></button>

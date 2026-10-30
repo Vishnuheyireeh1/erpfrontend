@@ -36,7 +36,7 @@ export const navGroups: NavGroup[] = [
     title: 'Sales',
     items: [
       { label: 'Billing', path: '/billing', icon: IconReceipt },
-      { label: 'Sales bills', path: '/sales', icon: IconFileInvoice },
+      { label: 'All bills', path: '/sales', icon: IconFileInvoice },
       { label: 'Customers', path: '/customers', icon: IconUsers },
     ],
   },

@@ -10,14 +10,12 @@ import { EmptyState } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { Select } from '@/components/ui/Select'
-import { cn } from '@/lib/cn'
 import { useDebounce } from '@/lib/useDebounce'
 import { ownMadeColumns } from '../config/ownMadeColumns'
 import { productColumns } from '../config/productColumns'
-import { productTypeMeta, productTypeOptions } from '../constants'
 import { useProductList } from '../hooks/useProductList'
 import { useProductOptions } from '../hooks/useProductOptions'
-import type { ProductListParams, ProductType } from '../types'
+import type { ProductListParams } from '../types'
 
 const PAGE_SIZE = 20
 
@@ -27,23 +25,26 @@ const statusOptions = [
   { value: 'inactive', label: 'Inactive' },
 ]
 
-// Product list: search by name / code / SKU / barcode, filter by type (buttons), open to edit.
-// "Own-made" shows cost / profit per piece and how often made (making is recorded on the product page).
+// Product list: search by name / code / SKU / barcode, filter by product type (dropdown — includes types added in
+// Masters / on the product form), category and status. A type that works like Own-made shows cost / profit per piece.
 export function ProductListPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [search, setSearch] = useState(params.get('search') ?? '')
-  const [type, setType] = useState(() => (params.get('type') && params.get('type')! in productTypeMeta ? params.get('type')! : ''))
-  const ownMade = type === 'FINISHED'
+  const [chosenType, setTypeId] = useState<string | null>(null) // null = not picked yet
   const [categoryId, setCategoryId] = useState('')
   const [status, setStatus] = useState<ProductListParams['status']>('all')
   const [page, setPage] = useState(1)
   const { options } = useProductOptions()
+  // /products?type=FINISHED (back from an own-made product) → starts on the first type that works like it.
+  const kindParam = params.get('type')
+  const typeId = chosenType ?? String(options.productTypes.find((t) => kindParam && t.kind === kindParam)?.id ?? '')
+  const ownMade = options.productTypes.find((t) => String(t.id) === typeId)?.kind === 'FINISHED'
 
   const debounced = useDebounce(search.trim())
   const list = useProductList({
     search: debounced || undefined,
-    type: (type || undefined) as ProductType | undefined,
+    productTypeId: typeId ? Number(typeId) : undefined,
     categoryId: categoryId ? Number(categoryId) : undefined,
     status,
     page,
@@ -56,7 +57,7 @@ export function ProductListPage() {
     setPage(1)
   }
   const mainCategories = options.categories.filter((c) => !c.parent)
-  const filtered = Boolean(debounced || type || categoryId || status !== 'all')
+  const filtered = Boolean(debounced || typeId || categoryId || status !== 'all')
 
   return (
     <>
@@ -65,7 +66,7 @@ export function ProductListPage() {
         subtitle="Everything you sell, stitch with or make."
         actions={
           <>
-            <ExportButton path="/products/export" params={{ search: debounced || undefined, type: type || undefined, categoryId: categoryId || undefined, status }} />
+            <ExportButton path="/products/export" params={{ search: debounced || undefined, productTypeId: typeId || undefined, categoryId: categoryId || undefined, status }} />
             <Button icon={IconFileImport} onClick={() => navigate('/products/import')}>
               Import
             </Button>
@@ -76,26 +77,20 @@ export function ProductListPage() {
         }
       />
 
-      <div role="group" aria-label="Product type" className="mb-3 flex flex-wrap gap-1 rounded-control border border-line bg-card p-1 sm:inline-flex">
-        {[{ value: '', label: 'All' }, ...productTypeOptions].map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            aria-pressed={type === t.value}
-            onClick={() => reset(setType)(t.value)}
-            className={cn('rounded-control px-3 py-1.5 text-sm', type === t.value ? 'bg-brand text-white' : 'text-ink-soft hover:text-ink')}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
         <Input
           icon={IconSearch}
           aria-label="Search products"
           placeholder="Name, code, SKU or barcode"
           value={search}
           onChange={(e) => reset(setSearch)(e.target.value)}
+        />
+        <Select
+          aria-label="Product type"
+          placeholder="All types"
+          value={typeId}
+          onChange={(e) => reset(setTypeId)(e.target.value)}
+          options={options.productTypes.map((t) => ({ value: String(t.id), label: t.name }))}
         />
         <Select
           aria-label="Category"

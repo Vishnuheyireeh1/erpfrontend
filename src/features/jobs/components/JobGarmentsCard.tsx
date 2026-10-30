@@ -1,6 +1,7 @@
 import { IconPhoto, IconTrash } from '@tabler/icons-react'
 import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
+import { Select } from '@/components/ui/Select'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/toast-context'
 import { staffApi } from '@/features/staff/api/staff.api'
@@ -84,11 +85,8 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
                 </p>
                 <label className="mb-2 flex flex-wrap items-center gap-2 text-sm">
                   <span className="text-muted">Measured by</span>
-                  <select value={i.measuredById ?? ''} disabled={!canPhoto || busy === i.id} onChange={(e) => setMeasurer(i.id, e.target.value)} className="h-8 rounded-control border border-line bg-card px-2 text-sm">
-                    <option value="">Not recorded</option>
-                    {i.measuredBy && !(staff.data ?? []).some((s) => s.id === i.measuredBy!.id) && <option value={i.measuredBy.id}>{i.measuredBy.name}</option>}
-                    {(staff.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <Select compact aria-label="Measured by" className="min-w-44" value={String(i.measuredById ?? '')} disabled={!canPhoto || busy === i.id} onChange={(e) => setMeasurer(i.id, e.target.value)} placeholder="Not recorded"
+                    options={[...(i.measuredBy && !(staff.data ?? []).some((s) => s.id === i.measuredBy!.id) ? [{ value: String(i.measuredBy.id), label: i.measuredBy.name }] : []), ...(staff.data ?? []).map((s) => ({ value: String(s.id), label: s.name }))]} />
                 </label>
                 {values.length > 0 ? (
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">

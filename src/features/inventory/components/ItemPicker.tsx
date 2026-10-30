@@ -65,7 +65,10 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
   }, [])
 
   const onKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') return close()
+    if (e.key === 'Escape') {
+      if (open) e.preventDefault() // closing the list — not "back" on the billing page
+      return close()
+    }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
       setOpen(true)

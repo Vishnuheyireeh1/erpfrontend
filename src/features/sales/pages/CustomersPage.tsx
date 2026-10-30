@@ -40,18 +40,18 @@ const columns: Column<Customer>[] = [
   { key: 'status', header: '', mobile: 'hidden', render: (c) => (!c.isActive ? <Badge>Inactive</Badge> : null) },
 ]
 
-type Tab = 'stitching' | 'shop' | 'dues' | 'inactive'
+type Tab = 'all' | 'stitching' | 'shop' | 'dues'
 
 // /customers — everyone who buys (saved from Billing): stitching customers (have jobs — tap → their page with the jobs
-// first), shop customers (only bought items), who still has a balance to pay.
+// first), shop customers (only bought items), who still has a balance to pay. All also lists any made inactive (badge).
 export function CustomersPage() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('stitching')
+  const [tab, setTab] = useState<Tab>('all')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const debounced = useDebounce(search.trim())
   const kind = tab === 'stitching' || tab === 'shop' ? tab : undefined
-  const params = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active', withDues: tab === 'dues', kind, page, pageSize: 20 }
+  const params = { search: debounced || undefined, status: tab === 'all' ? 'all' : 'active', withDues: tab === 'dues', kind, page, pageSize: 20 }
   const q = useApiQuery(params, () => customerApi.list(params))
 
   return (
@@ -67,7 +67,7 @@ export function CustomersPage() {
       />
       <div className="mb-4">
         <Tabs
-          tabs={[{ key: 'stitching', label: 'Stitching customers' }, { key: 'shop', label: 'Shop customers' }, { key: 'dues', label: 'Balance due' }, { key: 'inactive', label: 'Inactive' }]}
+          tabs={[{ key: 'all', label: 'All customers' }, { key: 'stitching', label: 'Stitching customers' }, { key: 'shop', label: 'Shop customers' }, { key: 'dues', label: 'Balance due' }]}
           active={tab}
           onChange={(t) => { setTab(t); setPage(1) }}
         />

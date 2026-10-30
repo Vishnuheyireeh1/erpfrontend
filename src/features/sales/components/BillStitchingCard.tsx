@@ -8,6 +8,7 @@ import { garmentPatch, itemError, newItem, type ItemDraft } from '@/features/job
 import { garmentApi, measurementApi, tailorApi } from '@/features/workshop/api/workshop.api'
 import { cn } from '@/lib/cn'
 import { useApiQuery } from '@/lib/useApiQuery'
+import { focusBox } from '../hooks/useBillingKeys'
 import { StepCard } from './StepCard'
 
 type Props = {
@@ -34,7 +35,11 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
   const latestFor = (gid: number) => measures.data?.find((m) => m.garmentTypeId === gid)?.values
   const set = (key: string, patch: Partial<ItemDraft>) => onChange(drafts.map((d) => (d.key === key ? { ...d, ...patch } : d)))
   const ready = garments.data && tailors.data
-  const add = (gid: string) => onChange([...drafts, { ...newItem(), ...garmentPatch(gid, garments.data!, tailors.data!, '', latestFor(Number(gid))) }])
+  const add = (gid: string) => {
+    onChange([...drafts, { ...newItem(), ...garmentPatch(gid, garments.data!, tailors.data!, '', latestFor(Number(gid))) }])
+    window.setTimeout(() => focusBox('[data-hotkey="measure"]', true), 80) // straight to its measurements
+  }
+
   const base = minDate > todayISO() ? minDate : todayISO()
   // Customer chosen after the garments: fill their last measurements into garments that are still empty.
   useEffect(() => {
@@ -46,20 +51,26 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the customer's measurements arrive
   }, [measures.data])
 
+  // First garment: chosen at the top. More garments: "Add another garment" sits below the list.
+  const picker = ready && (
+    <Select
+      label={drafts.length ? 'Add another garment' : 'Garment to stitch'}
+      placeholder="Choose the garment…"
+      data-hotkey="garment"
+      value=""
+      onChange={(e) => e.target.value && add(e.target.value)} // click or ↑ ↓ + Enter adds it
+      options={garments.data!.filter((g) => g.isActive).map((g) => ({ value: String(g.id), label: g.name }))}
+      className="sm:max-w-sm"
+    />
+  )
+
   return (
-    <StepCard step={step} title={drafts.length ? `Stitching (${drafts.length})` : 'Stitching — optional'}>
+    <StepCard step={step} title={drafts.length ? `Stitching jobs (${drafts.length})` : 'Stitching jobs'}>
       {!ready ? (
         <div className="flex justify-center py-6"><Spinner /></div>
       ) : (
         <div className="flex flex-col gap-4">
-          <Select
-            label={drafts.length ? 'Add another garment' : 'Garment to stitch'}
-            placeholder="Choose the garment…"
-            value=""
-            onChange={(e) => e.target.value && add(e.target.value)}
-            options={garments.data!.filter((g) => g.isActive).map((g) => ({ value: String(g.id), label: g.name }))}
-            className="sm:max-w-sm"
-          />
+          {!drafts.length && picker}
 
           {drafts.map((d, i) => (
             <JobItemEditor showMeasuredBy
@@ -75,6 +86,8 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
               onRemove={() => onChange(drafts.filter((x) => x.key !== d.key))}
             />
           ))}
+
+          {drafts.length > 0 && picker}
 
           {drafts.length > 0 && (
             <div className="rounded-card bg-page p-3">

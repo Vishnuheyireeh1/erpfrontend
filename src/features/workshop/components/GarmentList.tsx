@@ -1,4 +1,4 @@
-import { IconPlus } from '@tabler/icons-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -33,9 +33,11 @@ export function GarmentList() {
       key: 'actions',
       header: '',
       align: 'right',
-      mobile: 'hidden',
+      mobile: 'row',
       render: (g) => (
-        <button type="button" onClick={(e) => { e.stopPropagation(); setDeleting(g) }} className="text-sm text-muted hover:text-danger">Delete</button>
+        <button type="button" onClick={(e) => { e.stopPropagation(); setDeleting(g) }} aria-label={`Delete ${g.name}`} className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-sm text-muted hover:bg-page hover:text-danger">
+          <IconTrash size={16} /> Delete
+        </button>
       ),
     },
   ]
@@ -74,12 +76,13 @@ export function GarmentList() {
           garment={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); q.reload() }}
+          onDelete={editing === 'new' ? undefined : () => { setDeleting(editing); setEditing(null) }}
         />
       )}
       <ConfirmDialog
         open={!!deleting}
         title={`Delete ${deleting?.name ?? ''}?`}
-        message="Only possible while no measurements or jobs use it. Otherwise make it Inactive."
+        message="Only possible while no jobs, brand orders or saved measurements use it. Otherwise make it Inactive (it stays on old bills but is not offered any more)."
         confirmLabel="Delete"
         danger
         loading={busy}

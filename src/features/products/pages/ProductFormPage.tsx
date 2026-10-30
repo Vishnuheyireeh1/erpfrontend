@@ -32,7 +32,7 @@ export function ProductFormPage() {
   const isEdit = id !== undefined && id !== 'new'
   const navigate = useNavigate()
   const toast = useToast()
-  const { options, ready } = useProductOptions()
+  const { options, ready, addOption } = useProductOptions()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -173,7 +173,7 @@ export function ProductFormPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="flex min-w-0 flex-col gap-5">
-          <BasicInfoCard form={form} errors={errors} options={options} set={set} />
+          <BasicInfoCard form={form} errors={errors} options={options} set={set} onTypeAdded={(t) => addOption('productTypes', t)} />
           <VariantOptionsCard
             form={form}
             options={options}

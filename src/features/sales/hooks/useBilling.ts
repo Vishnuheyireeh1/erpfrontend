@@ -4,7 +4,8 @@ import { useToast } from '@/components/ui/toast-context'
 import { todayISO } from '@/features/inventory/constants'
 import type { StockItem } from '@/features/inventory/types'
 import { jobsApi } from '@/features/jobs/api/jobs.api'
-import { itemError, type CostDraft, type ItemDraft } from '@/features/jobs/jobDrafts'
+import { itemChargeCosts, itemError, newGarmentCharges, type CostDraft, type ItemDraft } from '@/features/jobs/jobDrafts'
+import { garmentApi } from '@/features/workshop/api/workshop.api'
 import { jobBillText } from '@/features/jobs/print/jobText'
 import { useBusinessProfile } from '@/features/settings/hooks/useBusinessProfile'
 import { ApiError } from '@/lib/api'
@@ -102,9 +103,11 @@ export function useBilling() {
   // With stitching: job GST as set in Settings → Stitching jobs; bill discount = stitching discount.
   const jobGst = !!settings?.['jobs.gst'].defaultOn && gstRegistered
   const jobGstRate = jobGst ? settings?.['jobs.gst'].rate ?? 0 : 0
+  // Charges typed inside each garment (Lining (Blouse) …) + any bill-level ones (Fast bill page).
+  const allCharges = useMemo(() => [...itemChargeCosts(stitch), ...charges], [stitch, charges])
   const jobT = useMemo(
-    () => jobBillTotals({ lines, stitch, charges, discount: meta.billDiscount, gstRate: jobGstRate, apparelRule, taxMode, gstRegistered }),
-    [lines, stitch, charges, meta.billDiscount, jobGstRate, apparelRule, taxMode, gstRegistered],
+    () => jobBillTotals({ lines, stitch, charges: allCharges, discount: meta.billDiscount, gstRate: jobGstRate, apparelRule, taxMode, gstRegistered }),
+    [lines, stitch, allCharges, meta.billDiscount, jobGstRate, apparelRule, taxMode, gstRegistered],
   )
   const soldIndex = new Map(lines.filter((l) => !l.included).map((l, i) => [l.key, i]))
   const lineCalc = (l: SaleLineDraft, i: number) => (isJob ? jobT.items.lines[soldIndex.get(l.key) ?? -1] : totals.lines[i])
@@ -156,7 +159,7 @@ export function useBilling() {
         customerId: buyer?.id ?? null,
         walkInName: buyer ? undefined : meta.walkInName.trim() || undefined,
         walkInPhone: buyer ? undefined : meta.walkInPhone.trim() || undefined,
-        docDate: meta.docDate, bookNo: meta.bookNo?.trim() || undefined, billDiscount: Number(meta.billDiscount) || 0, notes: meta.notes.trim() || undefined,
+        docDate: meta.docDate, bookNo: (editing ? meta.bookNo?.trim() : '') || undefined, billDiscount: Number(meta.billDiscount) || 0, notes: meta.notes.trim() || undefined,
         lines: lines.map((l) => ({ variantId: l.item.id, qty: Number(l.qty), rate: Number(l.rate), discountPct: Number(l.discountPct) || 0 })),
         tenders: tenderInput(tenders),
         useAdvance: !!buyer && buyer.id === customer?.id && useAdvance && advanceAvailable > 0,
@@ -177,10 +180,13 @@ export function useBilling() {
     if (stitch.some(itemError)) return setError('Fix the highlighted garments')
     if (lines.some(lineError)) return setError('Fix the highlighted items')
     if (deliveryDate < meta.docDate) return setError('Delivery date is before the bill date')
+    if (!meta.bookNo?.trim()) return setError('Enter the book no. — it is needed for stitching')
     setSaving(true)
     try {
       const buyer = (await resolveCustomer())!
-      const job = await jobsApi.create(jobFromBill({ customerId: buyer.id, docDate: meta.docDate, deliveryDate, discount: meta.billDiscount, notes: meta.notes, bookNo: meta.bookNo ?? '', gstApplied: jobGst, stitch, charges, lines, tenders, useAdvance: buyer.id === customer?.id && useAdvance && advanceAvailable > 0 }))
+      const job = await jobsApi.create(jobFromBill({ customerId: buyer.id, docDate: meta.docDate, deliveryDate, discount: meta.billDiscount, notes: meta.notes, bookNo: meta.bookNo ?? '', gstApplied: jobGst, stitch, charges: allCharges, lines, tenders, useAdvance: buyer.id === customer?.id && useAdvance && advanceAvailable > 0 }))
+      // New charge names typed here → the garment's list, so they show next time (a failure here doesn't matter).
+      await Promise.allSettled(newGarmentCharges(stitch).map(([g, n]) => garmentApi.addCharge(g, n)))
       clearBillDraft()
       toast.success(`${job.docNo} booked — print the tailor slip from the job page`)
       if (autoPrint && profile && settings) printText(jobBillText(job, profile, settings['billing.print'].columns), settings['billing.print'])

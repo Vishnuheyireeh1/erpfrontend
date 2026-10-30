@@ -61,7 +61,7 @@ export function jobBillText(job: Job, p: BusinessProfile, cols: number) {
   L.push(row('Sl#', 'Particulars', 'Rate', 'Qty', 'Amount'), rule)
   const lines = [
     ...job.items.map((i) => ({ n: i.description, r: Number(i.chargeRate), q: qty(i.qty), a: i.qty * Number(i.chargeRate) })),
-    ...job.costs.filter((c) => Number(c.charge) > 0).map((c) => ({ n: c.description ? `${c.kind} ${c.description}` : c.kind, r: Number(c.charge), q: qty(1), a: Number(c.charge) })),
+    ...job.costs.filter((c) => Number(c.charge) > 0).map((c) => ({ n: c.description ? `${c.kind} (${c.description})` : c.kind, r: Number(c.charge), q: qty(1), a: Number(c.charge) })),
     // Items sold on the job (used fabric is not printed).
     ...job.materials.filter((m) => !m.included).map((m) => ({
       n: `${m.description}${Number(m.discountPct) ? ` (-${Number(m.discountPct)}%)` : ''}${Number(m.returnedQty) > 0 ? ` [${Number(m.returnedQty)} returned]` : ''}`,
@@ -97,7 +97,7 @@ export function jobBillText(job: Job, p: BusinessProfile, cols: number) {
   return L.join('\n')
 }
 
-// For the workshop: garments, measurements and design — no prices.
+// For the workshop: garments, measurements, design and the tailor's pay for each garment (not the customer's price).
 export function tailorSlipText(job: Job, p: BusinessProfile, cols: number) {
   const W = Math.max(40, cols)
   const L = head(job, p, W, '* TAILOR SLIP *')
@@ -109,8 +109,11 @@ export function tailorSlipText(job: Job, p: BusinessProfile, cols: number) {
     const perLine = Math.max(1, Math.floor((W - 3) / cell))
     for (let k = 0; k < values.length; k += perLine) L.push('   ' + values.slice(k, k + perLine).map((v) => v.slice(0, cell - 1).padEnd(cell)).join('').trimEnd())
     if (i.instructions) L.push(...wrap(`Design: ${i.instructions}`, W - 3).map((x) => `   ${x}`))
+    if (Number(i.labourRate) > 0) L.push(`   Tailor pay: ${i.qty} x ${money(i.labourRate)} = ${money(i.qty * Number(i.labourRate))}`)
     L.push('')
   })
+  const pay = job.items.reduce((s, i) => s + i.qty * Number(i.labourRate), 0)
+  if (pay > 0) L.push(lr('Total tailor pay', money(pay), W), '')
   if (job.internalNotes) L.push(...wrap(`Note: ${job.internalNotes}`, W))
   return L.join('\n')
 }
@@ -131,7 +134,7 @@ export function jobCostSheetText(job: Job, p: BusinessProfile, cols: number) {
   const add = (name: string, pcs: number | string, rate: number, tot: number | null, cost: number | null) =>
     L.push(row(String(++n), name, String(pcs), money(rate), tot === null ? '' : money(tot), cost === null ? '' : money(cost)))
   for (const i of job.items) add(i.description, i.qty, Number(i.chargeRate), i.qty * Number(i.chargeRate), null)
-  for (const c of job.costs) add(c.description ? `${c.kind} ${c.description}` : c.kind, 1, Number(c.charge), Number(c.charge), null)
+  for (const c of job.costs) add(c.description ? `${c.kind} (${c.description})` : c.kind, 1, Number(c.charge), Number(c.charge), null)
   for (const i of job.items.filter((x) => x.tailor && Number(x.labourRate) > 0)) add(`Tailor fee (${i.tailor!.name})`, i.qty, Number(i.labourRate), null, i.qty * Number(i.labourRate))
   for (const e of job.costEntries) add(`${e.category.name}${e.description ? ` - ${e.description}` : ''}`, Number(e.qty), Number(e.rate), null, Number(e.amount))
   for (const m of job.materials.filter((x) => x.included)) add(`${m.description} (given free)`, Number(m.qty), Number(m.unitCost), null, Number(m.qty) * Number(m.unitCost))

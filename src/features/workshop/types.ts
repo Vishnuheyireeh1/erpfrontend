@@ -32,6 +32,7 @@ export type GarmentType = {
   isActive: boolean
   measurementCount?: number
   costDefaults?: { categoryId: number; rate: string }[] // usual job costs per piece
+  charges?: string[] // additional charge options (Lining, Piping …) — amount typed inside the garment on the bill
 }
 
 export type CostCategory = { id: number; name: string; defaultPaidBy: 'SALARIED' | 'PAID'; sortOrder: number; isActive: boolean; entryCount?: number }

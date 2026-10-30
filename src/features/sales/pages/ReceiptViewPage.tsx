@@ -35,7 +35,7 @@ export function ReceiptViewPage() {
       />
       <Card className="mb-5">
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-          <div><p className="text-xs text-muted">Status</p><Badge tone={r.status === 'POSTED' ? 'success' : 'neutral'}>{r.status === 'POSTED' ? 'Posted' : 'Cancelled'}</Badge></div>
+          <div><p className="text-xs text-muted">Status</p><Badge tone={r.status === 'POSTED' ? 'success' : 'neutral'}>{r.status === 'POSTED' ? 'Received' : 'Cancelled'}</Badge></div>
           <div><p className="text-xs text-muted">Amount</p><p className="text-base font-semibold">{formatINR(Number(r.amount))}</p></div>
           <div><p className="text-xs text-muted">Date</p>{formatDate(r.docDate)}</div>
           <div>

@@ -20,7 +20,7 @@ export function BillItemsCard({ step, stitching, lines, calc, errorOf, onAdd, on
   return (
     <StepCard
       step={step}
-      title={`Items${lines.length ? ` (${lines.length})` : ''}${stitching ? ' — optional' : ''}`}
+      title={`Sale items${lines.length ? ` (${lines.length})` : ''}${stitching ? ' — optional' : ''}`}
       bodyClassName="p-0"
     >
       <div className="border-b border-line p-4"><ItemPicker onPick={onAdd} placeholder="Scan barcode or type item name / code" /></div>

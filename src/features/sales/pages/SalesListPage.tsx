@@ -47,7 +47,7 @@ const receiptColumns: Column<Receipt>[] = [
   { key: 'date', header: 'Date', mobile: 'subtitle', render: (r) => formatDate(r.docDate) },
   { key: 'mode', header: 'Received by', render: tenderText },
   { key: 'amount', header: 'Amount', align: 'right', render: (r) => formatINR(Number(r.amount)) },
-  { key: 'status', header: 'Status', mobile: 'badge', render: (r) => <Badge tone={r.status === 'POSTED' ? 'success' : 'neutral'}>{r.status === 'POSTED' ? 'Posted' : 'Cancelled'}</Badge> },
+  { key: 'status', header: 'Status', mobile: 'badge', render: (r) => <Badge tone={r.status === 'POSTED' ? 'success' : 'neutral'}>{r.status === 'POSTED' ? 'Received' : 'Cancelled'}</Badge> },
 ]
 
 type Tab = 'all' | 'unpaid' | 'CANCELLED' | 'receipts'
@@ -76,8 +76,8 @@ export function SalesListPage() {
   return (
     <>
       <PageHeader
-        title="Sales"
-        subtitle={sum && !isReceipts ? `Sales ${formatINR(sum.sales)} · received ${formatINR(sum.received)} · returned ${formatINR(sum.returned)}` : 'Bills and money received.'}
+        title="All bills"
+        subtitle={sum && !isReceipts ? `Sales ${formatINR(sum.sales)} · received ${formatINR(sum.received)} · returned ${formatINR(sum.returned)}` : 'Shop bills, job bills and money received.'}
         actions={
           <>
             <ExportButton path={isReceipts ? '/receipts/export' : '/sales/export'} params={filters} />

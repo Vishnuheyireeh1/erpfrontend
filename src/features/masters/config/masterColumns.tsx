@@ -1,5 +1,7 @@
 import { Badge } from '@/components/ui/Badge'
 import type { Column } from '@/components/ui/DataTable'
+import { kindLabel } from '@/features/products/constants'
+import type { ProductType } from '@/features/products/types'
 import { ColourSwatch } from '../components/ColourSwatch'
 import type { MasterKey, MasterRow } from '../types'
 
@@ -16,6 +18,12 @@ const statusCol: Col = {
 
 // Table columns per master (on phones: title / subtitle / badge / rows).
 export const masterColumns: Record<MasterKey, Col[]> = {
+  productTypes: [
+    nameCol,
+    { key: 'kind', header: 'How it works', mobile: 'subtitle', render: (r) => kindLabel(r.kind as ProductType) },
+    { key: 'products', header: 'Products', align: 'right', render: (r) => r._count?.products ?? 0 },
+    statusCol,
+  ],
   categories: [
     nameCol,
     {

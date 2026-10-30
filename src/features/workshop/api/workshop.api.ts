@@ -32,6 +32,8 @@ export const garmentApi = {
   list: (activeOnly = false) => api.get<{ items: GarmentType[] }>(`/garment-types${activeOnly ? '?active=1' : ''}`).then((r) => r.items),
   create: (body: unknown) => api.post<{ item: GarmentType }>('/garment-types', body).then((r) => r.item),
   update: (id: number, body: unknown) => api.put<{ item: GarmentType }>(`/garment-types/${id}`, body).then((r) => r.item),
+  // A charge typed on a bill → added to the garment's charge options (no-op if already there).
+  addCharge: (id: number, name: string) => api.post<{ charges: string[] }>(`/garment-types/${id}/charges`, { name }).then((r) => r.charges),
   remove: (id: number) => api.delete(`/garment-types/${id}`),
 }
 

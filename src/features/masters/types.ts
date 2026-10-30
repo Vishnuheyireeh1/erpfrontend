@@ -1,5 +1,5 @@
 // Must match the backend's /api/masters/:master keys.
-export type MasterKey = 'categories' | 'units' | 'sizes' | 'colours' | 'taxRates'
+export type MasterKey = 'productTypes' | 'categories' | 'units' | 'sizes' | 'colours' | 'taxRates'
 
 export type MasterRow = {
   id: number
@@ -9,7 +9,6 @@ export type MasterRow = {
   parentId?: number | null
   description?: string | null
   parent?: { id: number; name: string } | null
-  _count?: { children: number }
   // units
   code?: string
   allowDecimal?: boolean
@@ -19,6 +18,9 @@ export type MasterRow = {
   hexCode?: string | null
   // tax rates (Decimal comes back as a string)
   rate?: string
+  // product types
+  kind?: string
+  _count?: { children?: number; products?: number }
 }
 
 export type ListResult = {
@@ -39,7 +41,7 @@ export type ListParams = {
 }
 
 // Form field kinds the generic master form can render.
-export type FieldType = 'text' | 'textarea' | 'number' | 'switch' | 'colour' | 'parent'
+export type FieldType = 'text' | 'textarea' | 'number' | 'switch' | 'colour' | 'parent' | 'kind'
 
 export type FieldDef = {
   name: string

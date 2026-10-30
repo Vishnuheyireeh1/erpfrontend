@@ -1,4 +1,5 @@
 import { IconCheck } from '@tabler/icons-react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
@@ -24,12 +25,32 @@ type Props = {
 const keep = (e: React.MouseEvent) => e.preventDefault() // don't steal focus from the search box
 
 // The open list of the item picker: tick items (several, even across searches), then Add — or Cancel.
+// Height fits the screen so Add stays in view; the list scrolls inside and loads more as it nears the end.
 export function ItemPickerList(p: Props) {
   const count = p.selected.size
+  const box = useRef<HTMLDivElement>(null)
+  const [maxH, setMaxH] = useState(384)
+  // Fit the space left below the search box (max 24rem, at least 12rem) — Add never goes off screen.
+  useLayoutEffect(() => {
+    const fit = () => { const t = box.current?.getBoundingClientRect().top ?? 0; setMaxH(Math.max(192, Math.min(384, Math.floor(window.innerHeight - t - 12)))) }
+    fit()
+    window.addEventListener('resize', fit)
+    window.addEventListener('scroll', fit, true)
+    return () => { window.removeEventListener('resize', fit); window.removeEventListener('scroll', fit, true) }
+  }, [])
+  const asked = useRef(-1) // list length the next page was asked at (one request per page while scrolling)
+  // Near the bottom of the list → load the next page by itself (the button stays as a fallback).
+  const scrolled = (e: React.UIEvent<HTMLUListElement>) => {
+    const el = e.currentTarget
+    if (p.moreCount > 0 && !p.loading && asked.current !== p.items.length && el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+      asked.current = p.items.length
+      p.onMore()
+    }
+  }
   return (
-    <div className="absolute inset-x-0 top-12 z-40 flex max-h-[26rem] flex-col rounded-card border border-line bg-card shadow-lg">
+    <div ref={box} style={{ maxHeight: maxH }} className="absolute inset-x-0 top-12 z-40 flex flex-col rounded-card border border-line bg-card shadow-lg">
       <p className="border-b border-line px-3 py-1.5 text-xs text-muted">{p.heading} · tick the items, then Add</p>
-      <ul className="min-h-0 flex-1 overflow-y-auto p-1" role="listbox" aria-multiselectable="true">
+      <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1" onScroll={scrolled} role="listbox" aria-multiselectable="true">
         {!p.loaded && p.loading && <li className="px-3 py-2 text-sm text-muted">Loading…</li>}
         {p.loaded && p.items.length === 0 && <li className="px-3 py-2 text-sm text-muted">{p.emptyText}</li>}
         {p.items.map((i, idx) => {

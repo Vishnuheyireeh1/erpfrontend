@@ -1,4 +1,5 @@
 import { controlClass } from '@/components/ui/controlClass'
+import { Select } from '@/components/ui/Select'
 import type { TailorOption } from '@/features/workshop/api/workshop.api'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
@@ -25,15 +26,14 @@ export function WorkerRow({ label, empty, people, value, qty, presetFor, onChang
   return (
     <div className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[7rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)]">
       <span className="col-span-2 text-sm font-medium text-ink sm:col-span-1">{label}</span>
-      <select
+      <Select
         aria-label={`${label} — who`}
         value={value.tailorId}
         onChange={(e) => onChange({ tailorId: e.target.value, rate: e.target.value ? String(Number(presetFor(e.target.value))) : '0', note: '' })}
-        className={cn(controlClass(), 'col-span-2 h-10 sm:col-span-1')}
-      >
-        <option value="">{empty}</option>
-        {people.map((p) => <option key={p.id} value={p.id}>{p.name}{p.payType === 'SALARY' ? ' (salaried)' : ''}</option>)}
-      </select>
+        className="col-span-2 sm:col-span-1"
+        placeholder={empty}
+        options={people.map((p) => ({ value: String(p.id), label: `${p.name}${p.payType === 'SALARY' ? ' (salaried)' : ''}` }))}
+      />
       {who && !piece && <span className="col-span-2 text-xs text-muted">Salaried — no pay, only who did it</span>}
       {piece && (
         <>

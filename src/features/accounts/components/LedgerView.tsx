@@ -44,17 +44,8 @@ export function LedgerView({ code, party, onChange }: Props) {
   return (
     <>
       <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
-          Account
-          <select value={code} onChange={(e) => onChange(e.target.value, '')} className="h-11 rounded-control border border-line bg-card px-3 text-sm font-normal text-ink">
-            <option value="">Choose the account…</option>
-            {groups.map((g) => (
-              <optgroup key={g.k} label={kindLabel[g.k]}>
-                {g.items.map((a) => <option key={a.code} value={a.code}>{a.code} · {a.name}</option>)}
-              </optgroup>
-            ))}
-          </select>
-        </label>
+        <Select label="Account" value={code} onChange={(e) => onChange(e.target.value, '')} placeholder="Choose the account…"
+          options={groups.flatMap((g) => g.items.map((a) => ({ value: a.code, label: `${a.code} · ${a.name} · ${kindLabel[g.k]}` })))} />
         {account?.party ? (
           <Select label={`Which ${account.party}`} value={party} onChange={(e) => onChange(code, e.target.value)} placeholder={`All ${account.party}s`} options={(parties.data ?? []).map((p) => ({ value: p.code, label: `${p.name} — ${drCr(p.balance)}` }))} />
         ) : <div className="hidden md:block" />}

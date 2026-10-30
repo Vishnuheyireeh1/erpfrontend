@@ -32,8 +32,11 @@ export function printText(text: string, s: PrintSettings) {
     pre { font-family: "Courier New", Courier, monospace; font-weight: 700; font-size: ${fontPt.toFixed(2)}pt; line-height: 1.15; margin: 0; color: #000; white-space: pre; }
   </style></head><body><pre>${esc}</pre></body></html>`
 
+  // One print frame at a time — an earlier bill left on the page can never be printed by mistake.
+  document.querySelectorAll('iframe[data-print-frame]').forEach((f) => f.remove())
   const frame = document.createElement('iframe')
   frame.setAttribute('aria-hidden', 'true')
+  frame.setAttribute('data-print-frame', '')
   Object.assign(frame.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: '0' })
   document.body.appendChild(frame)
   const doc = frame.contentDocument!

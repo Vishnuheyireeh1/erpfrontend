@@ -19,7 +19,8 @@ export type VariantRow = {
 
 export type ProductFormState = {
   name: string
-  type: ProductType | ''
+  type: ProductType | '' // the chosen type's kind (making card, labels …)
+  productTypeId: string
   categoryId: string
   unitId: string
   taxRateId: string
@@ -44,7 +45,7 @@ export function emptyVariant(sizeId: number | null = null, colourId: number | nu
 
 export function emptyForm(): ProductFormState {
   return {
-    name: '', type: '', categoryId: '', unitId: '', taxRateId: '', hsnCode: '', fabric: '',
+    name: '', type: '', productTypeId: '', categoryId: '', unitId: '', taxRateId: '', hsnCode: '', fabric: '',
     description: '', isActive: true, hasVariants: false, sizeIds: [], colourIds: [], variants: [emptyVariant()],
   }
 }
@@ -66,7 +67,7 @@ export function fromProduct(product: Product): ProductFormState {
   const p = { ...product, variants: sortVariants(product.variants) }
   const hasVariants = p.variants.some((v) => v.sizeId || v.colourId)
   return {
-    name: p.name, type: p.type, categoryId: str(p.categoryId), unitId: str(p.unitId),
+    name: p.name, type: p.type, productTypeId: str(p.productTypeId), categoryId: str(p.categoryId), unitId: str(p.unitId),
     taxRateId: str(p.taxRateId), hsnCode: str(p.hsnCode), fabric: str(p.fabric), description: str(p.description),
     isActive: p.isActive,
     hasVariants,
@@ -111,7 +112,7 @@ const isNum = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v)) && Numb
 export function validateForm(f: ProductFormState): FormErrors {
   const e: FormErrors = {}
   if (!f.name.trim()) e.name = 'Enter the product name'
-  if (!f.type) e.type = 'Choose a product type'
+  if (!f.productTypeId) e.productTypeId = 'Choose a product type'
   if (!f.categoryId) e.categoryId = 'Choose a category'
   if (!f.unitId) e.unitId = 'Choose a unit'
   if (f.hsnCode && !/^(\d{4}|\d{6}|\d{8})$/.test(f.hsnCode)) e.hsnCode = 'HSN code must be 4, 6 or 8 digits'
@@ -128,7 +129,7 @@ export function validateForm(f: ProductFormState): FormErrors {
 export function toPayload(f: ProductFormState) {
   const id = (v: string) => (v ? Number(v) : null)
   return {
-    name: f.name.trim(), type: f.type, categoryId: id(f.categoryId),
+    name: f.name.trim(), productTypeId: id(f.productTypeId), categoryId: id(f.categoryId),
     unitId: id(f.unitId), taxRateId: id(f.taxRateId), hsnCode: f.hsnCode.trim() || null,
     fabric: f.fabric.trim() || null, description: f.description.trim() || null, isActive: f.isActive,
     variants: f.variants.map((v) => ({

@@ -9,7 +9,8 @@ import { staffApi } from '@/features/staff/api/staff.api'
 import { cn } from '@/lib/cn'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { formatINR } from '@/lib/format'
-import { garmentPatch, labourFor, type ItemDraft } from '../jobDrafts'
+import { garmentPatch, itemChargesTotal, labourFor, type ItemDraft } from '../jobDrafts'
+import { ItemChargesEditor } from './ItemChargesEditor'
 
 type Props = {
   index: number
@@ -20,7 +21,8 @@ type Props = {
   error?: string
   onChange: (patch: Partial<ItemDraft>) => void
   onRemove?: () => void
-  // Billing page (counter): only pieces, price and measurements — the tailor and workers are given later in Job work.
+  // Billing page (counter): only pieces, price and measurements — the tailor and workers are given later in Job work;
+  // wrong garment → remove it (✕) and add the right one; the name on the bill can be changed later on Edit order.
   simple?: boolean
   // Brand orders: "Brand's own cloth" instead of the customer's, and extra fields (e.g. who the piece is for).
   ownFabricLabel?: string
@@ -32,11 +34,10 @@ type Props = {
 export function JobItemEditor({ index, draft, garments, tailors, latestFor, error, onChange, onRemove, simple, ownFabricLabel = "Customer's own cloth", extra, showMeasuredBy = false }: Props) {
   const staff = useApiQuery(showMeasuredBy ? 'staff-options' : 'staff-options-off', () => (showMeasuredBy ? staffApi.options() : Promise.resolve([])))
   const [open, setOpen] = useState(!draft.id)
-  const [more, setMore] = useState(false)
   const garment = garments.find((g) => String(g.id) === draft.garmentTypeId)
   const fields = garment ? [...garment.fields, ...Object.keys(draft.measurements).filter((k) => !garment.fields.includes(k))] : []
   const filled = Object.values(draft.measurements).filter(Boolean).length
-  const lineTotal = (Number(draft.qty) || 0) * (Number(draft.chargeRate) || 0)
+  const lineTotal = (Number(draft.qty) || 0) * (Number(draft.chargeRate) || 0) + (simple ? itemChargesTotal(draft) : 0)
   const fromLastTime = garment && filled > 0 ? !!latestFor(garment.id) : false
 
   const chooseGarment = (gid: string) => {
@@ -111,8 +112,8 @@ export function JobItemEditor({ index, draft, garments, tailors, latestFor, erro
                 {fromLastTime && <span className="ml-2 rounded-full bg-success-tint px-2 py-0.5 text-xs font-normal text-success">From last time</span>}
               </p>
               <div className="grid grid-cols-3 items-end gap-2 @md:grid-cols-4 @2xl:grid-cols-6">
-                {fields.map((f) => (
-                  <Input key={f} label={f} inputMode="decimal" maxLength={20} value={draft.measurements[f] ?? ''} onChange={(e) => onChange({ measurements: { ...draft.measurements, [f]: e.target.value } })} />
+                {fields.map((f, fi) => (
+                  <Input key={f} label={f} data-hotkey={fi === 0 ? 'measure' : undefined} inputMode="decimal" maxLength={20} value={draft.measurements[f] ?? ''} onChange={(e) => onChange({ measurements: { ...draft.measurements, [f]: e.target.value } })} />
                 ))}
               </div>
             </div>
@@ -126,14 +127,7 @@ export function JobItemEditor({ index, draft, garments, tailors, latestFor, erro
         </div>
       )}
 
-      {simple && garment && (
-        <>
-          <button type="button" onClick={() => setMore((m) => !m)} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand">
-            <IconChevronDown size={16} className={cn('transition-transform', more && 'rotate-180')} /> More (change garment, name on bill)
-          </button>
-          {more && <div className="mt-3 grid grid-cols-2 gap-3 @2xl:grid-cols-4">{garmentSelect}{nameInput}</div>}
-        </>
-      )}
+      {simple && garment && <ItemChargesEditor garment={garment.name} options={garment.charges ?? []} charges={draft.charges ?? []} onChange={(charges) => onChange({ charges })} />}
       {error && <p className="mt-2 text-xs text-danger">{error}</p>}
     </div>
   )
