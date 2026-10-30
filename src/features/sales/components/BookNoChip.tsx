@@ -19,7 +19,7 @@ export function BookNoChip({ bookNo, docNo, onSave, onSaved }: Props) {
     try {
       const r = await onSave(value.trim() || null)
       if (r.warning) toast.error(r.warning)
-      else toast.success(value.trim() ? `Book no. ${value.trim()} saved` : 'Book no. removed')
+      else toast.success(value.trim() ? `SJ number ${value.trim()} saved` : 'SJ number removed')
       setOpen(false)
       onSaved()
     } catch (err) {
@@ -33,12 +33,12 @@ export function BookNoChip({ bookNo, docNo, onSave, onSaved }: Props) {
       <button type="button" onClick={() => { setValue(bookNo ?? ''); setOpen(true) }}
         className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-sm hover:border-brand">
         <IconBook size={16} className="text-muted" aria-hidden />
-        {bookNo ? <><span className="text-muted">Book no.</span> <span className="font-semibold text-ink">{bookNo}</span> <IconPencil size={14} className="text-muted" /></> : <span className="font-medium text-brand">+ Book no.</span>}
+        {bookNo ? <><span className="text-muted">SJ no.</span> <span className="font-semibold text-ink">{bookNo}</span> <IconPencil size={14} className="text-muted" /></> : <span className="font-medium text-brand">+ SJ number</span>}
       </button>
       {open && (
-        <Modal open onClose={() => setOpen(false)} size="sm" title={`Book no. — ${docNo}`} description="The number from the paper bill book (optional)."
+        <Modal open onClose={() => setOpen(false)} size="sm" title={`SJ number — ${docNo}`} description="The number from the paper bill book (optional)."
           footer={<><Button onClick={() => setOpen(false)}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></>}>
-          <Input label="Book no." value={value} onChange={(e) => setValue(e.target.value)} maxLength={30} placeholder="2573" autoFocus onKeyDown={(e) => e.key === 'Enter' && save()} />
+          <Input label="SJ number" value={value} onChange={(e) => setValue(e.target.value)} maxLength={30} placeholder="2573" autoFocus onKeyDown={(e) => e.key === 'Enter' && save()} />
         </Modal>
       )}
     </>

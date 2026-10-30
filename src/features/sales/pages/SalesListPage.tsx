@@ -21,7 +21,8 @@ import { saleState, tenderText } from '../status'
 import type { BillKind, BillRow, Receipt } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
 
-const billColumns: Column<BillRow>[] = [
+// Sales bills = every item sold (shop bills + items sold on job bills); Job bills = stitching only; All = whole bills.
+const billColumns = (view: BillKind | 'all'): Column<BillRow>[] => [
   {
     key: 'docNo',
     header: 'Bill',
@@ -29,14 +30,22 @@ const billColumns: Column<BillRow>[] = [
     render: (b) => (
       <span className="flex flex-col">
         <span className="font-medium text-brand">{b.docNo}</span>
-        <span className="text-xs text-muted">{b.kind === 'JOB' ? 'Job sale' : 'Shop sale'}{b.bookNo ? ` · Book ${b.bookNo}` : ''}</span>
+        <span className="text-xs text-muted">{b.kind === 'JOB' ? (view === 'SHOP' ? 'Items sold on a job bill' : view === 'JOB' ? 'Stitching' : 'Job bill') : 'Sales bill'}{b.bookNo ? ` · SJ ${b.bookNo}` : ''}</span>
       </span>
     ),
   },
   { key: 'customer', header: 'Customer', mobile: 'subtitle', render: (b) => `${b.customerName}${b.customerPhone ? ` · ${b.customerPhone}` : ''}` },
   { key: 'date', header: 'Date', mobile: 'subtitle', render: (b) => formatDate(b.docDate) },
   { key: 'items', header: 'Items', align: 'right', mobile: 'hidden', render: (b) => b.lines },
-  { key: 'total', header: 'Total', align: 'right', render: (b) => formatINR(Number(b.grandTotal)) },
+  {
+    key: 'total', header: view === 'SHOP' ? 'Items sold' : view === 'JOB' ? 'Stitching' : 'Total', align: 'right',
+    render: (b) => (
+      <span className="flex flex-col items-end">
+        {formatINR(view === 'all' ? Number(b.grandTotal) : b.amount)}
+        {view !== 'all' && Math.abs(b.amount - Number(b.grandTotal)) > 0.004 && <span className="text-xs text-muted">bill {formatINR(Number(b.grandTotal))}</span>}
+      </span>
+    ),
+  },
   { key: 'due', header: 'Balance', align: 'right', render: (b) => (b.status === 'CANCELLED' ? '—' : <span className={b.dueAmount > 0 ? 'font-medium text-warn' : 'text-success'}>{b.dueAmount > 0 ? formatINR(b.dueAmount) : 'Paid'}</span>) },
   { key: 'status', header: 'Status', mobile: 'badge', render: (b) => { const s = saleState(b); return <Badge tone={s.tone}>{s.label}</Badge> } },
 ]
@@ -50,8 +59,17 @@ const receiptColumns: Column<Receipt>[] = [
   { key: 'status', header: 'Status', mobile: 'badge', render: (r) => <Badge tone={r.status === 'POSTED' ? 'success' : 'neutral'}>{r.status === 'POSTED' ? 'Received' : 'Cancelled'}</Badge> },
 ]
 
+// Top line: the total the chosen view counts, highlighted, with how many bills (cancelled ones not counted).
+function SalesSummary({ kind, sum, count }: { kind: BillKind | 'all'; sum: { sales: number; received: number; returned: number }; count: number }) {
+  const big = (n: number) => <span className="text-lg font-semibold text-brand">{formatINR(n)}</span>
+  const bills = ` · ${count} bill${count === 1 ? '' : 's'}`
+  if (kind === 'JOB') return <>Job bills {big(sum.sales)} stitching (items not included){bills}</>
+  if (kind === 'SHOP') return <>Sales bills {big(sum.sales)} items sold (incl. items on job bills){bills}</>
+  return <>All sales {big(sum.sales)} · received {formatINR(sum.received)} · returned {formatINR(sum.returned)}{bills}</>
+}
+
 type Tab = 'all' | 'unpaid' | 'CANCELLED' | 'receipts'
-const kinds: { key: BillKind | 'all'; label: string }[] = [{ key: 'all', label: 'All' }, { key: 'SHOP', label: 'Shop sales' }, { key: 'JOB', label: 'Job sales' }]
+const kinds: { key: BillKind | 'all'; label: string }[] = [{ key: 'all', label: 'All' }, { key: 'SHOP', label: 'Sales bills' }, { key: 'JOB', label: 'Job bills' }]
 
 // /sales — every bill to customers: shop bills and stitching job bills (filter by type), and money received.
 export function SalesListPage() {
@@ -77,7 +95,7 @@ export function SalesListPage() {
     <>
       <PageHeader
         title="All bills"
-        subtitle={sum && !isReceipts ? `Sales ${formatINR(sum.sales)} · received ${formatINR(sum.received)} · returned ${formatINR(sum.returned)}` : 'Shop bills, job bills and money received.'}
+        subtitle={sum && !isReceipts ? <SalesSummary kind={kind} sum={sum} count={sum.bills ?? 0} /> : 'Sales bills, job bills and money received.'}
         actions={
           <>
             <ExportButton path={isReceipts ? '/receipts/export' : '/sales/export'} params={filters} />
@@ -118,7 +136,7 @@ export function SalesListPage() {
         ) : (
           <DataTable
             startIndex={(page - 1) * 20 + 1}
-            columns={billColumns}
+            columns={billColumns(kind)}
             rows={bills.data?.items ?? []}
             rowKey={(b) => `${b.kind}${b.id}`}
             loading={bills.loading}

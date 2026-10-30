@@ -19,6 +19,7 @@ import { DeliverModal, StageModal } from '../components/JobActionModals'
 import { JobGarmentsCard } from '../components/JobGarmentsCard'
 import { AddCostModal } from '../components/AddCostModal'
 import { AssignWorkersModal } from '../components/AssignWorkersModal'
+import { JobActionsBar } from '../components/JobActionsBar'
 import { JobNextStep } from '../components/JobNextStep'
 import type { JobCostEntry } from '../types'
 import { AddItemsModal } from '../components/AddItemsModal'
@@ -67,24 +68,21 @@ export function JobViewPage() {
       <PageHeader
         title={job.docNo}
         subtitle={`${job.customerName}${job.customerPhone ? ` · ${job.customerPhone}` : ''} · booked ${formatDate(job.docDate)}`}
-        actions={
-          <>
-            <Button icon={IconPrinter} onClick={() => print(false)} loading={pdfBusy}>Print bill</Button>
-            <Button icon={IconNeedleThread} onClick={() => print(true)}>Tailor slip</Button>
-            {/* Every action as its own button (no More menu) — only the ones that apply to this job's stage. */}
-            {[
-              { label: 'Receive money', icon: IconCash, onClick: () => setModal('receive'), hidden: job.status === 'CANCELLED' || job.dueAmount <= 0.004 },
-              { label: 'Change stage', icon: IconProgress, onClick: () => setModal('stage'), hidden: !open },
-              { label: 'Edit job', icon: IconPencil, onClick: () => navigate(`/jobs/${job.id}/edit`), hidden: !open },
-              { label: 'Hand over to customer', icon: IconTruckDelivery, onClick: () => setModal('deliver'), hidden: !open },
-              { label: 'Download customer bill (PDF)', icon: IconFileTypePdf, onClick: pdf },
-              { label: 'Print job cost sheet', icon: IconReportMoney, onClick: () => print('cost') },
-              { label: 'Cancel job', icon: IconBan, onClick: () => setModal('cancel'), danger: true, hidden: !open },
-            ].filter((a) => !a.hidden).map((a) => (
-              <Button key={a.label} icon={a.icon} variant={a.danger ? 'danger' : 'secondary'} onClick={a.onClick}>{a.label}</Button>
-            ))}
-          </>
-        }
+      />
+      <JobActionsBar
+        work={[
+          { label: 'Receive money', icon: IconCash, onClick: () => setModal('receive'), hidden: job.status === 'CANCELLED' || job.dueAmount <= 0.004 },
+          { label: 'Change stage', icon: IconProgress, onClick: () => setModal('stage'), hidden: !open },
+          { label: 'Edit job', icon: IconPencil, onClick: () => navigate(`/jobs/${job.id}/edit`), hidden: !open },
+          { label: 'Hand over', icon: IconTruckDelivery, onClick: () => setModal('deliver'), hidden: !open },
+        ]}
+        prints={[
+          { label: 'Print bill', icon: IconPrinter, onClick: () => print(false), loading: pdfBusy },
+          { label: 'Tailor slip', icon: IconNeedleThread, onClick: () => print(true) },
+          { label: 'Bill PDF', icon: IconFileTypePdf, onClick: pdf },
+          { label: 'Job cost sheet', icon: IconReportMoney, onClick: () => print('cost') },
+        ]}
+        cancel={{ label: 'Cancel job', icon: IconBan, onClick: () => setModal('cancel'), hidden: !open }}
       />
       {job.status !== 'CANCELLED' && <BookNoChip bookNo={job.bookNo} docNo={job.docNo} onSave={(v) => jobsApi.setBookNo(job.id, v)} onSaved={q.reload} />}
 

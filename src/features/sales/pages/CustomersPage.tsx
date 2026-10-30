@@ -43,7 +43,7 @@ const columns: Column<Customer>[] = [
 type Tab = 'all' | 'stitching' | 'shop' | 'dues'
 
 // /customers — everyone who buys (saved from Billing): stitching customers (have jobs — tap → their page with the jobs
-// first), shop customers (only bought items), who still has a balance to pay. All also lists any made inactive (badge).
+// first), sales customers (only bought items), who still has a balance to pay. All also lists any made inactive (badge).
 export function CustomersPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('all')
@@ -67,7 +67,7 @@ export function CustomersPage() {
       />
       <div className="mb-4">
         <Tabs
-          tabs={[{ key: 'all', label: 'All customers' }, { key: 'stitching', label: 'Stitching customers' }, { key: 'shop', label: 'Shop customers' }, { key: 'dues', label: 'Balance due' }]}
+          tabs={[{ key: 'all', label: 'All customers' }, { key: 'stitching', label: 'Stitching customers' }, { key: 'shop', label: 'Sales customers' }, { key: 'dues', label: 'Balance due' }]}
           active={tab}
           onChange={(t) => { setTab(t); setPage(1) }}
         />
@@ -84,7 +84,7 @@ export function CustomersPage() {
               rows={q.data?.items ?? []}
               rowKey={(c) => c.id}
               loading={q.loading}
-              emptyTitle={tab === 'dues' ? 'Nobody owes a balance' : tab === 'stitching' ? 'No stitching customers yet' : tab === 'shop' ? 'No shop customers yet' : 'No customers'}
+              emptyTitle={tab === 'dues' ? 'Nobody owes a balance' : tab === 'stitching' ? 'No stitching customers yet' : tab === 'shop' ? 'No sales customers yet' : 'No customers'}
               emptyDescription={tab === 'dues' ? 'All bills are fully paid.' : 'Customers are saved from Billing — type their name (and phone) on the bill.'}
               onRowClick={(c) => navigate(`/customers/${c.id}`)}
             />

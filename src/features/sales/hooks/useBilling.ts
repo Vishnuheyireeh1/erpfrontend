@@ -180,7 +180,7 @@ export function useBilling() {
     if (stitch.some(itemError)) return setError('Fix the highlighted garments')
     if (lines.some(lineError)) return setError('Fix the highlighted items')
     if (deliveryDate < meta.docDate) return setError('Delivery date is before the bill date')
-    if (!meta.bookNo?.trim()) return setError('Enter the book no. — it is needed for stitching')
+    if (!meta.bookNo?.trim()) return setError('Enter the SJ number — it is needed for stitching')
     setSaving(true)
     try {
       const buyer = (await resolveCustomer())!

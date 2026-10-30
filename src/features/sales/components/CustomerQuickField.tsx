@@ -48,6 +48,7 @@ export function CustomerQuickField({ value, onChange, name, phone, onName, onPho
   }, [open])
 
   const pick = (c: Customer) => { onChange(c); setOpen(false); setHi(-1) }
+  // The list opens on typing, ↓ or a click — not just because the cursor landed here (billing starts here).
   const focus = (f: 'name' | 'phone') => { setField(f); setOpen(true); setHi(-1) }
   const keys = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -81,9 +82,9 @@ export function CustomerQuickField({ value, onChange, name, phone, onName, onPho
   return (
     <div ref={box} className="relative">
       <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-        <Input label="Customer name" required={phoneRequired} value={name} autoComplete="off" placeholder="Type the name or pick a saved customer" data-hotkey="customer-name" onFocus={() => focus('name')} onBlur={() => setOpen(false)} onKeyDown={keys}
+        <Input label="Customer name" required={phoneRequired} value={name} autoComplete="off" placeholder="Type the name or pick a saved customer" data-hotkey="customer-name" onFocus={() => setField('name')} onClick={() => focus('name')} onBlur={() => setOpen(false)} onKeyDown={keys}
           onChange={(e) => { onName(e.target.value); focus('name') }} error={showErrors && phoneRequired && !name.trim() ? 'Enter the name' : undefined} />
-        <Input label="Customer phone" required={phoneRequired} inputMode="tel" value={phone} autoComplete="off" placeholder="10-digit mobile number" data-hotkey="customer-phone" onFocus={() => focus('phone')} onBlur={() => setOpen(false)} onKeyDown={keys}
+        <Input label="Customer phone" required={phoneRequired} inputMode="tel" value={phone} autoComplete="off" placeholder="10-digit mobile number" data-hotkey="customer-phone" onFocus={() => setField('phone')} onClick={() => focus('phone')} onBlur={() => setOpen(false)} onKeyDown={keys}
           onChange={(e) => { onPhone(e.target.value); focus('phone') }}
           error={showErrors && (phoneRequired || digits.length > 0) && (digits.length < 10 || digits.length > 12) ? 'Enter a 10-digit phone' : undefined} />
       </div>

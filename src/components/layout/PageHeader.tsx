@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-type Props = { title: string; subtitle?: string; actions?: ReactNode }
+type Props = { title: string; subtitle?: ReactNode; actions?: ReactNode }
 
 // Page title row — actions wrap under the title on phones.
 export function PageHeader({ title, subtitle, actions }: Props) {

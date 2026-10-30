@@ -35,7 +35,7 @@ export const customerApi = {
 }
 
 export const salesApi = {
-  list: (p: DocFilters) => api.get<Paged<BillRow> & { summary: { sales: number; received: number; returned: number } }>(`/sales?${qs({ ...p, pageSize: 20 })}`),
+  list: (p: DocFilters) => api.get<Paged<BillRow> & { summary: { bills?: number; sales: number; received: number; returned: number } }>(`/sales?${qs({ ...p, pageSize: 20 })}`),
   get: (id: number) => api.get<{ item: Sale }>(`/sales/${id}`).then((r) => r.item),
   create: (body: NewSale) => api.post<{ item: Sale }>('/sales', body).then((r) => r.item),
   // Edit a bill of this month (same number); tenders = money taken now on top of what was already paid.

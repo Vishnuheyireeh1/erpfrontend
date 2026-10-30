@@ -149,6 +149,9 @@ export type BillRow = {
   paidAmount: number
   returnedAmount: number
   dueAmount: number
+  itemsTotal: number // items sold on the bill (a whole shop bill; the item part of a job bill)
+  stitchTotal: number // job bill: stitching part (after its discount)
+  amount: number // the part the chosen view counts: Sales bills = items, Job bills = stitching, All = whole bill
   status: DocStatus
   stage: string | null // job stage (PENDING … DELIVERED) for stitching bills
   lines: number

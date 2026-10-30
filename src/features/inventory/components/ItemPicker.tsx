@@ -118,7 +118,7 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
           ref={inputRef}
           value={text}
           onChange={(e) => { setText(e.target.value); setOpen(true); setActive(-1); setLimit(PAGE) }}
-          onFocus={() => setOpen(true)}
+          // The list opens on typing, ↓ or a click — not just because the cursor landed here (billing starts here).
           onClick={() => setOpen(true)}
           // Clicking elsewhere closes the list; ticked items stay ticked until Add / Cancel.
           onBlur={() => window.setTimeout(() => setOpen(false), 150)}

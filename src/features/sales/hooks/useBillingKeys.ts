@@ -75,8 +75,8 @@ export function useBillingKeys(handlers: Handlers) {
   useEffect(() => { h.current = handlers })
 
   useEffect(() => {
-    // The cursor starts in item search (scan or type straight away).
-    const t = window.setTimeout(() => focusBox(TARGET.F2), 300)
+    // The cursor starts on the customer name (F2 jumps to item search).
+    const t = window.setTimeout(() => focusBox(TARGET.F3), 300)
     const down = (e: KeyboardEvent) => {
       // An open popup handles its own keys (the phone menu stays in the page hidden — ignored).
       if ([...document.querySelectorAll<HTMLElement>('[role="dialog"]')].some(visible)) return

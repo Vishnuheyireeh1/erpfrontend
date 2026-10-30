@@ -60,7 +60,7 @@ export function BillPaymentPanel({ customer, meta, onMeta, tenders, onTenders, g
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Input label={isJob ? 'Discount on stitching ₹' : 'Bill discount ₹'} data-hotkey="discount" type="number" inputMode="decimal" min={0} value={meta.billDiscount} onChange={(e) => onMeta({ billDiscount: e.target.value })} />
         <Input label="Bill date" type="date" max={maxDate} value={meta.docDate} onChange={(e) => onMeta({ docDate: e.target.value })} />
-        {isJob && <Input label="Book no." required value={meta.bookNo ?? ''} onChange={(e) => onMeta({ bookNo: e.target.value })} maxLength={30} placeholder="From the paper book" />}
+        {isJob && <Input label="SJ number" required value={meta.bookNo ?? ''} onChange={(e) => onMeta({ bookNo: e.target.value })} maxLength={30} placeholder="From the paper book" />}
       </div>
 
       <div>

@@ -41,7 +41,7 @@ export function billText(sale: Sale, p: BusinessProfile, cols: number) {
   const date = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`
   const time = new Date(sale.createdAt).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }).toUpperCase()
   L.push(lr(`No: ${sale.docNo}`, `Date: ${date} ${time}`, W))
-  if (sale.bookNo) L.push(`Book No: ${sale.bookNo}`)
+  if (sale.bookNo) L.push(`SJ No: ${sale.bookNo}`)
   L.push(...wrap(`Name: ${sale.customerName}${sale.customerPhone ? `  Ph: ${sale.customerPhone}` : ''}`, W))
   if (sale.customerGstin) L.push(`GSTIN: ${sale.customerGstin}`)
   L.push(rule)
