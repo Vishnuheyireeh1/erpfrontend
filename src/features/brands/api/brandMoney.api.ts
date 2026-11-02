@@ -10,7 +10,7 @@ function qs(params: Record<string, string | number | boolean | undefined>) {
 }
 
 export type Period = { brandId?: number; from?: string; to?: string }
-export type NewPayment = { brandId: number; amount: number; mode: PaymentMode; docDate?: string; reference?: string; notes?: string }
+export type NewPayment = { brandId: number; orderId?: number; amount: number; mode: PaymentMode; docDate?: string; reference?: string; notes?: string }
 export type NewCloth = { kind: ClothKind; description: string; qty: number; unit: string; date?: string; notes?: string }
 
 export const brandMoneyApi = {

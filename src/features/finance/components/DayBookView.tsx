@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange, type DateRangeValue } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -81,7 +82,7 @@ export function DayBookView() {
         {q.error ? (
           <EmptyState title="Couldn't load the day book" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
         ) : (
-          <DataTable columns={columns} rows={q.data?.rows ?? []} rowKey={(r) => `${r.kind}-${r.refId}-${r.docNo}-${r.mode}-${r.in}-${r.out}`} loading={q.loading} emptyTitle="No money in or out on these dates" />
+          <PagedTable columns={columns} rows={q.data?.rows ?? []} rowKey={(r) => `${r.kind}-${r.refId}-${r.docNo}-${r.mode}-${r.in}-${r.out}`} loading={q.loading} emptyTitle="No money in or out on these dates" />
         )}
       </Card>
       {counting && <TallyModal date={from} onClose={() => setCounting(false)} onSaved={() => { setCounting(false); q.reload() }} />}

@@ -1,6 +1,7 @@
 import { ItemPicker } from '@/features/inventory/components/ItemPicker'
 import type { StockItem } from '@/features/inventory/types'
 import { cn } from '@/lib/cn'
+import { focusBox, TARGET } from '../hooks/useBillingKeys'
 import { SaleLineRow, saleGridClass, type SaleLineDraft } from './SaleLineRow'
 import { StepCard } from './StepCard'
 
@@ -15,8 +16,15 @@ type Props = {
   onRemove: (key: string) => void
 }
 
-// Esc in the item list → the first metre box still empty (Enter there walks to the next, then back to search).
-const toEmptyMetres = () => document.querySelector<HTMLInputElement>('input[data-need-qty]')?.focus()
+// Esc in the item list → the first metre box still empty (Enter there walks to the next, then back to search);
+// none empty → false, so Esc goes back to the customer.
+const toEmptyMetres = () => {
+  const box = document.querySelector<HTMLInputElement>('input[data-need-qty]')
+  box?.focus()
+  return !!box
+}
+// Enter / → on the empty item search → Stitching jobs (the garment box).
+const toStitching = () => focusBox(TARGET.F5)
 
 // Billing page: the items on the bill (scan / search, qty or metres, rate, discount).
 export function BillItemsCard({ step, stitching, lines, calc, errorOf, onAdd, onChange, onRemove }: Props) {
@@ -26,7 +34,7 @@ export function BillItemsCard({ step, stitching, lines, calc, errorOf, onAdd, on
       title={`Sale items${lines.length ? ` (${lines.length})` : ''}${stitching ? ' — optional' : ''}`}
       bodyClassName="p-0"
     >
-      <div className="border-b border-line p-4"><ItemPicker onPick={onAdd} onDone={toEmptyMetres} placeholder="Scan barcode or type item name / code" /></div>
+      <div className="border-b border-line p-4"><ItemPicker onPick={onAdd} onDone={toEmptyMetres} onNext={toStitching} placeholder="Scan barcode or type item name / code" /></div>
       {lines.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-muted">{stitching ? 'No items — that is fine for stitching only.' : 'Scan or search an item'}</p>
       ) : (

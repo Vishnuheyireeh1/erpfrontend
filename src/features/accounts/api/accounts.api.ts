@@ -20,7 +20,7 @@ export const accountsApi = {
   ledger: (code: string, r: Range & { party?: string }) => api.get<Ledger>(`/accounts/ledger/${encodeURIComponent(code)}?${qs(r)}`),
   parties: (code: string, to?: string) => api.get<{ items: Party[] }>(`/accounts/ledger/${encodeURIComponent(code)}/parties?${qs({ to })}`).then((r) => r.items),
 
-  journals: (p: Range & { status?: string; page: number; order?: string }) => api.get<Paged<Journal>>(`/accounts/journals?${qs({ ...p, pageSize: 20 })}`),
+  journals: (p: Range & { status?: string; page: number; pageSize?: number; order?: string }) => api.get<Paged<Journal>>(`/accounts/journals?${qs({ pageSize: 20, ...p })}`),
   journal: (id: number) => api.get<{ item: Journal }>(`/accounts/journals/${id}`).then((r) => r.item),
   createJournal: (body: JournalInput) => api.post<{ item: Journal }>('/accounts/journals', body).then((r) => r.item),
   cancelJournal: (id: number, reason: string) => api.post(`/accounts/journals/${id}/cancel`, { reason }),

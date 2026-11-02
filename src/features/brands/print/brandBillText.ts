@@ -30,6 +30,8 @@ export function brandBillText(bill: BrandBill, p: BusinessProfile, cols: number)
   L.push('To', bill.brandName.toUpperCase())
   if (bill.brandGstin) L.push(`GSTIN: ${bill.brandGstin}`)
   if (bill.brand.phone) L.push(bill.brand.phone)
+  const forWhom = [...new Set(bill.lines.map((l) => l.endCustomer?.trim()).filter(Boolean))]
+  if (forWhom.length) L.push(...wrap(`For: ${forWhom.join(', ').toUpperCase()} (C/o ${bill.brandName.toUpperCase()})`, W))
   L.push(`Order: ${bill.order.docNo}${bill.order.theirOrderNo ? `  Order/Bill no: ${bill.order.theirOrderNo}` : ''}`)
   const right = [`No  : ${bill.docNo}`, `Date: ${oldDate(bill.docDate)}`]
   const rw = Math.max(...right.map((r) => r.length))

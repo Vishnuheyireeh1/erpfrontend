@@ -94,7 +94,7 @@ export function JobViewPage() {
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div><p className="text-xs text-muted">Stage</p><Badge tone={job.overdue ? 'danger' : statusTones[job.status]}>{statusLabels[job.status]}</Badge></div>
           <div>
-            <p className="text-xs text-muted">Ready by</p>
+            <p className="text-xs text-muted">Expected delivery date</p>
             <p className={cn(job.overdue && 'font-medium text-danger')}>{formatDate(job.expectedDate)}{open ? ` · ${dueText(job.expectedDate, true)}` : ''}</p>
           </div>
           <div><p className="text-xs text-muted">Customer</p><Link to={`/customers/${job.customer.id}`} className="text-brand hover:underline">{job.customer.name}</Link></div>

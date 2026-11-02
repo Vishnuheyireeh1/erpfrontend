@@ -17,6 +17,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import { supplierApi } from '../api/purchase.api'
 import { SupplierFormModal } from '../components/SupplierFormModal'
 import type { Supplier } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 export function BalanceText({ balance }: { balance: number }) {
   if (Math.abs(balance) < 0.005) return <span className="text-muted">Settled</span>
@@ -54,9 +55,10 @@ export function SuppliersPage() {
   const [tab, setTab] = useState<Tab>('active')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [adding, setAdding] = useState(false)
   const debounced = useDebounce(search.trim())
-  const params = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active', withDues: tab === 'dues', page, pageSize: 20 }
+  const params = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active', withDues: tab === 'dues', page, pageSize }
   const q = useApiQuery(params, () => supplierApi.list(params))
 
   return (
@@ -85,7 +87,7 @@ export function SuppliersPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * 20 + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={q.data?.items ?? []}
               rowKey={(s) => s.id}
@@ -94,7 +96,7 @@ export function SuppliersPage() {
               emptyDescription={tab === 'dues' ? 'All supplier bills are paid.' : 'Add the suppliers you buy fabric and goods from.'}
               onRowClick={(s) => navigate(`/suppliers/${s.id}`)}
             />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

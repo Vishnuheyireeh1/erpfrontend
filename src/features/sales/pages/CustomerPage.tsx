@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { MoreMenu } from '@/components/ui/MoreMenu'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { formatDate, formatINR } from '@/lib/format'
@@ -98,7 +99,7 @@ export function CustomerPage() {
           <span className="text-muted">Earlier balance / advance</span>
           <CustomerBalance balance={data.opening} />
         </div>
-        <DataTable
+        <PagedTable
           columns={columns}
           rows={inOrder(data.rows, order, 'oldest')}
           rowKey={(r) => `${r.type}-${r.id}`}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { accountsApi } from '@/features/accounts/api/accounts.api'
 import type { SalesByType } from '@/features/accounts/types'
@@ -50,7 +51,7 @@ export function SalesByTypeView() {
       </div>
       <Card bodyClassName="p-0">
         {q.error && !r ? <EmptyState title="Couldn't load" description={q.error} /> : (
-          <DataTable columns={columns} rows={r?.lines ?? []} rowKey={(l) => l.period} loading={!r} emptyTitle="No sales in these dates" />
+          <PagedTable columns={columns} rows={r?.lines ?? []} rowKey={(l) => l.period} loading={!r} emptyTitle="No sales in these dates" />
         )}
       </Card>
       <p className="mt-3 text-xs text-muted">Shop sales = readymade, fabric and materials sold (counter bills + items on jobs − returns). Stitching = job charges. All before GST.</p>

@@ -1,7 +1,8 @@
 import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { Tabs } from '@/components/ui/Tabs'
 import { cn } from '@/lib/cn'
 import { formatDate, formatINR } from '@/lib/format'
@@ -30,7 +31,7 @@ const tallyColumns: Column<CashTally>[] = [
 function TallyHistory() {
   const [order, setOrder] = useListOrder('cash-counts')
   const q = useApiQuery(['tally-history', order], () => financeApi.tallyHistory(order))
-  return <><div className="mb-3 flex justify-end"><SortSwitch order={order} onOrder={setOrder} /></div><Card bodyClassName="p-0"><DataTable columns={tallyColumns} rows={q.data ?? []} rowKey={(t) => t.id} loading={q.loading} emptyTitle="No cash counts yet" emptyDescription="Use 'Count cash' on the day book each evening." /></Card></>
+  return <><div className="mb-3 flex justify-end"><SortSwitch order={order} onOrder={setOrder} /></div><Card bodyClassName="p-0"><PagedTable columns={tallyColumns} rows={q.data ?? []} rowKey={(t) => t.id} loading={q.loading} emptyTitle="No cash counts yet" emptyDescription="Use 'Count cash' on the day book each evening." /></Card></>
 }
 
 // /finance — day book (cash & bank), money in / out, cash counts, profit & loss.

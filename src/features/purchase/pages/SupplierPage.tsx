@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, StatCard } from '@/components/ui/Card'
 import { ExportButton } from '@/components/ui/ExportButton'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { formatDate, formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
@@ -83,7 +84,7 @@ export function SupplierPage() {
           <span className="text-muted">Opening balance</span>
           <BalanceText balance={data.opening} />
         </div>
-        <DataTable
+        <PagedTable
           columns={columns}
           rows={inOrder(data.rows, order, 'oldest')}
           rowKey={(r) => `${r.type}-${r.id}`}

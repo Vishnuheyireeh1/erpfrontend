@@ -5,13 +5,14 @@ import type { BrandOrder } from './types'
 // Brand order form state. A piece = a job garment line (ownFabric = the brand gave the cloth) + who it is for +
 // cloth / lining from our stock (new pieces only; later on the order page).
 
-export type PieceDraft = ItemDraft & { endCustomer: string; materials: ProductDraft[]; stage?: string }
+// cutTailorId / cutRate: the cutting master and their pay per piece (per-piece workers only).
+export type PieceDraft = ItemDraft & { endCustomer: string; materials: ProductDraft[]; stage?: string; cutTailorId: string; cutRate: string }
 export type OrderForm = { theirOrderNo: string; docDate: string; expectedDate: string; labelNote: string; notes: string }
 
 // Wording of stock lines on brand orders.
 export const BRAND_LINE_LABELS = { sold: 'Charged to brand', used: 'Used free', usedNote: 'Not billed — its stock cost counts in the order profit.' }
 
-export const newPiece = (): PieceDraft => ({ ...newItem(), endCustomer: '', materials: [] })
+export const newPiece = (): PieceDraft => ({ ...newItem(), endCustomer: '', materials: [], cutTailorId: '', cutRate: '0' })
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 export const pieceAmount = (d: PieceDraft) =>
@@ -43,6 +44,8 @@ export function toOrderInput(f: OrderForm, pieces: PieceDraft[]): OrderInput {
       instructions: d.instructions.trim() || undefined,
       tailorId: d.tailorId ? Number(d.tailorId) : null,
       labourRate: Number(d.labourRate) || 0,
+      measuredById: d.measuredById ? Number(d.measuredById) : null,
+      cutting: d.cutTailorId ? { tailorId: Number(d.cutTailorId), rate: Number(d.cutRate) || 0 } : null,
       materials: d.id ? [] : d.materials.map(toMaterialInput),
     })),
   }
@@ -53,12 +56,15 @@ export function fromOrder(o: BrandOrder) {
   const form: OrderForm = {
     theirOrderNo: o.theirOrderNo ?? '', docDate: o.docDate.slice(0, 10), expectedDate: o.expectedDate.slice(0, 10), labelNote: o.labelNote ?? '', notes: o.notes ?? '',
   }
+  // The piece's cutting line (first "Cutting" work with a worker) fills the cutting master boxes.
+  const cutOf = (id: number) => o.costs.find((c) => c.itemId === id && c.tailorId && /^cutting$/i.test(c.category.name))
   const pieces = o.items
     .filter((i) => i.stage !== 'DELIVERED')
     .map<PieceDraft>((i) => ({
       ...newItem(), id: i.id, garmentTypeId: String(i.garmentTypeId), description: i.description, qty: String(i.qty), chargeRate: String(Number(i.chargeRate)),
       tailorId: i.tailorId ? String(i.tailorId) : '', labourRate: String(Number(i.labourRate)), measurements: { ...i.measurements },
       instructions: i.instructions ?? '', ownFabric: i.brandCloth, endCustomer: i.endCustomer ?? '', materials: [], stage: i.stage,
+      measuredById: i.measuredById ? String(i.measuredById) : '', cutTailorId: cutOf(i.id)?.tailorId ? String(cutOf(i.id)!.tailorId) : '', cutRate: String(Number(cutOf(i.id)?.rate ?? 0)),
     }))
   return { form, pieces }
 }

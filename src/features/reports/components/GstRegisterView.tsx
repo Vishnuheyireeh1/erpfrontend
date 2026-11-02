@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { Switch } from '@/components/ui/Switch'
 import { formatDate, formatINR2 as formatINR } from '@/lib/format'
@@ -61,7 +62,7 @@ export function GstRegisterView({ kind }: { kind: 'sales' | 'purchases' }) {
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
           <>
-            <DataTable
+            <PagedTable
               columns={columns}
               rows={r?.items ?? []}
               rowKey={(d) => `${d.kind}-${d.refId}`}
@@ -100,7 +101,7 @@ export function HsnView() {
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
           <>
-            <DataTable columns={hsnColumns} rows={r?.items ?? []} rowKey={(h) => `${h.hsn}-${h.rate}`} loading={q.loading && !r} emptyTitle="No sales in these dates" />
+            <PagedTable columns={hsnColumns} rows={r?.items ?? []} rowKey={(h) => `${h.hsn}-${h.rate}`} loading={q.loading && !r} emptyTitle="No sales in these dates" />
             {r && r.items.length > 0 && <TotalBar t={r.total} count={r.items.length} />}
           </>
         )}

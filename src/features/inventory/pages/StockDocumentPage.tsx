@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -112,7 +113,7 @@ export function StockDocumentPage() {
       </Card>
 
       <Card title={`Items (${doc.lines?.length ?? 0})`} bodyClassName="p-0">
-        <DataTable columns={columns} rows={doc.lines ?? []} rowKey={(l) => l.id} />
+        <PagedTable columns={columns} rows={doc.lines ?? []} rowKey={(l) => l.id} />
       </Card>
 
       <Modal

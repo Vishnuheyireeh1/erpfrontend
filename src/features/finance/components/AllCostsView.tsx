@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
@@ -93,7 +94,7 @@ export function AllCostsView({ from, to, order, kind, search, version, onKind, o
         {all.error ? (
           <EmptyState title="Couldn't load expenses" description={all.error} action={<Button onClick={all.reload}>Try again</Button>} />
         ) : (
-          <DataTable
+          <PagedTable
             columns={columns}
             rows={rows}
             rowKey={(r) => r.key}

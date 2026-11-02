@@ -19,8 +19,8 @@ import { useMainCategories } from '../hooks/useMainCategories'
 import { useMasterList } from '../hooks/useMasterList'
 import type { MasterRow, StatusFilter } from '../types'
 import { MasterFormModal } from './MasterFormModal'
+import { usePageSize } from '@/lib/usePageSize'
 
-const PAGE_SIZE = 20
 
 const statusOptions = [
   { value: 'all', label: 'All statuses' },
@@ -36,6 +36,7 @@ export function MasterPanel({ meta }: { meta: MasterMeta }) {
   const [status, setStatus] = useState<StatusFilter>('all')
   const [parentFilter, setParentFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [editing, setEditing] = useState<MasterRow | null | undefined>(undefined) // undefined = closed
   const [deleting, setDeleting] = useState<MasterRow | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
@@ -45,7 +46,7 @@ export function MasterPanel({ meta }: { meta: MasterMeta }) {
   const list = useMasterList(meta.key, {
     search: debouncedSearch || undefined,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
     status,
     parentId,
   })
@@ -151,7 +152,7 @@ export function MasterPanel({ meta }: { meta: MasterMeta }) {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * PAGE_SIZE + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={list.items}
               rowKey={(r) => r.id}
@@ -160,8 +161,8 @@ export function MasterPanel({ meta }: { meta: MasterMeta }) {
               emptyDescription={debouncedSearch ? 'Try a different search.' : `Add your first ${meta.singular}.`}
               onRowClick={setEditing}
             />
-            {list.total > PAGE_SIZE && (
-              <Pagination page={page} pageSize={PAGE_SIZE} total={list.total} onPageChange={setPage} />
+            {list.total > 0 && (
+              <Pagination page={page} pageSize={pageSize} total={list.total} onPageChange={setPage} />
             )}
           </>
         )}

@@ -18,8 +18,8 @@ import { useDebounce } from '@/lib/useDebounce'
 import { inventoryApi } from '../api/inventory.api'
 import { stockColumns } from '../config/stockColumns'
 import type { StockStatus } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
-const PAGE_SIZE = 20
 const n = (v: number) => v.toLocaleString('en-IN')
 
 // Inventory → Stock: current stock of every item, with value and low / out alerts.
@@ -30,10 +30,11 @@ export function StockPage() {
   const [status, setStatus] = useState<StockStatus>(() => (['in', 'low', 'out'].includes(query.get('status') ?? '') ? (query.get('status') as StockStatus) : 'all'))
   const [categoryId, setCategoryId] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const { options } = useProductOptions()
 
-  const params = { search: debounced || undefined, status, categoryId: categoryId ? Number(categoryId) : undefined, page, pageSize: PAGE_SIZE }
+  const params = { search: debounced || undefined, status, categoryId: categoryId ? Number(categoryId) : undefined, page, pageSize }
   const list = useApiQuery(params, () => inventoryApi.list(params))
   const summary = useApiQuery('summary', inventoryApi.summary)
   const s = summary.data ?? summary.lastData
@@ -95,7 +96,7 @@ export function StockPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * PAGE_SIZE + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={stockColumns}
               rows={list.data?.items ?? []}
               rowKey={(i) => i.id}
@@ -104,8 +105,8 @@ export function StockPage() {
               emptyDescription={status === 'all' && !debounced ? 'Add products first, then enter opening stock.' : 'Try another search or tab.'}
               onRowClick={(i) => navigate(`/stock/items/${i.id}`)}
             />
-            {(list.data?.total ?? 0) > PAGE_SIZE && (
-              <Pagination page={page} pageSize={PAGE_SIZE} total={list.data!.total} onPageChange={setPage} />
+            {(list.data?.total ?? 0) > 0 && (
+              <Pagination page={page} pageSize={pageSize} total={list.data!.total} onPageChange={setPage} />
             )}
           </>
         )}

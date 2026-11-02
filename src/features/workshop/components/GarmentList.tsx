@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
 import { useToast } from '@/components/ui/toast-context'
@@ -67,7 +68,7 @@ export function GarmentList() {
         {q.error ? (
           <EmptyState title="Couldn't load garments" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
         ) : (
-          <DataTable columns={columns} rows={q.data ?? []} rowKey={(g) => g.id} loading={q.loading} emptyTitle="No garment types" onRowClick={(g) => setEditing(g)} />
+          <PagedTable columns={columns} rows={q.data ?? []} rowKey={(g) => g.id} loading={q.loading} emptyTitle="No garment types" onRowClick={(g) => setEditing(g)} />
         )}
       </Card>
       {editing && (

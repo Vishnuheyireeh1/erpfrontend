@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Switch } from '@/components/ui/Switch'
@@ -60,7 +61,7 @@ export function CourseList() {
     <>
       <div className="mb-3 flex justify-end"><Button variant="primary" icon={IconPlus} onClick={() => setEditing('new')}>Add course</Button></div>
       <Card bodyClassName="p-0">
-        <DataTable columns={columns} rows={q.data ?? []} rowKey={(c) => c.id} loading={q.loading} emptyTitle="No courses yet" emptyDescription="Add the courses taught, with their usual fee." onRowClick={(c) => setEditing(c)} />
+        <PagedTable columns={columns} rows={q.data ?? []} rowKey={(c) => c.id} loading={q.loading} emptyTitle="No courses yet" emptyDescription="Add the courses taught, with their usual fee." onRowClick={(c) => setEditing(c)} />
       </Card>
       {editing && <CourseModal key={editing === 'new' ? 'new' : editing.id} course={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); q.reload() }} />}
     </>

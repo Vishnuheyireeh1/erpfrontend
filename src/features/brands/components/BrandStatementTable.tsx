@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { formatDate, formatINR } from '@/lib/format'
@@ -27,7 +28,7 @@ export function BrandStatementTable({ brandId, version }: { brandId: number; ver
         <span>Opening {formatINR(q.data?.opening ?? 0)} → pending now <span className="font-semibold">{formatINR(q.data?.closing ?? 0)}</span></span>
         <ExportButton path={`/brands/${brandId}/statement/export`} />
       </div>
-      <DataTable
+      <PagedTable
         columns={columns}
         rows={q.data?.rows ?? []}
         rowKey={(r) => `${r.type}${r.id}`}

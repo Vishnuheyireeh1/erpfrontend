@@ -1,7 +1,8 @@
 import { IconSearch } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -63,7 +64,7 @@ export function ItemProfitView() {
       </div>
       <Card bodyClassName="p-0">
         {q.error && !r ? <EmptyState title="Couldn't load" description={q.error} /> : (
-          <DataTable columns={columns} rows={rows} rowKey={(x) => `${x.kind}-${x.item}`} loading={!r} emptyTitle="Nothing stitched or sold in these dates" />
+          <PagedTable columns={columns} rows={rows} rowKey={(x) => `${x.kind}-${x.item}`} loading={!r} emptyTitle="Nothing stitched or sold in these dates" />
         )}
       </Card>
       <p className="mt-3 text-xs text-muted">

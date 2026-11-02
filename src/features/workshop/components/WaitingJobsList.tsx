@@ -10,6 +10,7 @@ import { statusLabels, statusTones } from '@/features/jobs/jobUtils'
 import type { JobSummary } from '@/features/jobs/types'
 import { formatDate } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
+import { usePageSize } from '@/lib/usePageSize'
 
 const columns: Column<JobSummary>[] = [
   { key: 'job', header: 'Job', mobile: 'title', render: (j) => <span className="font-medium text-brand">{j.docNo}</span> },
@@ -22,7 +23,7 @@ const columns: Column<JobSummary>[] = [
       </span>
     ),
   },
-  { key: 'ready', header: 'Ready by', render: (j) => <span className={j.overdue ? 'font-medium text-danger' : ''}>{formatDate(j.expectedDate)}</span> },
+  { key: 'ready', header: 'Expected delivery', render: (j) => <span className={j.overdue ? 'font-medium text-danger' : ''}>{formatDate(j.expectedDate)}</span> },
   { key: 'stage', header: 'Stage', mobile: 'badge', render: (j) => <Badge tone={j.overdue ? 'danger' : statusTones[j.status]}>{statusLabels[j.status]}</Badge> },
 ]
 
@@ -31,13 +32,14 @@ const columns: Column<JobSummary>[] = [
 export function WaitingJobsList() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
-  const q = useApiQuery(['jobs-unassigned', page], () => jobsApi.list({ view: 'unassigned', page }))
+  const [pageSize] = usePageSize()
+  const q = useApiQuery(['jobs-unassigned', page, pageSize], () => jobsApi.list({ view: 'unassigned', page, pageSize }))
   return (
     <Card bodyClassName="p-0">
       {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
         <>
           <DataTable
-            startIndex={(page - 1) * 20 + 1}
+            startIndex={(page - 1) * pageSize + 1}
             columns={columns}
             rows={q.data?.items ?? []}
             rowKey={(j) => j.id}
@@ -46,7 +48,7 @@ export function WaitingJobsList() {
             emptyDescription="New stitching jobs from Billing appear here until a tailor is given to each garment."
             onRowClick={(j) => navigate(`/jobs/${j.id}?assign=1`)}
           />
-          {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+          {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
         </>
       )}
     </Card>

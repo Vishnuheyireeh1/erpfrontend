@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { formatDate, formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
@@ -38,7 +39,7 @@ export function SalesByDayView() {
       )}
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
-          <DataTable columns={dayColumns} rows={days} rowKey={(d) => d.date} loading={q.loading && !r} emptyTitle="No sales in these dates" />
+          <PagedTable columns={dayColumns} rows={days} rowKey={(d) => d.date} loading={q.loading && !r} emptyTitle="No sales in these dates" />
         )}
       </Card>
       <p className="mt-2 text-xs text-muted">Amounts as billed (GST included). Job bills count on the booking day.</p>
@@ -63,7 +64,7 @@ export function ItemsSoldView() {
       <ReportToolbar range={range} onRange={setRange} exportPath="/reports/sales/items/export" params={{ from, to }} />
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
-          <DataTable
+          <PagedTable
             columns={columns}
             rows={items}
             rowKey={(i) => i.productId}

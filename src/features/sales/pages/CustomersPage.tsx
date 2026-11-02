@@ -17,6 +17,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import { customerApi } from '../api/sales.api'
 import { CustomerBalance } from '../components/CustomerBalance'
 import type { Customer } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 const columns: Column<Customer>[] = [
   {
@@ -49,9 +50,10 @@ export function CustomersPage() {
   const [tab, setTab] = useState<Tab>('all')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const kind = tab === 'stitching' || tab === 'shop' ? tab : undefined
-  const params = { search: debounced || undefined, status: tab === 'all' ? 'all' : 'active', withDues: tab === 'dues', kind, page, pageSize: 20 }
+  const params = { search: debounced || undefined, status: tab === 'all' ? 'all' : 'active', withDues: tab === 'dues', kind, page, pageSize }
   const q = useApiQuery(params, () => customerApi.list(params))
 
   return (
@@ -79,7 +81,7 @@ export function CustomersPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * 20 + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={q.data?.items ?? []}
               rowKey={(c) => c.id}
@@ -88,7 +90,7 @@ export function CustomersPage() {
               emptyDescription={tab === 'dues' ? 'All bills are fully paid.' : 'Customers are saved from Billing — type their name (and phone) on the bill.'}
               onRowClick={(c) => navigate(`/customers/${c.id}`)}
             />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

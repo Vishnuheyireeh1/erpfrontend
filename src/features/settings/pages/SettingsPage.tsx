@@ -55,7 +55,7 @@ export function SettingsPage() {
           <Card title="Inventory">
             <Switch
               label="Allow stock to go below zero"
-              hint="Off (recommended): a bill or adjustment that needs more stock than recorded is blocked. Turn on only while stock counts are still being corrected."
+              hint="Bills and job bills never stop for low stock. This switch is for everything else (stock adjustments, purchase returns, production, brand orders): off = blocked when stock is short."
               checked={settings['inventory.allowNegativeStock']}
               onChange={(v) => saveSwitch('inventory.allowNegativeStock', v)}
             />

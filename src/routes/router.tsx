@@ -8,7 +8,6 @@ import { PlaceholderPage } from '@/features/common/pages/PlaceholderPage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { MastersPage } from '@/features/masters/pages/MastersPage'
 import { ProductFormPage } from '@/features/products/pages/ProductFormPage'
-import { ProductImportPage } from '@/features/products/pages/ProductImportPage'
 import { ProductsRoute } from '@/features/products/pages/ProductsRoute'
 import { OpeningImportPage } from '@/features/inventory/pages/OpeningImportPage'
 import { StockDocumentPage } from '@/features/inventory/pages/StockDocumentPage'
@@ -62,7 +61,7 @@ const builtRoutes = [
   { path: 'masters', element: <MastersPage /> },
   { path: 'products', element: <ProductsRoute /> },
   { path: 'products/new', element: <ProductFormPage /> },
-  { path: 'products/import', element: <ProductImportPage /> },
+  { path: 'products/import', element: <Navigate to="/products" replace /> }, // old link — upload is a popup on Products now
   { path: 'products/:id', element: <ProductFormPage /> },
   { path: 'stock', element: <StockPage /> },
   { path: 'stock/new', element: <StockEntryRoute /> },

@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { productionApi } from '@/features/production/api/production.api'
 import type { Production } from '@/features/production/types'
 import { formatDate, formatINR } from '@/lib/format'
@@ -27,7 +28,7 @@ export function MakingHistoryCard({ productId }: { productId: number }) {
 
   return (
     <Card title="Made in the shop — history" bodyClassName="p-0">
-      <DataTable columns={columns} rows={items} rowKey={(p) => p.id} loading={q.loading} onRowClick={(p) => navigate(`/production/${p.id}`)} />
+      <PagedTable columns={columns} rows={items} rowKey={(p) => p.id} loading={q.loading} onRowClick={(p) => navigate(`/production/${p.id}`)} />
       <p className="border-t border-line px-4 py-2 text-xs text-muted">Made a mistake? Open the entry and cancel it (stock is put back), then add it again below.</p>
     </Card>
   )

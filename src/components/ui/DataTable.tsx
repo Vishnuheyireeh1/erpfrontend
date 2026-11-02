@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { EmptyState, Spinner } from './Feedback'
 
@@ -32,6 +32,26 @@ type Props<T> = {
   numbered?: boolean
 }
 
+// Clickable rows with the keys: ↑ ↓ move, Enter opens, Esc back to the list's search box.
+function rowKeys(e: KeyboardEvent<HTMLTableRowElement>) {
+  const row = e.currentTarget
+  if (e.target !== row) return
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    row.click()
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    const to = e.key === 'ArrowDown' ? row.nextElementSibling : row.previousElementSibling
+    if (to instanceof HTMLElement) to.focus()
+  } else if (e.key === 'Escape') {
+    const search = document.querySelector<HTMLInputElement>('main input[type="search"], main input[aria-label^="Search"]')
+    if (search) {
+      e.preventDefault()
+      search.focus()
+    }
+  }
+}
+
 const alignClass = { left: 'text-left', right: 'text-right', center: 'text-center' }
 
 function cellValue<T>(col: Column<T>, row: T): ReactNode {
@@ -39,8 +59,19 @@ function cellValue<T>(col: Column<T>, row: T): ReactNode {
   return (row as Record<string, ReactNode>)[col.key]
 }
 
+// Top of every list: Pagination puts its bar (rows, page numbers, Show 10 / 20 / 50 / 100) in here. Stays the same element while
+// the rows reload, so the box doesn't jump.
+export function DataTable<T>(props: Props<T>) {
+  return (
+    <>
+      <div data-list-top className="border-b border-line px-4 py-2 empty:hidden" />
+      <Rows {...props} />
+    </>
+  )
+}
+
 // Table on laptop/desktop (lg+), cards on phone and tablet. Paging is done server-side.
-export function DataTable<T>({
+function Rows<T>({
   columns,
   rows,
   rowKey,
@@ -90,7 +121,9 @@ export function DataTable<T>({
               <tr
                 key={rowKey(row)}
                 onClick={onRowClick && (() => onRowClick(row))}
-                className={cn('border-t border-line', onRowClick && 'cursor-pointer hover:bg-page')}
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={onRowClick ? rowKeys : undefined}
+                className={cn('border-t border-line', onRowClick && 'cursor-pointer hover:bg-page focus:bg-brand-tint focus:outline-none')}
               >
                 {numbered && <td className="w-12 whitespace-nowrap px-4 py-3 text-right text-muted tabular-nums">{startIndex + index}</td>}
                 {columns.map((col) => (

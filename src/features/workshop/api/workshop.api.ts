@@ -21,8 +21,8 @@ export const tailorApi = {
 }
 
 export const tailorPaymentApi = {
-  list: (p: { search?: string; tailorId?: number; status?: string; from?: string; to?: string; page: number }) =>
-    api.get<Paged<TailorPayment> & { totalPaid: number }>(`/tailor-payments?${qs({ ...p, pageSize: 20 })}`),
+  list: (p: { search?: string; tailorId?: number; status?: string; from?: string; to?: string; page: number; pageSize?: number }) =>
+    api.get<Paged<TailorPayment> & { totalPaid: number }>(`/tailor-payments?${qs({ pageSize: 20, ...p })}`),
   create: (body: { tailorId: number; docDate: string; amount: number; mode: string; reference?: string; notes?: string }) =>
     api.post<{ item: TailorPayment }>('/tailor-payments', body).then((r) => r.item),
   cancel: (id: number, reason: string) => api.post(`/tailor-payments/${id}/cancel`, { reason }),

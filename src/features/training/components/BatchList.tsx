@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
@@ -77,7 +78,7 @@ export function BatchList() {
     <>
       <div className="mb-3 flex justify-end"><Button variant="primary" icon={IconPlus} onClick={() => setEditing('new')}>Add batch</Button></div>
       <Card bodyClassName="p-0">
-        <DataTable columns={columns} rows={q.data ?? []} rowKey={(b) => b.id} loading={q.loading} emptyTitle="No batches yet" emptyDescription="Add a course first, then a batch with its timing and teacher." onRowClick={(b) => setEditing(b)} />
+        <PagedTable columns={columns} rows={q.data ?? []} rowKey={(b) => b.id} loading={q.loading} emptyTitle="No batches yet" emptyDescription="Add a course first, then a batch with its timing and teacher." onRowClick={(b) => setEditing(b)} />
       </Card>
       {editing && <BatchModal key={editing === 'new' ? 'new' : editing.id} batch={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); q.reload() }} />}
     </>

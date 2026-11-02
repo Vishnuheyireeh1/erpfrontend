@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
 import type { DateRangeValue } from '@/components/ui/DateRange'
@@ -35,7 +36,7 @@ export function DirectExpensesSection({ range }: { range: DateRangeValue }) {
           <EmptyState title="Couldn't load" description={q.error} />
         ) : (
           <>
-            <DataTable columns={columns} rows={d?.rows ?? []} rowKey={(r) => r.name} loading={q.loading} emptyTitle="No job costs in this period" />
+            <PagedTable columns={columns} rows={d?.rows ?? []} rowKey={(r) => r.name} loading={q.loading} emptyTitle="No job costs in this period" />
             {d && d.rows.length > 0 && (
               <div className="flex flex-wrap justify-between gap-2 border-t border-line bg-page px-4 py-3 text-sm">
                 <span className="font-medium">Total {formatINR(d.totals.total)}</span>

@@ -56,8 +56,8 @@ export function DeliverModal({ order, onClose, onDone }: Props) {
       open
       onClose={onClose}
       size="lg"
-      title={`Deliver & bill · ${order.brandName}`}
-      footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Make bill · {formatINR(Math.round(gross))}</Button></>}
+      title={`Hand over to ${order.brandName}`}
+      footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Hand over & make bill · {formatINR(Math.round(gross))}</Button></>}
     >
       <p className="mb-3 text-sm text-ink-soft">Tick the pieces handed over now. The rest stay in the order for a later delivery.</p>
       <ul className="mb-4 flex flex-col gap-2">
@@ -85,6 +85,7 @@ export function DeliverModal({ order, onClose, onDone }: Props) {
         <div><dt className="text-xs text-muted">{rate ? `Before GST · GST ${formatINR(r2(gross - taxable))}` : 'No GST'}</dt><dd className="font-medium">{formatINR(taxable)}</dd></div>
         <div><dt className="text-xs text-muted">Bill total</dt><dd className="text-base font-semibold">{formatINR(Math.round(gross))}</dd></div>
       </dl>
+      {order.received > 0 && <p className="mt-2 text-sm text-ink-soft">Already received on this order: <span className="font-medium text-success">{formatINR(order.received)}</span> · balance <span className="font-semibold text-ink">{formatINR(order.balance)}</span></p>}
     </Modal>
   )
 }

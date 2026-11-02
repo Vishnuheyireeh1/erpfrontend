@@ -20,8 +20,8 @@ export const systemApi = {
   backups: () => api.get<BackupList>('/system/backups'),
   backupNow: () => api.post<{ name: string }>('/system/backups', {}),
   checklist: () => api.get<{ items: ChecklistItem[]; done: number; todo: number }>('/system/checklist'),
-  activity: (p: { search?: string; entity?: string; from?: string; to?: string; page: number }) =>
-    api.get<{ items: Activity[]; total: number; entities: string[] }>(`/system/activity?${qs({ ...p, pageSize: 50 })}`),
+  activity: (p: { search?: string; entity?: string; from?: string; to?: string; page: number; pageSize?: number }) =>
+    api.get<{ items: Activity[]; total: number; entities: string[] }>(`/system/activity?${qs({ pageSize: 50, ...p })}`),
 }
 
 export const backupKindLabels: Record<BackupKind, string> = { auto: 'Daily', manual: 'Manual', 'before-reset': 'Before reset', 'before-restore': 'Before restore' }

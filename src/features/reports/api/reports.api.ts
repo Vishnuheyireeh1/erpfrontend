@@ -16,8 +16,8 @@ export const reportsApi = {
   byCategory: (r: Range) => api.get<SalesByCategory>(`/reports/analysis/by-category?${qs(r)}`),
   byCustomer: (r: Range) => api.get<SalesByCustomer>(`/reports/analysis/by-customer?${qs(r)}`),
   whoOwes: () => api.get<WhoOwes>('/reports/analysis/who-owes'),
-  stockOnDate: (p: { date: string; search?: string; page: number }) => api.get<StockReport>(`/reports/analysis/stock-on-date?${qs({ date: p.date, search: p.search, page: String(p.page), pageSize: '50' })}`),
-  slowMoving: (p: { days: number; search?: string; page: number }) => api.get<StockReport>(`/reports/analysis/slow-moving?${qs({ days: String(p.days), search: p.search, page: String(p.page), pageSize: '50' })}`),
+  stockOnDate: (p: { date: string; search?: string; page: number; pageSize?: number }) => api.get<StockReport>(`/reports/analysis/stock-on-date?${qs({ date: p.date, search: p.search, page: String(p.page), pageSize: String(p.pageSize ?? 50) })}`),
+  slowMoving: (p: { days: number; search?: string; page: number; pageSize?: number }) => api.get<StockReport>(`/reports/analysis/slow-moving?${qs({ days: String(p.days), search: p.search, page: String(p.page), pageSize: String(p.pageSize ?? 50) })}`),
   purchasesBySupplier: (r: Range) => api.get<{ from: string; to: string; items: SupplierPurchase[]; total: Omit<SupplierPurchase, 'supplierId' | 'name' | 'bills'> }>(`/reports/analysis/purchases?${qs(r)}`),
   purchasesByItem: (r: Range) => api.get<{ from: string; to: string; items: ItemPurchase[] }>(`/reports/analysis/purchases?${qs({ ...r, by: 'item' })}`),
 }

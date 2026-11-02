@@ -13,9 +13,13 @@ import { newItem } from '@/features/jobs/jobDrafts'
 import { garmentApi, tailorApi } from '@/features/workshop/api/workshop.api'
 import { ApiError } from '@/lib/api'
 import { formatINR } from '@/lib/format'
+import { printText } from '@/features/sales/print/printing'
+import { useBusinessProfile } from '@/features/settings/hooks/useBusinessProfile'
 import { useApiQuery } from '@/lib/useApiQuery'
+import { brandOrderBillText } from '../print/brandOrderBillText'
 import { brandApi } from '../api/brand.api'
 import { brandOrderApi } from '../api/brandOrder.api'
+import { BrandOrderSummary } from '../components/BrandOrderSummary'
 import { BrandPieceEditor } from '../components/BrandPieceEditor'
 import { fromOrder, newPiece, pieceAmount, pieceError, toOrderInput, type OrderForm, type PieceDraft } from '../orderDrafts'
 import type { BrandOrder } from '../types'
@@ -40,6 +44,7 @@ export function BrandOrderFormPage() {
 function OrderFormView({ order }: { order: BrandOrder | null }) {
   const navigate = useNavigate()
   const toast = useToast()
+  const { profile, settings } = useBusinessProfile()
   const garments = useApiQuery('garments', () => garmentApi.list())
   const tailors = useApiQuery('tailor-options', () => tailorApi.options())
   const brands = useApiQuery('brand-options', () => brandApi.list({ status: 'active', pageSize: 100 }))
@@ -73,6 +78,8 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
       const body = toOrderInput(form, pieces)
       const saved = order ? await brandOrderApi.update(order.id, body) : await brandOrderApi.create({ ...body, brandId: Number(brandId), docDate: form.docDate })
       toast.success(order ? 'Order updated' : `Order ${saved.docNo} saved`)
+      // A new order prints its bill at once (one per customer); after an edit, print from the order page.
+      if (!order && profile && settings) printText(brandOrderBillText(saved, profile, settings['billing.print'].columns), settings['billing.print'])
       navigate(`/brand-orders/${saved.id}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not save')
@@ -127,9 +134,9 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-ink-soft">{count} piece{count === 1 ? '' : 's'} · order value <span className="font-semibold text-ink">{formatINR(total)}</span><span className="block text-xs text-muted">Billed to the brand as pieces are delivered (GST chosen on each bill).</span></p>
-            <Button variant="primary" loading={saving} onClick={save} className="h-12 sm:w-64">{order ? 'Save changes' : 'Save order'}</Button>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <BrandOrderSummary brandName={order?.brandName ?? brands.data?.items.find((b) => String(b.id) === brandId)?.name ?? ''} theirOrderNo={form.theirOrderNo} expectedDate={form.expectedDate} pieces={pieces} garments={garments.data} />
+            <Button variant="primary" loading={saving} onClick={save} className="h-12 shrink-0 lg:w-64">{order ? 'Save changes' : 'Save order and bill'}</Button>
           </div>
           {error && <p role="alert" className="mt-3 rounded-control bg-danger-tint px-3 py-2 text-sm text-danger">{error}</p>}
         </Card>

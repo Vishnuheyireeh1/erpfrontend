@@ -1,6 +1,7 @@
 import { IconX } from '@tabler/icons-react'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Input } from '@/components/ui/Input'
+import { BOX_SELECTOR, focusEl, visible } from '@/lib/boxNav'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { useDebounce } from '@/lib/useDebounce'
 import { customerApi } from '../api/sales.api'
@@ -47,7 +48,17 @@ export function CustomerQuickField({ value, onChange, name, phone, onName, onPho
     return () => document.removeEventListener('mousedown', away)
   }, [open])
 
-  const pick = (c: Customer) => { onChange(c); setOpen(false); setHi(-1) }
+  const pick = (c: Customer) => {
+    // These two boxes go away once a customer is chosen → the cursor moves on to the box after them.
+    const area = box.current?.closest<HTMLElement>('[role="dialog"], main')
+    const boxes = area ? [...area.querySelectorAll<HTMLElement>(BOX_SELECTOR)].filter(visible) : []
+    const mine = box.current ? [...box.current.querySelectorAll<HTMLElement>('input')] : []
+    const next = boxes[boxes.indexOf(mine[mine.length - 1]) + 1]
+    if (next) window.setTimeout(() => focusEl(next), 0)
+    onChange(c)
+    setOpen(false)
+    setHi(-1)
+  }
   // The list opens on typing, ↓ or a click — not just because the cursor landed here (billing starts here).
   const focus = (f: 'name' | 'phone') => { setField(f); setOpen(true); setHi(-1) }
   const keys = (e: KeyboardEvent) => {

@@ -173,7 +173,7 @@ function JobForm({ job }: { job: Job | null }) {
                 )}
               </div>
               {!job && <Input label="Order date" type="date" max={todayISO()} value={meta.docDate} onChange={(e) => setMeta((m) => ({ ...m, docDate: e.target.value }))} />}
-              <Input label="Ready by" type="date" min={job ? job.docDate.slice(0, 10) : meta.docDate} value={meta.expectedDate} onChange={(e) => setMeta((m) => ({ ...m, expectedDate: e.target.value }))} />
+              <Input label="Expected delivery date" type="date" min={job ? job.docDate.slice(0, 10) : meta.docDate} value={meta.expectedDate} onChange={(e) => setMeta((m) => ({ ...m, expectedDate: e.target.value }))} />
             </div>
           </Card>
 

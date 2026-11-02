@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange, type DateRangeValue } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -78,7 +79,7 @@ export function WorkshopReportsPage() {
           </div>
           <JobProfitList rows={profit.data?.jobs ?? []} loading={profit.loading} />
           <Card title="By garment" bodyClassName="p-0" className="mb-6">
-            <DataTable columns={garmentColumns} rows={profit.data?.garments ?? []} rowKey={(g) => g.garment} loading={profit.loading} emptyTitle="No jobs in this period" />
+            <PagedTable columns={garmentColumns} rows={profit.data?.garments ?? []} rowKey={(g) => g.garment} loading={profit.loading} emptyTitle="No jobs in this period" />
           </Card>
         </>
       )}
@@ -94,7 +95,7 @@ export function WorkshopReportsPage() {
           <EmptyState title="Couldn't load" description={work.error} />
         ) : (
           <>
-            <DataTable columns={tailorColumns} rows={work.data?.rows ?? []} rowKey={(r) => r.id} loading={work.loading} emptyTitle="No tailors yet" onRowClick={(r) => navigate(`/tailors/${r.id}`)} />
+            <PagedTable columns={tailorColumns} rows={work.data?.rows ?? []} rowKey={(r) => r.id} loading={work.loading} emptyTitle="No tailors yet" onRowClick={(r) => navigate(`/tailors/${r.id}`)} />
             {work.data && (
               <div className="flex flex-wrap justify-between gap-2 border-t border-line bg-page px-4 py-3 text-sm">
                 <span className="font-medium">Total</span>

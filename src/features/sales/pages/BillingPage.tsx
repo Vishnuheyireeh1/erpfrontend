@@ -1,6 +1,6 @@
 import { IconList, IconPrinter } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -19,7 +19,7 @@ import { SaleTotals } from '../components/SaleTotals'
 import { EditingBanner } from '../components/EditingBanner'
 import { StepCard } from '../components/StepCard'
 import { lineError, useBilling } from '../hooks/useBilling'
-import { useBillingKeys } from '../hooks/useBillingKeys'
+import { focusBox, TARGET, useBillingKeys } from '../hooks/useBillingKeys'
 
 const KEYS_HELP = 'sairandhri.billing.keysHelp'
 const readKeysHelp = () => { try { return localStorage.getItem(KEYS_HELP) !== '0' } catch { return true } }
@@ -35,10 +35,15 @@ export function BillingPage() {
   const toggleKeysHelp = () => setKeysHelp((v) => { try { localStorage.setItem(KEYS_HELP, v ? '0' : '1') } catch { /* private mode */ } return !v })
   // Keyboard billing (F2 item, F3 customer … F9 save) — see hooks/useBillingKeys.ts.
   useBillingKeys({ onSave: b.save, onTogglePrint: () => b.toggleAutoPrint(!b.autoPrint), onToggleHelp: toggleKeysHelp })
+  // Customer picked → on to Sale items; "Change" → back to the name box.
+  const pickCustomer = (c: Parameters<typeof b.setCustomer>[0]) => {
+    b.setCustomer(c)
+    window.setTimeout(() => focusBox(c ? TARGET.F2 : TARGET.F3), 0)
+  }
 
   const customerStep = (
     <StepCard step={1} title="Customer details">
-      <BillCustomerBar customer={b.customer} onCustomer={b.setCustomer} meta={b.meta} onMeta={b.setMeta} needsCustomer={b.isJob} showErrors={b.showErrors} />
+      <BillCustomerBar customer={b.customer} onCustomer={pickCustomer} meta={b.meta} onMeta={b.setMeta} needsCustomer={b.isJob} showErrors={b.showErrors} />
     </StepCard>
   )
   const itemsCard = (
@@ -97,6 +102,11 @@ export function BillingPage() {
 
   return (
     <>
+      {b.lastSaved && (
+        <p role="status" className="mb-3 rounded-control bg-success-tint px-3 py-2 text-sm text-success">
+          Saved {b.lastSaved.docNo} — <Link to={b.lastSaved.to} className="font-medium underline">open it</Link>
+        </p>
+      )}
       <PageHeader
         title={b.editing ? `Edit ${b.editing.docNo}` : 'New bill'}
         actions={

@@ -1,5 +1,6 @@
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { cn } from '@/lib/cn'
 import { formatINR2 as formatINR } from '@/lib/format'
@@ -43,7 +44,7 @@ export function GstSummaryView() {
           </div>
           <div className="flex flex-col gap-4">
             <Card title="Sales — GST collected" bodyClassName="p-0">
-              <DataTable
+              <PagedTable
                 columns={columns}
                 rows={[
                   ...byRate(s.outward, s.outwardTotal, 'Total sales'),
@@ -55,7 +56,7 @@ export function GstSummaryView() {
               />
             </Card>
             <Card title="Purchases — GST paid (input credit)" bodyClassName="p-0">
-              <DataTable columns={columns} rows={byRate(s.inward, s.inwardTotal, 'Total purchases')} rowKey={(r) => r.name} emptyTitle="No purchases in these dates" />
+              <PagedTable columns={columns} rows={byRate(s.inward, s.inwardTotal, 'Total purchases')} rowKey={(r) => r.name} emptyTitle="No purchases in these dates" />
             </Card>
             <Card title="GST to pay">
               <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">

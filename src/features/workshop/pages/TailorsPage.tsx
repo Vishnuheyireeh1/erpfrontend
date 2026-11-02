@@ -22,6 +22,7 @@ import { GarmentList } from '../components/GarmentList'
 import { TailorPaymentsList } from '../components/TailorPaymentsList'
 import { WaitingJobsList } from '../components/WaitingJobsList'
 import type { Tailor } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 const columns: Column<Tailor>[] = [
   {
@@ -54,6 +55,7 @@ export function TailorsPage() {
   const tab = (params.get('tab') as Tab) || 'waiting'
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const [work, setWork] = useState('') // '' = everyone · 'STITCHING' · work type id
   const [range, setRange] = useState<DateRangeValue>(() => ({ from: `${todayISO().slice(0, 8)}01`, to: todayISO() }))
@@ -63,7 +65,7 @@ export function TailorsPage() {
   const doneWorks = (cats.data ?? []).filter((c) => c.isActive && (people.data ?? []).some((p) => p.works.some((w) => w.categoryId === c.id)))
   const filters = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active', work: work || undefined, from: range.from || undefined, to: range.to || undefined }
   const lists = tab === 'active' || tab === 'inactive'
-  const q = useApiQuery(['tailors', filters, page, tab], () => (lists ? tailorApi.list({ ...filters, page, pageSize: 20 }) : Promise.resolve(null)))
+  const q = useApiQuery(['tailors', filters, page, pageSize, tab], () => (lists ? tailorApi.list({ ...filters, page, pageSize }) : Promise.resolve(null)))
 
   return (
     <>
@@ -112,7 +114,7 @@ export function TailorsPage() {
             ) : (
               <>
                 <DataTable
-                  startIndex={(page - 1) * 20 + 1}
+                  startIndex={(page - 1) * pageSize + 1}
                   columns={columns}
                   rows={q.data?.items ?? []}
                   rowKey={(t) => t.id}
@@ -121,7 +123,7 @@ export function TailorsPage() {
                   emptyDescription={tab === 'active' ? 'Add people in Staff & salary and turn on "Does job work".' : undefined}
                   onRowClick={(t) => navigate(`/tailors/${t.id}`)}
                 />
-                {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+                {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
               </>
             )}
           </Card>

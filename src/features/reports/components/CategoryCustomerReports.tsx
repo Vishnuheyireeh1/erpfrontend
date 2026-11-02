@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { formatDate, formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
@@ -34,7 +35,7 @@ export function SalesByCategoryView() {
         </div>
       )}
       <Card bodyClassName="p-0">
-        {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : <DataTable columns={catColumns} rows={rows} rowKey={(c) => c.category} loading={q.loading && !r} emptyTitle="No goods sold in these dates" />}
+        {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : <PagedTable columns={catColumns} rows={rows} rowKey={(c) => c.category} loading={q.loading && !r} emptyTitle="No goods sold in these dates" />}
       </Card>
       <p className="mt-2 text-xs text-muted">Counter bills + items sold on job bills, after returns, GST included. Profit = sale before GST − stock cost.</p>
     </>
@@ -61,7 +62,7 @@ export function SalesByCustomerView() {
       {r && <p className="mb-3 text-sm text-muted">{r.customers} customers · total <b className="text-ink">{formatINR(r.total)}</b></p>}
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
-          <DataTable columns={columns} rows={r?.items ?? []} rowKey={(c) => c.customerId ?? 0} loading={q.loading && !r} emptyTitle="No sales in these dates" onRowClick={(c) => c.customerId && navigate(`/customers/${c.customerId}`)} />
+          <PagedTable columns={columns} rows={r?.items ?? []} rowKey={(c) => c.customerId ?? 0} loading={q.loading && !r} emptyTitle="No sales in these dates" onRowClick={(c) => c.customerId && navigate(`/customers/${c.customerId}`)} />
         )}
       </Card>
     </>

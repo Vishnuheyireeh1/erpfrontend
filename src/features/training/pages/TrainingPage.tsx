@@ -20,6 +20,7 @@ import { CourseList } from '../components/CourseList'
 import { FeeReceiptsList, FeesPendingList } from '../components/FeeLists'
 import { StudentFormModal } from '../components/StudentModals'
 import type { Student } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 const tabs = [
   { key: 'students', label: 'Students' },
@@ -47,10 +48,11 @@ export function TrainingPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('STUDYING')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [adding, setAdding] = useState(false)
   const debounced = useDebounce(search.trim())
   const filters = { search: debounced || undefined, status: status || undefined, batchId }
-  const q = useApiQuery(['students', filters, page, tab], () => (tab === 'students' ? trainingApi.students({ ...filters, page }) : Promise.resolve(null)))
+  const q = useApiQuery(['students', filters, page, pageSize, tab], () => (tab === 'students' ? trainingApi.students({ ...filters, page, pageSize }) : Promise.resolve(null)))
   const batches = useApiQuery('batches-all', () => trainingApi.batches())
   const batch = batches.data?.find((b) => b.id === batchId)
 
@@ -76,8 +78,8 @@ export function TrainingPage() {
           <Card bodyClassName="p-0">
             {q.error ? <EmptyState title="Couldn't load students" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} /> : (
               <>
-                <DataTable startIndex={(page - 1) * 20 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(s) => s.id} loading={q.loading} emptyTitle="No students" emptyDescription="Add courses and batches first, then the students who join." onRowClick={(s) => navigate(`/training/students/${s.id}`)} />
-                {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+                <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(s) => s.id} loading={q.loading} emptyTitle="No students" emptyDescription="Add courses and batches first, then the students who join." onRowClick={(s) => navigate(`/training/students/${s.id}`)} />
+                {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
               </>
             )}
           </Card>

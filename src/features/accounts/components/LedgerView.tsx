@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -63,7 +64,7 @@ export function LedgerView({ code, party, onChange }: Props) {
         <Card bodyClassName="p-0">
           {l && <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2"><p className="text-xs text-muted">{l.account.hint}</p><SortSwitch order={order} onOrder={setOrder} /></div>}
           {l && <div className="flex justify-between gap-3 border-b border-line bg-page px-4 py-2 text-sm"><span className="text-muted">Opening balance ({formatDate(l.from)})</span><span className="font-medium">{drCr(l.opening)}</span></div>}
-          <DataTable columns={columns} rows={inOrder((l?.lines ?? []).map((x, i) => ({ ...x, key: i })), order, 'oldest')} rowKey={(x) => x.key ?? 0} loading={!l} emptyTitle="No entries in these dates" />
+          <PagedTable columns={columns} rows={inOrder((l?.lines ?? []).map((x, i) => ({ ...x, key: i })), order, 'oldest')} rowKey={(x) => x.key ?? 0} loading={!l} emptyTitle="No entries in these dates" />
           {l && (
             <div className="flex flex-wrap justify-between gap-3 border-t border-line bg-page px-4 py-3 text-sm font-semibold text-ink">
               <span>Debit {money(l.totals.debit)} · Credit {money(l.totals.credit)}</span>

@@ -20,6 +20,7 @@ import { useApiQuery } from '@/lib/useApiQuery'
 import { financeApi, moveKindLabels } from '../api/finance.api'
 import type { MoveKind, Movement, PaymentMode } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 const isTransfer = (k: MoveKind) => k === 'DEPOSIT' || k === 'WITHDRAW'
 
@@ -63,10 +64,11 @@ export function MovementsView() {
   const [range, setRange] = useState<DateRangeValue>(() => ({ from: `${todayISO().slice(0, 8)}01`, to: todayISO() }))
   const [order, setOrder] = useListOrder('moves')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [adding, setAdding] = useState(false)
   const [cancelling, setCancelling] = useState<Movement | null>(null)
   const filters = { order, status: 'all', from: range.from || undefined, to: range.to || undefined }
-  const q = useApiQuery(['movements', filters, page], () => financeApi.movements({ ...filters, page }))
+  const q = useApiQuery(['movements', filters, page, pageSize], () => financeApi.movements({ ...filters, page, pageSize }))
   const columns: Column<Movement>[] = [
     { key: 'what', header: 'What', mobile: 'title', render: (m) => <span className="font-medium text-ink">{moveKindLabels[m.kind]}</span> },
     { key: 'date', header: 'Date', mobile: 'subtitle', render: (m) => `${formatDate(m.docDate)} · ${m.docNo}` },
@@ -84,8 +86,8 @@ export function MovementsView() {
         </div>
       </div>
       <Card bodyClassName="p-0">
-        <DataTable startIndex={(page - 1) * 20 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(m) => m.id} loading={q.loading} emptyTitle="No entries" emptyDescription="Cash deposited to the bank, owner taking money, other income …" />
-        {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+        <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(m) => m.id} loading={q.loading} emptyTitle="No entries" emptyDescription="Cash deposited to the bank, owner taking money, other income …" />
+        {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
       </Card>
       {adding && <MovementModal onClose={() => setAdding(false)} onSaved={() => { setAdding(false); q.reload() }} />}
       {cancelling && <CancelDocModal docNo={cancelling.docNo} effect="Cash / bank balances go back." onCancel={(r) => financeApi.cancelMovement(cancelling.id, r)} onClose={() => setCancelling(null)} onDone={() => { setCancelling(null); q.reload() }} />}

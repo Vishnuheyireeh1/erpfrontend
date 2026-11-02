@@ -2,6 +2,8 @@ import { ApiError } from '@/lib/api'
 
 export type ImportError = { row: number; column?: string; message: string }
 
+// What a file gives: the items that will be added (productCount / variantCount = their rows) and every row that
+// won't be, with its reason (errors). An item goes in only when all its rows are right.
 export type ImportCheck = {
   rowCount: number
   productCount: number
@@ -9,11 +11,12 @@ export type ImportCheck = {
   stockItems: number // rows with an Opening stock quantity
   stockValue: number
   toCreate: { sizes: string[]; colours: string[] }
-  errors: ImportError[]
+  skippedRows: number
+  errors: ImportError[] // reasons for the rows not added
   errorCount: number
 }
 
-export type ImportDone = {
+export type ImportDone = Omit<ImportCheck, 'productCount' | 'variantCount'> & {
   imported: true
   products: number
   variants: number

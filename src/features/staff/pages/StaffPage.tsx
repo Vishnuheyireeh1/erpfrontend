@@ -20,6 +20,7 @@ import { SalaryList } from '../components/SalaryList'
 import { SalaryPayModal } from '../components/SalaryPayModal'
 import { StaffFormModal } from '../components/StaffFormModal'
 import type { Staff } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 type Tab = 'active' | 'payroll' | 'salary' | 'inactive'
 
@@ -30,13 +31,14 @@ export function StaffPage() {
   const tab = (params.get('tab') as Tab) || 'active'
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize(50)
   const [editing, setEditing] = useState<Staff | 'new' | null>(null)
   const [paying, setPaying] = useState<{ staffId?: number; month?: string } | null>(null)
   const [version, setVersion] = useState(0)
   const debounced = useDebounce(search.trim())
   const filters = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active' }
   const listTab = tab === 'active' || tab === 'inactive'
-  const q = useApiQuery(['staff', filters, page, tab, version], () => (listTab ? staffApi.list({ ...filters, page }) : Promise.resolve(null)))
+  const q = useApiQuery(['staff', filters, page, pageSize, tab, version], () => (listTab ? staffApi.list({ ...filters, page, pageSize }) : Promise.resolve(null)))
   const refresh = () => { setVersion((v) => v + 1); q.reload() }
   // /employees?edit=12 (from a worker's page) → that person's form opens once loaded.
   const editId = Number(params.get('edit')) || 0
@@ -113,7 +115,7 @@ export function StaffPage() {
             ) : (
               <>
                 <DataTable
-                  startIndex={(page - 1) * 50 + 1}
+                  startIndex={(page - 1) * pageSize + 1}
                   columns={columns}
                   rows={q.data?.items ?? []}
                   rowKey={(s) => s.id}
@@ -122,7 +124,7 @@ export function StaffPage() {
                   emptyDescription={tab === 'active' ? 'Add everyone — sales staff, tailors, cutting master, teachers.' : undefined}
                   onRowClick={(s) => setEditing(s)}
                 />
-                {(q.data?.total ?? 0) > 50 && <Pagination page={page} pageSize={50} total={q.data!.total} onPageChange={setPage} />}
+                {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
               </>
             )}
           </Card>

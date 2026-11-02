@@ -87,6 +87,7 @@ export function SaleLineRow({ line, amount, gstRate, error, stitching, onChange,
           <span className="font-mono">{item.sku}</span> · in stock {qtyText(item.stockQty, unit)}
         </p>
         {decimal && !line.qty && !error && <p className="mt-1 text-xs font-medium text-brand">Type how many {unitWord(unit).toLowerCase()} the customer wants</p>}
+        {Number(line.qty) > Number(item.stockQty) && !error && <p className="mt-1 text-xs font-medium text-warn">More than the stock shown — the bill will still save</p>}
         {error && <p className="mt-1 text-xs text-danger">{error}</p>}
         {stitching && (
           <div className="mt-1.5 inline-flex overflow-hidden rounded-control border border-line text-xs" role="group" aria-label="Customer pays or free for stitching">

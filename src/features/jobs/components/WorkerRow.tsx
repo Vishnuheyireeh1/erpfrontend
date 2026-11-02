@@ -14,11 +14,12 @@ type Props = {
   qty: number
   presetFor: (tailorId: string) => string // their usual pay per piece for this work ('' = none)
   onChange: (v: WorkPick) => void
+  noNote?: boolean // brand orders: pay can be changed without a reason
 }
 
 // One work on a garment (Stitching, Cutting, Embroidery …): who did it → per-piece people get their usual pay filled
 // in (change it + write why); salaried people get no pay — the job only records who did it.
-export function WorkerRow({ label, empty, people, value, qty, presetFor, onChange }: Props) {
+export function WorkerRow({ label, empty, people, value, qty, presetFor, onChange, noNote = false }: Props) {
   const who = people.find((p) => String(p.id) === value.tailorId)
   const piece = who?.payType === 'PIECE'
   const preset = presetFor(value.tailorId)
@@ -41,14 +42,14 @@ export function WorkerRow({ label, empty, people, value, qty, presetFor, onChang
             ₹
             <input type="number" inputMode="decimal" min={0} aria-label={`${label} pay per piece`} value={value.rate} onChange={(e) => onChange({ ...value, rate: e.target.value })} className={cn(controlClass(), 'h-10 w-full text-right')} />
           </label>
-          <input
+          {!noNote && <input
             aria-label={`${label} note`}
             maxLength={200}
             value={value.note}
             onChange={(e) => onChange({ ...value, note: e.target.value })}
             placeholder={changed ? 'Why changed? (needed)' : 'Note'}
             className={cn(controlClass(), 'h-10', changed && !value.note.trim() && 'border-warn')}
-          />
+          />}
           <span className="col-span-2 text-xs text-muted sm:col-start-2 sm:col-end-5">
             {qty} pc × {formatINR(Number(value.rate) || 0)} = <b className="text-ink">{formatINR(qty * (Number(value.rate) || 0))}</b> to {who.name} when Ready
             {changed && ` · usual ${formatINR(Number(preset))}`}

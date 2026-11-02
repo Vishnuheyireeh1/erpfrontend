@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState } from '@/components/ui/Feedback'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
@@ -49,9 +50,9 @@ export function PurchaseReportView() {
       {by === 'supplier' && s && <p className="mb-3 text-sm text-muted">Bought <b className="text-ink">{formatINR(s.total.total)}</b> · paid {formatINR(s.total.paid)} · still to pay <b className="text-warn">{formatINR(s.total.due)}</b></p>}
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : by === 'supplier' ? (
-          <DataTable columns={supplierColumns} rows={s?.items ?? []} rowKey={(x) => x.supplierId} loading={sup.loading && !s} emptyTitle="No purchases in these dates" />
+          <PagedTable columns={supplierColumns} rows={s?.items ?? []} rowKey={(x) => x.supplierId} loading={sup.loading && !s} emptyTitle="No purchases in these dates" />
         ) : (
-          <DataTable columns={itemColumns} rows={(itm.data ?? itm.lastData)?.items ?? []} rowKey={(x) => x.variantId} loading={itm.loading} emptyTitle="No purchases in these dates" />
+          <PagedTable columns={itemColumns} rows={(itm.data ?? itm.lastData)?.items ?? []} rowKey={(x) => x.variantId} loading={itm.loading} emptyTitle="No purchases in these dates" />
         )}
       </Card>
       <p className="mt-2 text-xs text-muted">Purchase bills dated in these dates. By item: after purchase returns, top 200 on screen — Excel has all.</p>

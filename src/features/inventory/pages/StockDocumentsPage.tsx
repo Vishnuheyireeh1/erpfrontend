@@ -17,6 +17,7 @@ import { inventoryApi } from '../api/inventory.api'
 import { reasonLabels } from '../constants'
 import type { DocKind, StockDocument } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 const columns: Column<StockDocument>[] = [
   { key: 'docNo', header: 'Document', mobile: 'title', render: (d) => <span className="font-medium text-brand">{d.docNo}</span> },
@@ -48,8 +49,9 @@ export function StockDocumentsPage() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('stock-documents')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const filters = { order, kind: kind === 'ALL' ? undefined : kind, from: range.from || undefined, to: range.to || undefined }
-  const q = useApiQuery({ ...filters, page }, () => inventoryApi.documents({ ...filters, page }))
+  const q = useApiQuery({ ...filters, page, pageSize }, () => inventoryApi.documents({ ...filters, page, pageSize }))
 
   return (
     <>
@@ -78,7 +80,7 @@ export function StockDocumentsPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * 20 + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={q.data?.items ?? []}
               rowKey={(d) => d.id}
@@ -87,7 +89,7 @@ export function StockDocumentsPage() {
               emptyDescription="Opening stock and adjustments you save appear here."
               onRowClick={(d) => navigate(`/stock/documents/${d.id}`)}
             />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

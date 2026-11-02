@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { focusEl, moveByKey, visible } from '@/lib/boxNav'
 
 // Billing page keys for staff used to the old keyboard billing software.
 //   F1 help · F2 item search · F3 customer name · F4 phone · F5 garment · F6 measurements · F7 discount
@@ -11,7 +12,7 @@ export const BILLING_KEYS: [string, string][] = [
 ]
 
 // Boxes the keys jump to (data-hotkey is set on them; item search / payment by their labels).
-const TARGET: Record<string, string> = {
+export const TARGET: Record<string, string> = {
   F2: 'input[aria-label="Find item"]',
   F3: '[data-hotkey="customer-name"], button[aria-label="Change customer"]',
   F4: '[data-hotkey="customer-phone"], button[aria-label="Change customer"]',
@@ -20,52 +21,20 @@ const TARGET: Record<string, string> = {
   F8: 'input[aria-label="Payment 1 amount"]',
 }
 
-const visible = (el: HTMLElement) => el.offsetParent !== null
-function focusEl(el: HTMLElement) {
-  el.focus()
-  if (el instanceof HTMLInputElement && el.type !== 'date') el.select()
-  el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-}
 export function focusBox(selector: string, last = false) {
   const all = [...document.querySelectorAll<HTMLElement>(selector)].filter(visible)
   const el = last ? all[all.length - 1] : all[0]
   if (el) focusEl(el)
 }
 
-// The boxes on the page in screen order (inputs and dropdowns; buttons and notes are skipped).
-const allBoxes = () => [...document.querySelectorAll<HTMLElement>('main input:not([type=hidden]):not([type=checkbox]):not([disabled]):not([readonly]), main select:not([disabled])')].filter(visible)
+// The boxes on the page in step order 1 → 4 (a laptop shows two columns, so page order isn't step order),
+// then screen order inside a step. Inputs and dropdowns only, + the picked customer's Change button
+// (so Esc from the items comes back to the customer).
+const stepOf = (el: HTMLElement) => Number(el.closest<HTMLElement>('[data-step]')?.dataset.step ?? 99)
+const allBoxes = () => [...document.querySelectorAll<HTMLElement>('main input:not([type=hidden]):not([type=checkbox]):not([disabled]):not([readonly]), main select:not([disabled]), main button[aria-label="Change customer"]')]
+  .filter(visible)
+  .sort((a, z) => stepOf(a) - stepOf(z))
 
-// Enter / → = next box, Esc / ← = previous box.
-function stepBox(from: HTMLElement, step: 1 | -1) {
-  const boxes = allBoxes()
-  const to = boxes[boxes.indexOf(from) + step]
-  if (!boxes.includes(from) || !to) return false
-  focusEl(to)
-  return true
-}
-
-// ↑ ↓ = the nearest box in the row above / below (closest to the same column).
-function rowBox(from: HTMLElement, dir: 1 | -1) {
-  const r = from.getBoundingClientRect()
-  const cx = r.left + r.width / 2
-  const cands = allBoxes().filter((b) => b !== from).map((b) => {
-    const q = b.getBoundingClientRect()
-    return { b, dy: dir === 1 ? q.top - r.bottom : r.top - q.bottom, dx: Math.abs(q.left + q.width / 2 - cx) }
-  }).filter((c) => c.dy > -4).sort((a, z) => a.dy - z.dy)
-  if (!cands.length) return false
-  const row = cands.filter((c) => c.dy <= cands[0].dy + 12)
-  focusEl(row.sort((a, z) => a.dx - z.dx)[0].b)
-  return true
-}
-
-// In a typed box ← / → move out only from the very start / end (number boxes have no cursor — always move).
-function atEdge(el: HTMLElement, dir: 1 | -1) {
-  if (!(el instanceof HTMLInputElement)) return true
-  const start = el.selectionStart
-  const end = el.selectionEnd
-  if (start === null || end === null) return true
-  return dir === -1 ? start === 0 && (end === 0 || end === el.value.length) : end === el.value.length
-}
 const isBox = (el: HTMLElement) => el.tagName === 'INPUT' || el.tagName === 'SELECT'
 
 type Handlers = { onSave: () => void; onTogglePrint: () => void; onToggleHelp: () => void }
@@ -88,14 +57,7 @@ export function useBillingKeys(handlers: Handlers) {
       else if (k === 'F6') { e.preventDefault(); focusBox('[data-hotkey="measure"]', true) }
       else if (TARGET[k]) { e.preventDefault(); focusBox(TARGET[k]) }
       else if (!e.defaultPrevented && !ctrl && !e.shiftKey && !e.altKey && isBox(e.target as HTMLElement)) {
-        const el = e.target as HTMLElement
-        const date = el instanceof HTMLInputElement && el.type === 'date' // its arrows change the day / month
-        let moved = false
-        if (k === 'Enter') moved = stepBox(el, 1)
-        else if (k === 'Escape') moved = stepBox(el, -1)
-        else if ((k === 'ArrowRight' || k === 'ArrowLeft') && !date && atEdge(el, k === 'ArrowRight' ? 1 : -1)) moved = stepBox(el, k === 'ArrowRight' ? 1 : -1)
-        else if ((k === 'ArrowDown' || k === 'ArrowUp') && !date && el.tagName !== 'SELECT') moved = rowBox(el, k === 'ArrowDown' ? 1 : -1)
-        if (moved) e.preventDefault()
+        if (moveByKey(e, e.target as HTMLElement, allBoxes())) e.preventDefault()
       }
     }
     window.addEventListener('keydown', down)

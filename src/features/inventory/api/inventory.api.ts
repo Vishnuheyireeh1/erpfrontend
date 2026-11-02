@@ -34,11 +34,11 @@ async function upload<T>(path: string, file: File, fields: Record<string, string
 export const inventoryApi = {
   list: (p: StockListParams) => api.get<Paged<StockItem>>(`/stock?${qs(p)}`),
   summary: () => api.get<StockSummary>('/stock/summary'),
-  ledger: (variantId: number, page: number, order = 'newest') =>
-    api.get<Paged<Movement> & { item: StockItem }>(`/stock/items/${variantId}/ledger?page=${page}&order=${order}`),
+  ledger: (variantId: number, page: number, pageSize?: number, order = 'newest') =>
+    api.get<Paged<Movement> & { item: StockItem }>(`/stock/items/${variantId}/ledger?page=${page}&order=${order}${pageSize ? `&pageSize=${pageSize}` : ''}`),
 
-  documents: (p: { kind?: DocKind; from?: string; to?: string; page: number }) =>
-    api.get<Paged<StockDocument>>(`/stock/documents?${qs({ ...p, pageSize: 20 })}`),
+  documents: (p: { kind?: DocKind; from?: string; to?: string; page: number; pageSize?: number }) =>
+    api.get<Paged<StockDocument>>(`/stock/documents?${qs({ pageSize: 20, ...p })}`),
   document: (id: number) => api.get<{ item: StockDocument }>(`/stock/documents/${id}`).then((r) => r.item),
   createOpening: (body: { docDate?: string; note?: string; lines: DocLine[] }) =>
     api.post<{ item: StockDocument }>('/stock/opening', body).then((r) => r.item),

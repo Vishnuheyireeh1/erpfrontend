@@ -48,7 +48,7 @@ export function SearchResults({ data, active, onPick }: Props) {
       {data.jobs.length > 0 && (
         <Group title="Stitching jobs">
           {data.jobs.map((j) => (
-            <Row key={j.id} {...pick} k={`j${j.id}`} to={`/jobs/${j.id}`} icon={<IconNeedleThread size={18} />} title={`${j.docNo} · ${j.customerName}`} sub={`${j.garments} · ready by ${formatDate(j.expectedDate)}`}
+            <Row key={j.id} {...pick} k={`j${j.id}`} to={`/jobs/${j.id}`} icon={<IconNeedleThread size={18} />} title={`${j.docNo} · ${j.customerName}`} sub={`${j.garments} · delivery ${formatDate(j.expectedDate)}`}
               right={<><span className={j.status === 'READY' ? 'font-medium text-success' : 'text-ink-soft'}>{STAGE[j.status] ?? j.status}</span>{j.due > 0.004 && <span className="block text-warn">to collect {formatINR(j.due)}</span>}</>} />
           ))}
         </Group>

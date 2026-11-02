@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
@@ -62,7 +63,7 @@ export function ExpenseTypeList() {
   return (
     <>
       <div className="mb-4 flex justify-end"><Button variant="primary" icon={IconPlus} onClick={() => open('new')}>Add expense type</Button></div>
-      <Card bodyClassName="p-0"><DataTable columns={columns} rows={q.data ?? []} rowKey={(c) => c.id} loading={q.loading} emptyTitle="No expense types" onRowClick={open} /></Card>
+      <Card bodyClassName="p-0"><PagedTable columns={columns} rows={q.data ?? []} rowKey={(c) => c.id} loading={q.loading} emptyTitle="No expense types" onRowClick={open} /></Card>
       {editing && (
         <Modal
           open

@@ -16,6 +16,7 @@ import { itemTitle, movementLabels, qtyText, stockState } from '../constants'
 import type { Movement } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
 import { SortSwitch } from '@/components/ui/DateRange'
+import { usePageSize } from '@/lib/usePageSize'
 
 // Which document page a ledger row links to (purchase / bill pages added by later modules).
 const docLinks: Record<string, string> = { OPN: '/stock/documents', ADJ: '/stock/documents', PUR: '/purchase', DN: '/purchase/returns', INV: '/sales', SR: '/sales/returns', JOB: '/jobs', BRO: '/brand-orders' }
@@ -51,8 +52,9 @@ export function StockLedgerPage() {
   const id = Number(useParams().id)
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [order, setOrder] = useListOrder('stock-history')
-  const q = useApiQuery({ id, page, order }, () => inventoryApi.ledger(id, page, order))
+  const q = useApiQuery({ id, page, pageSize, order }, () => inventoryApi.ledger(id, page, pageSize, order))
   const data = q.data ?? q.lastData
 
   if (q.error && !data) {
@@ -98,7 +100,7 @@ export function StockLedgerPage() {
           emptyTitle="No stock movements yet"
           emptyDescription="Opening stock, purchases, sales and adjustments will appear here."
         />
-        {data.total > data.pageSize && (
+        {data.total > 0 && (
           <Pagination page={page} pageSize={data.pageSize} total={data.total} onPageChange={setPage} />
         )}
       </Card>

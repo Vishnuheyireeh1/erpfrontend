@@ -20,6 +20,7 @@ import { jobsApi } from '../api/jobs.api'
 import { dueText, garmentsText, isOpen, statusLabels, statusTones } from '../jobUtils'
 import type { JobSummary } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 const columns: Column<JobSummary>[] = [
   {
@@ -36,7 +37,7 @@ const columns: Column<JobSummary>[] = [
   { key: 'customer', header: 'Customer', mobile: 'subtitle', render: (j) => `${j.customerName}${j.customerPhone ? ` · ${j.customerPhone}` : ''}` },
   {
     key: 'delivery',
-    header: 'Ready by',
+    header: 'Expected delivery',
     mobile: 'subtitle',
     render: (j) => (
       <span className={cn(j.overdue && 'font-medium text-danger')}>
@@ -62,9 +63,10 @@ export function JobsListPage() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('jobs')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const filters = { order, view, search: debounced || undefined, from: range.from || undefined, to: range.to || undefined }
-  const q = useApiQuery(['jobs', filters, page], () => jobsApi.list({ ...filters, page }))
+  const q = useApiQuery(['jobs', filters, page, pageSize], () => jobsApi.list({ ...filters, page, pageSize }))
   const counts = (q.data ?? q.lastData)?.counts
   const badge = (label: string, n?: number) => (n ? `${label} (${n})` : label)
 
@@ -105,7 +107,7 @@ export function JobsListPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * 20 + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={q.data?.items ?? []}
               rowKey={(j) => j.id}
@@ -114,7 +116,7 @@ export function JobsListPage() {
               emptyDescription={view === 'open' ? 'Book a stitching job — measurements, tailor, ready-by date and advance.' : undefined}
               onRowClick={(j) => navigate(`/jobs/${j.id}`)}
             />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

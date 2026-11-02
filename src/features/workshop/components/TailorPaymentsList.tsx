@@ -17,6 +17,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import { tailorPaymentApi } from '../api/workshop.api'
 import type { TailorPayment } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 // Tailors page → "Payments" tab: every payment made to tailors, with Excel and cancel.
 export function TailorPaymentsList() {
@@ -24,10 +25,11 @@ export function TailorPaymentsList() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('worker-payments')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [cancelling, setCancelling] = useState<TailorPayment | null>(null)
   const debounced = useDebounce(search.trim())
   const filters = { order, search: debounced || undefined, from: range.from || undefined, to: range.to || undefined, status: 'all' }
-  const q = useApiQuery(['tailor-payments', filters, page], () => tailorPaymentApi.list({ ...filters, page }))
+  const q = useApiQuery(['tailor-payments', filters, page, pageSize], () => tailorPaymentApi.list({ ...filters, page, pageSize }))
 
   const columns: Column<TailorPayment>[] = [
     { key: 'docNo', header: 'Payment', mobile: 'title', render: (p) => <span className="font-medium text-ink">{p.docNo}</span> },
@@ -60,8 +62,8 @@ export function TailorPaymentsList() {
           <EmptyState title="Couldn't load payments" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
         ) : (
           <>
-            <DataTable startIndex={(page - 1) * 20 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(p) => p.id} loading={q.loading} emptyTitle="No payments yet" emptyDescription="Pay a worker from their page (Job work → Workers)." />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(p) => p.id} loading={q.loading} emptyTitle="No payments yet" emptyDescription="Pay a worker from their page (Job work → Workers)." />
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

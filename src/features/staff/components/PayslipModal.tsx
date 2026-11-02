@@ -25,8 +25,9 @@ const Line = ({ label, value, minus, strong }: { label: string; value: number; m
 export function PayslipModal({ row, month, onClose, onPaid }: Props) {
   const toast = useToast()
   const [bonus, setBonus] = useState('')
-  const [deduction, setDeduction] = useState('')
-  const [deductionNote, setDeductionNote] = useState('')
+  // The month's leave cut comes filled in (it can still be changed here).
+  const [deduction, setDeduction] = useState(() => (row.leaveCut > 0 ? String(row.leaveCut) : ''))
+  const [deductionNote, setDeductionNote] = useState(() => (row.leaveDays > 0 ? `${row.leaveDays} day${row.leaveDays === 1 ? '' : 's'} leave` : ''))
   const [piece, setPiece] = useState(() => String(Math.max(0, row.pieceDue)))
   const [mode, setMode] = useState('CASH')
   const [docDate, setDocDate] = useState(todayISO)

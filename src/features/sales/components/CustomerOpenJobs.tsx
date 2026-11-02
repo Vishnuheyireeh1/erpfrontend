@@ -27,7 +27,7 @@ export function CustomerOpenJobs({ customerId }: { customerId: number }) {
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-ink">{j.docNo} · {j.items.map((i) => `${i.qty} × ${i.description}`).join(', ')}</span>
                 <span className="block text-xs text-muted">
-                  {done(j.status) ? `Booked ${formatDate(j.docDate)}` : `Ready by ${formatDate(j.expectedDate)}`}
+                  {done(j.status) ? `Booked ${formatDate(j.docDate)}` : `Delivery ${formatDate(j.expectedDate)}`}
                   {j.status === 'CANCELLED' ? '' : j.dueAmount > 0.004 ? ` · to collect ${formatINR(j.dueAmount)}` : ' · fully paid'}
                 </span>
               </span>

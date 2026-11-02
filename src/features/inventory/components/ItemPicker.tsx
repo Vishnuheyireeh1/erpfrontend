@@ -9,8 +9,9 @@ import { itemTitle } from '../constants'
 import type { StockItem } from '../types'
 import { ItemPickerList } from './ItemPickerList'
 
-// onDone: Esc closed the open list (billing: go to the metre boxes still empty).
-type Props = { onPick: (item: StockItem) => void; placeholder?: string; onDone?: () => void }
+// onDone: Esc closed the open list (billing: go to the metre boxes still empty; false = nowhere to go).
+// onNext: Enter / → on an empty box (billing: on to Stitching jobs).
+type Props = { onPick: (item: StockItem) => void; placeholder?: string; onDone?: () => boolean | void; onNext?: () => void }
 
 const PAGE = 20
 
@@ -20,7 +21,7 @@ const PAGE = 20
 //   • scanner gun (code + Enter) or the camera Scan button → exact match added at once
 // Keys: ↓ ↑ move, Enter adds the highlighted item (list stays open for the next), Space ticks several →
 // Enter adds all the ticked ones, a typed code + Enter adds that item, Esc closes.
-export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item name / SKU', onDone }: Props) {
+export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item name / SKU', onDone, onNext }: Props) {
   const toast = useToast()
   const inputRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState('')
@@ -69,9 +70,16 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
   const onKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       if (!open) return close()
-      e.preventDefault() // closing the list — not "back" on the billing page
       close()
-      return onDone?.()
+      // onDone took the cursor somewhere (an empty metre box) → not also "back" on the billing page.
+      if (!onDone || onDone() !== false) e.preventDefault()
+      return
+    }
+    // Nothing typed / highlighted / ticked: Enter or → = next section (billing: Stitching jobs).
+    if (onNext && (e.key === 'Enter' || e.key === 'ArrowRight') && !text.trim() && active < 0 && !selected.size) {
+      e.preventDefault()
+      close()
+      return onNext()
     }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
@@ -84,6 +92,8 @@ export function ItemPicker({ onPick, placeholder = 'Scan barcode or search item 
       return toggle(items[active])
     }
     if (e.key !== 'Enter') return
+    // Nothing typed / highlighted / ticked: Enter is left for the page → the next box.
+    if (!text.trim() && active < 0 && !selected.size) return
     e.preventDefault()
     const code = text.trim()
     // A typed / scanned code that matches exactly is added at once (scanner gun).

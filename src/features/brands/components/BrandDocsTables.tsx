@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange, type DateRangeValue } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -41,7 +42,7 @@ export function BrandBillsTable({ brandId, version }: Props) {
         <DateRange value={range} onChange={setRange} />
         <ExportButton path="/brand-bills/export" params={p} />
       </div>
-      <DataTable columns={billCols} rows={q.data ?? []} rowKey={(b) => b.id} loading={q.loading} emptyTitle="No delivery bills" emptyDescription="Bills are made from a brand order → Deliver & bill." onRowClick={(b) => navigate(`/brand-bills/${b.id}`)} />
+      <PagedTable columns={billCols} rows={q.data ?? []} rowKey={(b) => b.id} loading={q.loading} emptyTitle="No delivery bills" emptyDescription="Bills are made from a brand order → Deliver & bill." onRowClick={(b) => navigate(`/brand-bills/${b.id}`)} />
     </>
   )
 }
@@ -67,7 +68,7 @@ export function BrandPaymentsTable({ brandId, version, onChanged }: Props) {
         <DateRange value={range} onChange={setRange} />
         <ExportButton path="/brand-payments/export" params={p} />
       </div>
-      <DataTable columns={cols} rows={q.data ?? []} rowKey={(x) => x.id} loading={q.loading} emptyTitle="No money received yet" />
+      <PagedTable columns={cols} rows={q.data ?? []} rowKey={(x) => x.id} loading={q.loading} emptyTitle="No money received yet" />
       {cancel && (
         <CancelDocModal docNo={cancel.docNo} effect="The brand will owe this amount again." onCancel={(reason) => brandMoneyApi.cancelPayment(cancel.id, reason)}
           onClose={() => setCancel(null)} onDone={() => { setCancel(null); q.reload(); onChanged?.() }} />

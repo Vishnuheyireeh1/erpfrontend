@@ -27,7 +27,7 @@ export const shortJobNo = (job: Pick<Job, 'docNo' | 'bookNo'>) => {
 }
 
 // Top of the bill, as on the shop's old bills: shop name, address, phone, title; To / NAME / phone on the left;
-// Ready by under them; then No / Date on the right; a double line.
+// Expected delivery under them; then No / Date on the right; a double line.
 const plain = (n: number | string) => Number(n).toFixed(2) // old bills: no thousands commas
 const oldDate = (d: string, withTime = false) => {
   const x = new Date(d)
@@ -41,7 +41,7 @@ function head(job: Job, p: BusinessProfile, W: number, title: string) {
   for (const a of addr) L.push(...wrap(a.toUpperCase(), W).map((x) => center(x, W)))
   if (p.phone) L.push(center(`PH: ${p.phone}`, W))
   L.push('', center(title, W))
-  L.push('To', job.customerName.toUpperCase(), job.customerPhone ?? '', `Ready by: ${oldDate(job.expectedDate)}`)
+  L.push('To', job.customerName.toUpperCase(), job.customerPhone ?? '', `Expected delivery: ${oldDate(job.expectedDate)}`)
   const right = [`No  : ${shortJobNo(job)}`, `Date: ${oldDate(job.createdAt, true)}`]
   const rw = Math.max(...right.map((r) => r.length))
   for (const r of right) L.push(' '.repeat(Math.max(0, W - rw)) + r)

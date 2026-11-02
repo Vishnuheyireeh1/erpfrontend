@@ -1,6 +1,7 @@
 import { IconAlertTriangle, IconCircleCheck } from '@tabler/icons-react'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -44,7 +45,7 @@ export function TrialBalanceView({ onOpen }: { onOpen: (code: string) => void })
           <EmptyState title="Couldn't load" description={q.error} />
         ) : (
           <>
-            <DataTable columns={columns} rows={t?.lines ?? []} rowKey={(l) => l.code} loading={!t} emptyTitle="No entries yet" onRowClick={(l) => /^(\d|E)/.test(l.code) && onOpen(l.code)} />
+            <PagedTable columns={columns} rows={t?.lines ?? []} rowKey={(l) => l.code} loading={!t} emptyTitle="No entries yet" onRowClick={(l) => /^(\d|E)/.test(l.code) && onOpen(l.code)} />
             {t && t.lines.length > 0 && (
               <div className="grid grid-cols-2 gap-2 border-t border-line bg-page px-4 py-3 text-sm font-semibold text-ink sm:grid-cols-4">
                 <span>Debit {formatINR2(t.totals.debit)}</span>

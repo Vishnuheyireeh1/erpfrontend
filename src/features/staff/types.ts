@@ -75,6 +75,8 @@ export type WorkLine = { docNo: string; date: string; detail: string; pieces: nu
 export type PayrollRow = {
   staff: { id: number; code: string; name: string; role: string; dept: StaffDept; salary: string; isActive: boolean }
   salary: number
+  leaveDays: number // leave taken this month
+  leaveCut: number // salary ÷ 30 × leave days
   advance: number // salary already paid for the month (advance / part)
   salaryDue: number
   isPiece: boolean

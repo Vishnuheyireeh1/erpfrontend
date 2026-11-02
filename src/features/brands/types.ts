@@ -64,6 +64,8 @@ export type BrandPiece = {
   tailorId: number | null
   tailor: { id: number; name: string; payType: 'PIECE' | 'SALARY' } | null
   labourRate: string
+  measuredById: number | null
+  measuredBy: { id: number; name: string } | null
   stage: PieceStage
   readyOn: string | null
   billId: number | null
@@ -97,6 +99,10 @@ export type BrandOrder = BrandOrderSummary & {
   clothEntries: ClothEntry[]
   cloth: ClothLine[]
   costs: BrandCost[]
+  payments: { id: number; docNo: string; docDate: string; amount: string; mode: string; reference: string | null }[] // received on this order
+  total: number // delivered pieces at their bills + the rest at their price
+  received: number
+  balance: number
   profit?: OrderProfit
 }
 

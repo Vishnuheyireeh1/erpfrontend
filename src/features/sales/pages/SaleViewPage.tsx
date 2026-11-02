@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { useToast } from '@/components/ui/toast-context'
 import { todayISO } from '@/features/inventory/constants'
@@ -122,7 +123,7 @@ export function SaleViewPage() {
       </div>
 
       <Card title={`Items (${b.lines.length})`} bodyClassName="p-0" className="mb-5">
-        <DataTable columns={lineColumns} rows={b.lines} rowKey={(l) => l.id} />
+        <PagedTable columns={lineColumns} rows={b.lines} rowKey={(l) => l.id} />
       </Card>
 
       {(b.allocations.length > 0 || b.returns.length > 0 || (b.credits ?? []).length > 0) && (

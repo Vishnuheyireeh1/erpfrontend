@@ -92,7 +92,7 @@ export function FastBillPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div><p className="mb-1.5 text-sm font-medium text-ink">Bill type</p><div className="flex h-11 items-center">{b.isJob ? <Badge tone="brand">Job bill (stitching)</Badge> : <Badge tone="info">Shop bill</Badge>}</div></div>
             <Select label="Cash / Credit" value={mode} onChange={(e) => setMode(e.target.value as 'CASH' | 'CREDIT')} options={[{ value: 'CASH', label: 'Cash — paid in full' }, { value: 'CREDIT', label: 'Credit — pay later' }]} disabled={b.isJob} />
-            {b.isJob && <Input label="Ready by" type="date" min={b.meta.docDate} value={b.deliveryDate} onChange={(e) => b.setDeliveryDate(e.target.value)} />}
+            {b.isJob && <Input label="Expected delivery date" type="date" min={b.meta.docDate} value={b.deliveryDate} onChange={(e) => b.setDeliveryDate(e.target.value)} />}
           </div>
           <div ref={customerRef}>
             <BillCustomerBar customer={b.customer} onCustomer={b.setCustomer} meta={b.meta} onMeta={b.setMeta} needsCustomer={b.isJob || mode === 'CREDIT'} showErrors={b.showErrors} />

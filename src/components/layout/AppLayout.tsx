@@ -2,9 +2,12 @@ import { useCallback, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { MobileDrawer } from './MobileDrawer'
+import { FormPageKeys } from './FormPageKeys'
+import { KeysHelp } from './KeysHelp'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { useAppKeys } from './useAppKeys'
+import { useFormKeys } from './useFormKeys'
 
 const COLLAPSE_KEY = 'sairandhri.sidebarCollapsed'
 
@@ -30,6 +33,7 @@ export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
   useAppKeys() // Alt+M menu, Ctrl+K search, Alt+B billing
+  useFormKeys() // every form / popup: Enter next, Esc back, arrows, F9 / Ctrl+S save
 
   const toggleCollapsed = () => {
     const next = !collapsed
@@ -39,11 +43,13 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-dvh">
+      <KeysHelp />
       <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setDrawerOpen(true)} />
         <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 pt-5 md:px-6 md:pb-8">
           <Outlet />
+          <FormPageKeys />
         </main>
       </div>
       <BottomNav onMore={() => setDrawerOpen(true)} />

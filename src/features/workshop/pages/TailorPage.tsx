@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, StatCard } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { formatDate, formatINR } from '@/lib/format'
@@ -77,7 +78,7 @@ export function TailorPage() {
         <StatCard label="Pieces done" value={String(data.totals.pieces)} />
       </div>
       <Card title="Statement" bodyClassName="p-0" actions={<SortSwitch order={order} onOrder={setOrder} />}>
-        <DataTable
+        <PagedTable
           columns={columns}
           rows={inOrder(data.rows, order, 'oldest')}
           rowKey={(r) => `${r.type}-${r.id}`}

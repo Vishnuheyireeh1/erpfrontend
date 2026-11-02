@@ -17,6 +17,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import { brandApi } from '../api/brand.api'
 import { BrandFormModal } from '../components/BrandFormModal'
 import { gstLabel, type Brand } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 // + = the brand owes the shop.
 function PendingText({ balance }: { balance: number }) {
@@ -57,9 +58,10 @@ export function BrandsPage() {
   const setTab = (t: Tab) => setSp(t === 'active' ? {} : { tab: t })
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [adding, setAdding] = useState(false)
   const debounced = useDebounce(search.trim())
-  const params = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active', withDues: tab === 'dues', page, pageSize: 20 }
+  const params = { search: debounced || undefined, status: tab === 'inactive' ? 'inactive' : 'active', withDues: tab === 'dues', page, pageSize }
   const q = useApiQuery(params, () => brandApi.list(params))
 
   return (
@@ -91,7 +93,7 @@ export function BrandsPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * 20 + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={q.data?.items ?? []}
               rowKey={(b) => b.id}
@@ -100,7 +102,7 @@ export function BrandsPage() {
               emptyDescription={tab === 'dues' ? 'No brand owes the shop anything.' : 'Add the brands you stitch for — their orders and bills come next.'}
               onRowClick={(b) => navigate(`/brands/${b.id}`)}
             />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

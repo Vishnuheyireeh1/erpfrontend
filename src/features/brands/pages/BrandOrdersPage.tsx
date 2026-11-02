@@ -20,6 +20,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import { useListOrder } from '@/lib/useListOrder'
 import { brandOrderApi } from '../api/brandOrder.api'
 import type { BrandOrderSummary } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 const late = (o: BrandOrderSummary) => o.status === 'OPEN' && o.expectedDate.slice(0, 10) < new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
@@ -79,9 +80,10 @@ export function BrandOrdersPage() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('brand-orders')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const filters = { order, view, search: debounced || undefined, from: range.from || undefined, to: range.to || undefined }
-  const q = useApiQuery(['brand-orders', filters, page], () => brandOrderApi.list({ ...filters, page }))
+  const q = useApiQuery(['brand-orders', filters, page, pageSize], () => brandOrderApi.list({ ...filters, page, pageSize }))
 
   return (
     <>
@@ -119,7 +121,7 @@ export function BrandOrdersPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * 20 + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={columns}
               rows={q.data?.items ?? []}
               rowKey={(o) => o.id}
@@ -128,7 +130,7 @@ export function BrandOrdersPage() {
               emptyDescription={view === 'open' ? 'Add an order a brand gave you — each piece with its measurements, rate and tailor.' : undefined}
               onRowClick={(o) => navigate(`/brand-orders/${o.id}`)}
             />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

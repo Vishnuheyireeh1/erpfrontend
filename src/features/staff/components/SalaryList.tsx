@@ -17,17 +17,19 @@ import { monthLabel, salaryApi } from '../api/staff.api'
 import type { SalaryPayment } from '../types'
 import { SortSwitch } from '@/components/ui/DateRange'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 // Staff page → "Salary paid" tab: every salary payment, by month, with Excel and cancel.
 export function SalaryList({ version }: { version: number }) {
   const [search, setSearch] = useState('')
   const [month, setMonth] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [cancelling, setCancelling] = useState<SalaryPayment | null>(null)
   const debounced = useDebounce(search.trim())
   const [order, setOrder] = useListOrder('salary-paid')
   const filters = { order, search: debounced || undefined, month: month || undefined, status: 'all' }
-  const q = useApiQuery(['salary-payments', filters, page, version], () => salaryApi.list({ ...filters, page }))
+  const q = useApiQuery(['salary-payments', filters, page, pageSize, version], () => salaryApi.list({ ...filters, page, pageSize }))
 
   const columns: Column<SalaryPayment>[] = [
     { key: 'docNo', header: 'Payment', mobile: 'title', render: (p) => <span className="font-medium text-ink">{p.docNo}</span> },
@@ -69,8 +71,8 @@ export function SalaryList({ version }: { version: number }) {
           <EmptyState title="Couldn't load salary payments" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
         ) : (
           <>
-            <DataTable startIndex={(page - 1) * 20 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(p) => p.id} loading={q.loading} emptyTitle="No salary paid yet" emptyDescription="Use 'Pay salary' to record what was paid." />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(p) => p.id} loading={q.loading} emptyTitle="No salary paid yet" emptyDescription="Use 'Pay salary' to record what was paid." />
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

@@ -20,6 +20,7 @@ import { salesApi } from '../api/sales.api'
 import { saleState, tenderText } from '../status'
 import type { BillKind, BillRow, Receipt } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 // Sales bills = every item sold (shop bills + items sold on job bills); Job bills = stitching only; All = whole bills.
 const billColumns = (view: BillKind | 'all'): Column<BillRow>[] => [
@@ -81,10 +82,11 @@ export function SalesListPage() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('sales')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const isReceipts = tab === 'receipts'
   const filters = { order, search: debounced || undefined, status: isReceipts ? 'all' : tab, kind: isReceipts || kind === 'all' ? undefined : kind, from: range.from || undefined, to: range.to || undefined }
-  const params = { ...filters, page }
+  const params = { ...filters, page, pageSize }
   const bills = useApiQuery(['sales', params, isReceipts], () => (isReceipts ? Promise.resolve(null) : salesApi.list(params)))
   const receipts = useApiQuery(['receipts', params, isReceipts], () => (isReceipts ? salesApi.receipts(params) : Promise.resolve(null)))
   const active = isReceipts ? receipts : bills
@@ -132,10 +134,10 @@ export function SalesListPage() {
         {active.error ? (
           <EmptyState title="Couldn't load" description={active.error} action={<Button onClick={active.reload}>Try again</Button>} />
         ) : isReceipts ? (
-          <DataTable startIndex={(page - 1) * 20 + 1} columns={receiptColumns} rows={receipts.data?.items ?? []} rowKey={(r) => r.id} loading={receipts.loading} emptyTitle="No money received yet" onRowClick={(r) => navigate(`/sales/receipts/${r.id}`)} />
+          <DataTable startIndex={(page - 1) * pageSize + 1} columns={receiptColumns} rows={receipts.data?.items ?? []} rowKey={(r) => r.id} loading={receipts.loading} emptyTitle="No money received yet" onRowClick={(r) => navigate(`/sales/receipts/${r.id}`)} />
         ) : (
           <DataTable
-            startIndex={(page - 1) * 20 + 1}
+            startIndex={(page - 1) * pageSize + 1}
             columns={billColumns(kind)}
             rows={bills.data?.items ?? []}
             rowKey={(b) => `${b.kind}${b.id}`}
@@ -145,7 +147,7 @@ export function SalesListPage() {
             onRowClick={(b) => navigate(b.kind === 'JOB' ? `/jobs/${b.id}` : `/sales/${b.id}`)}
           />
         )}
-        {total > 20 && <Pagination page={page} pageSize={20} total={total} onPageChange={setPage} />}
+        {total > 0 && <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />}
       </Card>
     </>
   )

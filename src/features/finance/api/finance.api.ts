@@ -6,7 +6,7 @@ function qs(params: Record<string, string | number | boolean | undefined>) {
   Object.entries(params).forEach(([k, v]) => v !== undefined && v !== '' && v !== false && q.set(k, String(v)))
   return q.toString()
 }
-type ListFilters = { search?: string; status?: string; categoryId?: number; kind?: string; expenseKind?: string; from?: string; to?: string; page: number }
+type ListFilters = { search?: string; status?: string; categoryId?: number; kind?: string; expenseKind?: string; from?: string; to?: string; page: number; pageSize?: number }
 
 export const financeApi = {
   addExpense: (body: { docDate: string; categoryId: number; amount: number; mode: PaymentMode; paidTo?: string; reference?: string; notes?: string }) =>
@@ -17,7 +17,7 @@ export const financeApi = {
   saveCategory: (id: number | null, body: unknown) => (id ? api.put(`/expense-categories/${id}`, body) : api.post('/expense-categories', body)),
   removeCategory: (id: number) => api.delete(`/expense-categories/${id}`),
 
-  movements: (p: ListFilters) => api.get<Paged<Movement>>(`/money-movements?${qs({ ...p, pageSize: 20 })}`),
+  movements: (p: ListFilters) => api.get<Paged<Movement>>(`/money-movements?${qs({ pageSize: 20, ...p })}`),
   addMovement: (body: { docDate: string; kind: MoveKind; amount: number; mode: PaymentMode; reference?: string; notes?: string }) =>
     api.post<{ item: Movement }>('/money-movements', body).then((r) => r.item),
   cancelMovement: (id: number, reason: string) => api.post(`/money-movements/${id}/cancel`, { reason }),

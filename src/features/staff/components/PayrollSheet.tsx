@@ -2,10 +2,12 @@ import { IconFileTypePdf } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/toast-context'
 import { todayISO } from '@/features/inventory/constants'
 import { CancelDocModal } from '@/features/purchase/components/CancelDocModal'
@@ -14,20 +16,28 @@ import { formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { monthLabel, payrollApi } from '../api/staff.api'
 import type { PayrollRow } from '../types'
+import { LeaveBox } from './LeaveBox'
 import { PayslipModal } from './PayslipModal'
 
 type Props = { version: number; onAdvance: (staffId: number, month: string) => void }
 
-// Staff & salary → "Monthly salary": everyone's pay for a month — salary − advance taken + per-piece work —
-// Pay (makes a payslip), print the payslip, or give an advance.
+// Staff & salary → "Monthly salary": everyone's pay for a month — salary − leave cut − advance taken + per-piece work —
+// type the leave right in the list, Pay (makes a payslip), print the payslip, or give an advance.
+// Filter: a person on salary who also does per-piece work shows under both.
+type Show = 'all' | 'salary' | 'piece'
+const SHOW = [{ value: 'all', label: 'All staff' }, { value: 'salary', label: 'Monthly salary' }, { value: 'piece', label: 'Per piece' }]
 export function PayrollSheet({ version, onAdvance }: Props) {
   const toast = useToast()
   const [month, setMonth] = useState(() => todayISO().slice(0, 7))
+  const [show, setShow] = useState<Show>('all')
   const [paying, setPaying] = useState<PayrollRow | null>(null)
   const [cancelling, setCancelling] = useState<PayrollRow | null>(null)
   const q = useApiQuery(['payroll', month, version], () => payrollApi.sheet(month))
   const pdf = (id: number) => fetchFile(payrollApi.pdfPath(id)).catch((e) => toast.error(e instanceof Error ? e.message : 'Could not download'))
-  const t = q.data?.totals
+  const data = q.data ?? q.lastData // keep the list on screen while it refreshes (the cursor stays in its box)
+  const rows = (data?.rows ?? []).filter((r) => show === 'all' || (show === 'salary' ? r.salary > 0 : r.isPiece))
+  const sum = (f: (r: PayrollRow) => number) => rows.reduce((s, r) => s + f(r), 0)
+  const t = { toPay: sum((r) => (r.payslip ? 0 : r.toPay)), paid: sum((r) => Number(r.payslip?.netPaid ?? 0)), people: rows.length, done: rows.filter((r) => r.payslip).length }
 
   const columns: Column<PayrollRow>[] = [
     {
@@ -42,6 +52,12 @@ export function PayrollSheet({ version, onAdvance }: Props) {
       ),
     },
     { key: 'salary', header: 'Salary', align: 'right', render: (r) => (r.salary > 0 ? formatINR(r.salary) : <span className="text-muted">—</span>) },
+    {
+      key: 'leave',
+      header: 'Leave days',
+      render: (r) => (r.salary > 0 ? <LeaveBox key={`${r.staff.id}-${month}`} row={r} month={month} onSaved={q.reload} /> : <span className="text-muted">—</span>),
+    },
+    { key: 'cut', header: 'Leave cut', align: 'right', render: (r) => (r.leaveCut > 0 ? <span className="text-danger">− {formatINR(r.leaveCut)}</span> : <span className="text-muted">—</span>) },
     { key: 'advance', header: 'Advance taken', align: 'right', render: (r) => (r.advance > 0 ? <span className="text-danger">− {formatINR(r.advance)}</span> : <span className="text-muted">—</span>) },
     {
       key: 'piece',
@@ -87,8 +103,9 @@ export function PayrollSheet({ version, onAdvance }: Props) {
     <>
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <Input label="Month" type="month" max={todayISO().slice(0, 7)} value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} className="w-48" />
+        <Select label="Show" value={show} onChange={(e) => setShow(e.target.value as Show)} options={SHOW} className="w-44" />
         <ExportButton path="/payroll/export" params={{ month }} />
-        {t && (
+        {data && (
           <p className="text-sm text-muted sm:ml-auto">
             {monthLabel(month)}: <b className="text-ink">{t.done} of {t.people}</b> paid · paid {formatINR(t.paid)} · still to pay <b className="text-ink">{formatINR(t.toPay)}</b>
           </p>
@@ -98,12 +115,12 @@ export function PayrollSheet({ version, onAdvance }: Props) {
         {q.error ? (
           <EmptyState title="Couldn't load salaries" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
         ) : (
-          <DataTable
+          <PagedTable
             numbered
             columns={columns}
-            rows={q.data?.rows ?? []}
+            rows={rows}
             rowKey={(r) => r.staff.id}
-            loading={q.loading}
+            loading={q.loading && !data}
             emptyTitle="No staff for this month"
             emptyDescription="Add staff first (Staff tab → Add staff)."
           />

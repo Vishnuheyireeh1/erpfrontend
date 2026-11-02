@@ -1,4 +1,4 @@
-import { IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconPlus, IconTrash, IconUsers } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -13,8 +13,9 @@ import { BrandCostModal } from './BrandCostModal'
 
 const PAID_LABEL: Record<BrandCost['paidBy'], string> = { WORKER: 'owed to worker', SALARIED: 'salaried', PAID: 'paid out' }
 
-// Brand order page: other work / costs (who did what) and the order's profit so far.
-export function BrandCostsCard({ order, onChanged }: { order: BrandOrder; onChanged: () => void }) {
+// Brand order page, like a job's work card: who did what (Assign workers), money paid out (Add cost);
+// the order's profit stays closed at the bottom — only the owner needs it.
+export function BrandCostsCard({ order, onChanged, onAssign }: { order: BrandOrder; onChanged: () => void; onAssign: () => void }) {
   const toast = useToast()
   const [adding, setAdding] = useState(false)
   const [removing, setRemoving] = useState<BrandCost | null>(null)
@@ -36,8 +37,8 @@ export function BrandCostsCard({ order, onChanged }: { order: BrandOrder; onChan
 
   return (
     <>
-      <Card title="Work, costs & profit" className="mb-5"
-        actions={canAdd && <Button size="sm" icon={IconPlus} onClick={() => setAdding(true)}>Add work / cost</Button>}>
+      <Card title="Job work & costs" className="mb-5"
+        actions={canAdd && <div className="flex flex-wrap gap-2"><Button size="sm" icon={IconUsers} onClick={onAssign} disabled={order.status !== 'OPEN'}>Assign workers</Button><Button size="sm" icon={IconPlus} onClick={() => setAdding(true)}>Add cost</Button></div>}>
         {order.costs.length > 0 ? (
           <ul className="mb-4 flex flex-col divide-y divide-line text-sm">
             {order.costs.map((c) => (
@@ -57,10 +58,12 @@ export function BrandCostsCard({ order, onChanged }: { order: BrandOrder; onChan
             ))}
           </ul>
         ) : (
-          <p className="mb-4 text-sm text-muted">No other work added. Add embroidery, hand work or outside work here — with who did it.</p>
+          <p className="mb-4 text-sm text-muted">No other work yet. Assign the workers, then add any money paid out.</p>
         )}
         {p && (
-          <div className="grid grid-cols-2 gap-3 rounded-control bg-page p-3 text-sm sm:grid-cols-5">
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium text-ink-soft">Profit so far: <span className={p.profit < 0 ? 'text-danger' : 'text-success'}>{formatINR(p.profit)}</span></summary>
+          <div className="mt-2 grid grid-cols-2 gap-3 rounded-control bg-page p-3 text-sm sm:grid-cols-5">
             <div><p className="text-xs text-muted">Billed (before GST)</p><p className="font-semibold">{formatINR(p.billed)}</p></div>
             <div><p className="text-xs text-muted">Our cloth / items</p><p className="font-semibold">− {formatINR(p.ourCloth)}</p></div>
             <div><p className="text-xs text-muted">Stitching pay</p><p className="font-semibold">− {formatINR(p.tailorPay)}</p></div>
@@ -70,8 +73,9 @@ export function BrandCostsCard({ order, onChanged }: { order: BrandOrder; onChan
               <p className={cn('text-lg font-semibold', p.profit < 0 ? 'text-danger' : 'text-success')}>{formatINR(p.profit)}</p>
             </div>
           </div>
+            <p className="mt-2 text-xs text-muted">Billed counts delivery bills made so far; stitching pay counts per-piece tailors for pieces that are ready or delivered.</p>
+          </details>
         )}
-        {p && <p className="mt-2 text-xs text-muted">Billed counts delivery bills made so far; stitching pay counts per-piece tailors for pieces that are ready or delivered.</p>}
       </Card>
       {adding && <BrandCostModal order={order} onClose={() => setAdding(false)} onDone={() => { setAdding(false); onChanged() }} />}
       <ConfirmDialog open={!!removing} title="Remove this cost?" message={removing ? `${removing.category.name} ${formatINR(Number(removing.amount))} comes off this order (and off the worker's / day book).` : ''}

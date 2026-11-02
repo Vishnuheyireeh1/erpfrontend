@@ -14,7 +14,7 @@ import { clothKindLabel, type ClothKind } from '../moneyTypes'
 import type { BrandOrder } from '../types'
 
 type Props = { order: BrandOrder; onChanged: () => void }
-const blank = { kind: 'RECEIVED' as ClothKind, description: '', qty: '', unit: 'm', date: todayISO() }
+const blank = () => ({ kind: 'RECEIVED' as ClothKind, description: '', qty: '', unit: 'm', date: todayISO() })
 const qtyText = (n: number) => String(Math.round(n * 1000) / 1000)
 
 // The brand's own cloth for this order (not our stock): received from them, used, given back → left with us.
@@ -43,7 +43,7 @@ export function BrandClothCard({ order, onChanged }: Props) {
     if (!f.description.trim()) return toast.error('Write which cloth it is')
     if (!(Number(f.qty) > 0)) return toast.error('Enter the quantity')
     const ok = await run(() => brandMoneyApi.addCloth(order.id, { kind: f.kind, description: f.description.trim(), qty: Number(f.qty), unit: f.unit.trim() || 'm', date: f.date }), 'Cloth entry saved')
-    if (ok) setF((x) => ({ ...blank, kind: x.kind, description: x.description, unit: x.unit }))
+    if (ok) setF((x) => ({ ...blank(), kind: x.kind, description: x.description, unit: x.unit }))
   }
 
   return (

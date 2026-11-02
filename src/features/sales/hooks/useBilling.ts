@@ -21,6 +21,7 @@ import { ensureCustomer, quickCustomerError } from '../customerQuick'
 import { jobBillTotals, jobFromBill } from '../jobBill'
 import { billText } from '../print/billText'
 import { printText } from '../print/printing'
+import { focusBox, TARGET } from './useBillingKeys'
 import { newTender, tenderInput, type TenderRow } from '../tenders'
 import type { Customer } from '../types'
 import { startQty, unitWord } from '../units'
@@ -53,6 +54,7 @@ export function useBilling() {
   const [meta, setMetaState] = useState<BillMeta>(() => draft?.meta ?? freshMeta())
   const [tenders, setTenders] = useState<TenderRow[]>(() => (draft?.tenders?.length ? draft.tenders : [newTender()]))
   const [autoPrint, setAutoPrint] = useState(readAutoPrint)
+  const [lastSaved, setLastSaved] = useState<{ docNo: string; to: string } | null>(null)
   const [useAdvance, setUseAdvance] = useState(() => draft?.useAdvance ?? true)
   const [stitch, setStitch] = useState<ItemDraft[]>(() => draft?.stitch ?? [])
   const [charges, setCharges] = useState<CostDraft[]>(() => draft?.charges ?? []) // additional charges on a job bill
@@ -169,7 +171,9 @@ export function useBilling() {
       setEditing(null)
       toast.success(`${sale.docNo} ${editing ? 'updated' : 'saved'}${Number(sale.changeReturned) > 0 ? ` — give change ₹${Number(sale.changeReturned)}` : ''}`)
       if (autoPrint && profile && settings) printText(billText(sale, profile, settings['billing.print'].columns), settings['billing.print'])
-      navigate(`/sales/${sale.id}`)
+      // Editing an old bill → back to it. A new bill → stay here, empty, for the next customer.
+      if (editing) navigate(`/sales/${sale.id}`)
+      else nextBill({ docNo: sale.docNo, to: `/sales/${sale.id}` })
     } catch (err) { fail(err) }
   }
 
@@ -188,9 +192,9 @@ export function useBilling() {
       // New charge names typed here → the garment's list, so they show next time (a failure here doesn't matter).
       await Promise.allSettled(newGarmentCharges(stitch).map(([g, n]) => garmentApi.addCharge(g, n)))
       clearBillDraft()
-      toast.success(`${job.docNo} booked — print the tailor slip from the job page`)
+      toast.success(`${job.docNo} booked`)
       if (autoPrint && profile && settings) printText(jobBillText(job, profile, settings['billing.print'].columns), settings['billing.print'])
-      navigate(`/jobs/${job.id}`)
+      nextBill({ docNo: job.docNo, to: `/jobs/${job.id}` })
     } catch (err) { fail(err) }
   }
 
@@ -201,7 +205,15 @@ export function useBilling() {
     if (editing && isJob) return setError("A shop bill can't become a stitching job — cancel it and book a job instead")
     return isJob ? bookJob() : saveShopBill()
   }
+  // Saved: empty form, cursor on the customer name; the bill just saved stays one click away.
+  const nextBill = (saved: { docNo: string; to: string }) => {
+    clearAll()
+    setSaving(false)
+    setLastSaved(saved)
+    window.setTimeout(() => focusBox(TARGET.F3), 0)
+  }
   const clearAll = () => {
+    setLastSaved(null)
     setLines([]); setStitch([]); setCharges([]); setCustomer(null); setMetaState(freshMeta()); setTenders([newTender()])
     setDeliveryDate(inDays(7)); setError(''); setShowErrors(false); clearBillDraft()
     if (editing) { setEditing(null); setParams({}) }
@@ -212,7 +224,7 @@ export function useBilling() {
     customer, setCustomer, meta, setMeta, tenders, setTenders, useAdvance, setUseAdvance, advanceAvailable,
     stitch, setStitch, charges, setCharges, deliveryDate, setDeliveryDate, isJob,
     editing, payable, totals, jobT, jobGstRate, grandTotal, taxMode, gstRegistered,
-    autoPrint, toggleAutoPrint, showErrors, error, setError, saving, save, clearAll,
+    lastSaved, autoPrint, toggleAutoPrint, showErrors, error, setError, saving, save, clearAll,
   }
 }
 export type Billing = ReturnType<typeof useBilling>

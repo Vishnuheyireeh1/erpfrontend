@@ -4,7 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange, type DateRangeValue } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -70,7 +71,7 @@ export function BrandReportsPage() {
           : kind === 'payments' ? <BrandPaymentsTable brandId={p.brandId} version={0} />
             : q.error ? <EmptyState title="Couldn't load the report" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
               : (
-                <DataTable
+                <PagedTable
                   columns={COLS[kind]}
                   rows={q.data?.rows ?? []}
                   rowKey={(r) => JSON.stringify(r).slice(0, 120)}

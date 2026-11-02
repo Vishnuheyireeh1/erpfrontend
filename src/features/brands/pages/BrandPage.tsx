@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { EmptyState, Spinner } from '@/components/ui/Feedback'
 import { Tabs } from '@/components/ui/Tabs'
 import { formatDate, formatINR } from '@/lib/format'
@@ -73,7 +74,7 @@ export function BrandPage() {
       </div>
       <Card bodyClassName="p-0">
         {tab === 'statement' && <BrandStatementTable brandId={b.id} version={version} />}
-        {tab === 'orders' && <DataTable columns={orderCols} rows={orders.data?.items ?? []} rowKey={(o) => o.id} loading={orders.loading} emptyTitle="No orders yet" onRowClick={(o) => navigate(`/brand-orders/${o.id}`)} />}
+        {tab === 'orders' && <PagedTable columns={orderCols} rows={orders.data?.items ?? []} rowKey={(o) => o.id} loading={orders.loading} emptyTitle="No orders yet" onRowClick={(o) => navigate(`/brand-orders/${o.id}`)} />}
         {tab === 'bills' && <BrandBillsTable brandId={b.id} version={version} />}
         {tab === 'payments' && <BrandPaymentsTable brandId={b.id} version={version} onChanged={refresh} />}
       </Card>

@@ -17,7 +17,7 @@ export const trainingApi = {
   saveBatch: (id: number | null, body: unknown) => (id ? api.put(`/training/batches/${id}`, body) : api.post('/training/batches', body)),
   removeBatch: (id: number) => api.delete(`/training/batches/${id}`),
 
-  students: (p: ListQ & { page: number }) => api.get<Paged<Student>>(`/training/students?${qs({ ...p, pageSize: 20 })}`),
+  students: (p: ListQ & { page: number; pageSize?: number }) => api.get<Paged<Student>>(`/training/students?${qs({ pageSize: 20, ...p })}`),
   student: (id: number) => api.get<{ item: Student }>(`/training/students/${id}`).then((r) => r.item),
   createStudent: (body: StudentBody & { enrol?: EnrolBody | null }) => api.post<{ item: Student }>('/training/students', body).then((r) => r.item),
   updateStudent: (id: number, body: StudentBody) => api.put<{ item: Student }>(`/training/students/${id}`, body).then((r) => r.item),
@@ -26,7 +26,7 @@ export const trainingApi = {
   updateEnrolment: (id: number, body: { fee: number; status: EnrolmentStatus; notes?: string }) => api.put<{ item: Student }>(`/training/enrolments/${id}`, body).then((r) => r.item),
 
   pending: (p: ListQ) => api.get<{ items: PendingFee[]; total: number; count: number }>(`/training/fees/pending?${qs(p)}`),
-  receipts: (p: ListQ & { page: number }) => api.get<Paged<FeeReceiptFull> & { totalReceived: number }>(`/training/fees?${qs({ ...p, pageSize: 20 })}`),
+  receipts: (p: ListQ & { page: number; pageSize?: number }) => api.get<Paged<FeeReceiptFull> & { totalReceived: number }>(`/training/fees?${qs({ pageSize: 20, ...p })}`),
   receipt: (id: number) => api.get<{ item: FeeReceiptFull }>(`/training/fees/${id}`).then((r) => r.item),
   pay: (body: { enrolmentId: number; docDate: string; amount: number; mode: PaymentMode; reference?: string; notes?: string }) =>
     api.post<{ item: FeeReceiptFull }>('/training/fees', body).then((r) => r.item),

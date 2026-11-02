@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import { DataTable, type Column } from '@/components/ui/DataTable'
+import type { Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { formatDate, formatINR } from '@/lib/format'
 
 export type JobProfitRow = {
@@ -50,7 +51,7 @@ export function JobProfitList({ rows, loading }: { rows: JobProfitRow[]; loading
       bodyClassName="p-0"
       className="mb-6"
     >
-      <DataTable columns={columns} rows={rows} rowKey={(j) => j.id} loading={loading} emptyTitle="No jobs in this period" onRowClick={(j) => navigate(`/jobs/${j.id}`)} />
+      <PagedTable columns={columns} rows={rows} rowKey={(j) => j.id} loading={loading} emptyTitle="No jobs in this period" onRowClick={(j) => navigate(`/jobs/${j.id}`)} />
       <p className="border-t border-line px-4 py-2 text-xs text-muted">
         Lowest profit first. Profit = stitching charged (before GST) − tailor pay − other work (cutting, embroidery…) − cloth given free. Items the customer paid for are a shop sale, not counted here.
       </p>

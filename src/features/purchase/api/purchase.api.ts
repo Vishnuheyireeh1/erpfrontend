@@ -46,15 +46,15 @@ export const supplierApi = {
 }
 
 export const purchaseApi = {
-  list: (p: { search?: string; supplierId?: number; status?: string; from?: string; to?: string; page: number }) =>
-    api.get<Paged<BillSummary>>(`/purchases?${qs({ ...p, pageSize: 20 })}`),
+  list: (p: { search?: string; supplierId?: number; status?: string; from?: string; to?: string; page: number; pageSize?: number }) =>
+    api.get<Paged<BillSummary>>(`/purchases?${qs({ pageSize: 20, ...p })}`),
   get: (id: number) => api.get<{ item: Bill }>(`/purchases/${id}`).then((r) => r.item),
   create: (body: NewBill) => api.post<{ item: Bill }>('/purchases', body).then((r) => r.item),
   cancel: (id: number, reason: string) => api.post<{ item: Bill }>(`/purchases/${id}/cancel`, { reason }).then((r) => r.item),
   freightPaid: (id: number, body: { mode: string; date: string }) => api.post<{ item: Bill }>(`/purchases/${id}/freight-paid`, body).then((r) => r.item),
 
-  payments: (p: { search?: string; supplierId?: number; status?: string; from?: string; to?: string; page: number }) =>
-    api.get<Paged<Payment>>(`/supplier-payments?${qs({ ...p, pageSize: 20 })}`),
+  payments: (p: { search?: string; supplierId?: number; status?: string; from?: string; to?: string; page: number; pageSize?: number }) =>
+    api.get<Paged<Payment>>(`/supplier-payments?${qs({ pageSize: 20, ...p })}`),
   payment: (id: number) => api.get<{ item: Payment }>(`/supplier-payments/${id}`).then((r) => r.item),
   pay: (body: NewPayment) => api.post<{ item: Payment }>('/supplier-payments', body).then((r) => r.item),
   cancelPayment: (id: number, reason: string) => api.post(`/supplier-payments/${id}/cancel`, { reason }),

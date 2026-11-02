@@ -20,7 +20,7 @@ export type NewSale = {
   tenders: TenderInput[]
   useAdvance?: boolean
 }
-type DocFilters = { search?: string; customerId?: number; status?: string; kind?: BillKind; from?: string; to?: string; page: number }
+type DocFilters = { search?: string; customerId?: number; status?: string; kind?: BillKind; from?: string; to?: string; page: number; pageSize?: number }
 
 export const customerApi = {
   list: (p: { search?: string; status?: string; withDues?: boolean; kind?: 'stitching' | 'shop'; sort?: 'name' | 'recent'; match?: 'any' | 'start'; page?: number; pageSize?: number }) =>
@@ -35,7 +35,7 @@ export const customerApi = {
 }
 
 export const salesApi = {
-  list: (p: DocFilters) => api.get<Paged<BillRow> & { summary: { bills?: number; sales: number; received: number; returned: number } }>(`/sales?${qs({ ...p, pageSize: 20 })}`),
+  list: (p: DocFilters) => api.get<Paged<BillRow> & { summary: { bills?: number; sales: number; received: number; returned: number } }>(`/sales?${qs({ pageSize: 20, ...p })}`),
   get: (id: number) => api.get<{ item: Sale }>(`/sales/${id}`).then((r) => r.item),
   create: (body: NewSale) => api.post<{ item: Sale }>('/sales', body).then((r) => r.item),
   // Edit a bill of this month (same number); tenders = money taken now on top of what was already paid.
@@ -43,7 +43,7 @@ export const salesApi = {
   cancel: (id: number, reason: string) => api.post<{ item: Sale }>(`/sales/${id}/cancel`, { reason }).then((r) => r.item),
   setBookNo: (id: number, bookNo: string | null) => api.put<{ item: Sale; warning: string | null }>(`/sales/${id}/book-no`, { bookNo }),
 
-  receipts: (p: DocFilters) => api.get<Paged<Receipt>>(`/receipts?${qs({ ...p, pageSize: 20 })}`),
+  receipts: (p: DocFilters) => api.get<Paged<Receipt>>(`/receipts?${qs({ pageSize: 20, ...p })}`),
   receipt: (id: number) => api.get<{ item: Receipt }>(`/receipts/${id}`).then((r) => r.item),
   receive: (body: { customerId: number; docDate: string; tenders: TenderInput[]; notes?: string; allocations?: { invoiceId?: number; jobId?: number; amount: number }[] }) =>
     api.post<{ item: Receipt }>('/receipts', body).then((r) => r.item),

@@ -16,6 +16,7 @@ import { accountsApi } from '../api/accounts.api'
 import type { Journal } from '../types'
 import { JournalFormModal } from './JournalFormModal'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 const columns: Column<Journal>[] = [
   { key: 'docNo', header: 'Entry', mobile: 'title', render: (j) => <span className="font-medium text-brand">{j.docNo}</span> },
@@ -52,11 +53,12 @@ function JournalModal({ id, onClose, onChanged }: { id: number; onClose: () => v
 export function JournalsView() {
   const { range, setRange, from, to } = useYearRange()
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [adding, setAdding] = useState(false)
   const [open, setOpen] = useState<number | null>(null)
   const chart = useApiQuery('accounts-chart', () => accountsApi.chart())
   const [order, setOrder] = useListOrder('journals')
-  const q = useApiQuery(['journals', from, to, page, order], () => accountsApi.journals({ from, to, page, order }))
+  const q = useApiQuery(['journals', from, to, page, pageSize, order], () => accountsApi.journals({ from, to, page, pageSize, order }))
   return (
     <>
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -67,9 +69,9 @@ export function JournalsView() {
         </div>
       </div>
       <Card bodyClassName="p-0">
-        <DataTable startIndex={(page - 1) * 20 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(j) => j.id} loading={q.loading} onRowClick={(j) => setOpen(j.id)}
+        <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(j) => j.id} loading={q.loading} onRowClick={(j) => setOpen(j.id)}
           emptyTitle="No journal entries" emptyDescription="Bills, jobs, purchases, payments, salary and expenses go into the books by themselves. Use a journal only for things like capital, machines, loans, depreciation or GST paid." />
-        {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+        {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
       </Card>
       {adding && chart.data && <JournalFormModal accounts={chart.data.items} locked={chart.data.locked} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); q.reload() }} />}
       {open && <JournalModal id={open} onClose={() => setOpen(null)} onChanged={q.reload} />}

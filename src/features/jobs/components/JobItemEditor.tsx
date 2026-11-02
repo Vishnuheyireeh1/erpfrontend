@@ -28,10 +28,12 @@ type Props = {
   ownFabricLabel?: string
   extra?: ReactNode
   showMeasuredBy?: boolean // job garments: who took the measurements (staff, optional)
+  afterTailor?: ReactNode // brand orders: cutting master + measured by, right under the tailor
+  hideName?: boolean // brand orders: the bill just prints the garment name
 }
 
 // One garment on the job: type, pieces, price, tailor, measurements and design notes.
-export function JobItemEditor({ index, draft, garments, tailors, latestFor, error, onChange, onRemove, simple, ownFabricLabel = "Customer's own cloth", extra, showMeasuredBy = false }: Props) {
+export function JobItemEditor({ index, draft, garments, tailors, latestFor, error, onChange, onRemove, simple, ownFabricLabel = "Customer's own cloth", extra, showMeasuredBy = false, afterTailor, hideName = false }: Props) {
   const staff = useApiQuery(showMeasuredBy ? 'staff-options' : 'staff-options-off', () => (showMeasuredBy ? staffApi.options() : Promise.resolve([])))
   const [open, setOpen] = useState(!draft.id)
   const garment = garments.find((g) => String(g.id) === draft.garmentTypeId)
@@ -91,10 +93,11 @@ export function JobItemEditor({ index, draft, garments, tailors, latestFor, erro
           {garmentSelect}
           {piecesInput}
           {priceInput}
-          {nameInput}
+          {!hideName && nameInput}
           {extra}
           {tailorSelect}
           {labourInput}
+          {afterTailor}
         </div>
       )}
 

@@ -7,6 +7,7 @@ import type { TailorOption } from '@/features/workshop/api/workshop.api'
 import type { GarmentType } from '@/features/workshop/types'
 import { formatINR } from '@/lib/format'
 import { BRAND_LINE_LABELS, pieceAmount, type PieceDraft } from '../orderDrafts'
+import { BrandCuttingFields } from './BrandCuttingFields'
 
 type Props = {
   index: number
@@ -20,6 +21,7 @@ type Props = {
 }
 
 // One piece of a brand order: the job garment editor (measurements, rate, tailor, brand's cloth) + who it is for +
+// cutting master and who measured (under the tailor) +
 // cloth / lining from OUR stock (leaves stock when the order is saved).
 export function BrandPieceEditor({ index, draft, garments, tailors, error, onChange, onRemove, onCopy }: Props) {
   const [showStock, setShowStock] = useState(draft.materials.length > 0)
@@ -40,7 +42,9 @@ export function BrandPieceEditor({ index, draft, garments, tailors, error, onCha
         onChange={onChange}
         onRemove={onRemove}
         ownFabricLabel="Brand's own cloth"
+        hideName
         extra={forInput}
+        afterTailor={<BrandCuttingFields draft={draft} workers={tailors} onChange={onChange} />}
       />
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-sm">
         {!draft.id && (

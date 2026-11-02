@@ -91,7 +91,7 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
 
           {drafts.length > 0 && (
             <div className="rounded-card bg-page p-3">
-              <p className="mb-2 text-sm font-medium text-ink">Ready by</p>
+              <p className="mb-2 text-sm font-medium text-ink">Expected delivery date</p>
               <div className="flex flex-wrap items-end gap-2">
                 {quickDays.map(([n, label]) => {
                   const d = addDays(base, n)
@@ -101,7 +101,7 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
                     </button>
                   )
                 })}
-                <Input aria-label="Ready by date" type="date" min={minDate} value={deliveryDate} onChange={(e) => onDelivery(e.target.value)} className="w-44" />
+                <Input aria-label="Expected delivery date" type="date" min={minDate} value={deliveryDate} onChange={(e) => onDelivery(e.target.value)} className="w-44" />
               </div>
             </div>
           )}

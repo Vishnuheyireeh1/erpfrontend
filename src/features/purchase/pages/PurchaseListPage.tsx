@@ -18,6 +18,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import { paymentModeLabels, purchaseApi } from '../api/purchase.api'
 import type { BillSummary, Payment } from '../types'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 const billColumns: Column<BillSummary>[] = [
   { key: 'docNo', header: 'Bill', mobile: 'title', render: (b) => <span className="font-medium text-brand">{b.docNo}</span> },
@@ -48,10 +49,11 @@ export function PurchaseListPage() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('purchase')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const debounced = useDebounce(search.trim())
   const isPayments = tab === 'payments'
   const filters = { order, search: debounced || undefined, status: isPayments ? 'all' : tab, from: range.from || undefined, to: range.to || undefined }
-  const params = { ...filters, page }
+  const params = { ...filters, page, pageSize }
   const bills = useApiQuery(['bills', params, isPayments], () => (isPayments ? Promise.resolve(null) : purchaseApi.list(params)))
   const payments = useApiQuery(['payments', params, isPayments], () => (isPayments ? purchaseApi.payments(params) : Promise.resolve(null)))
   const active = isPayments ? payments : bills
@@ -83,10 +85,10 @@ export function PurchaseListPage() {
         {active.error ? (
           <EmptyState title="Couldn't load" description={active.error} action={<Button onClick={active.reload}>Try again</Button>} />
         ) : isPayments ? (
-          <DataTable startIndex={(page - 1) * 20 + 1} columns={paymentColumns} rows={payments.data?.items ?? []} rowKey={(p) => p.id} loading={payments.loading} emptyTitle="No payments yet" onRowClick={(p) => navigate(`/purchase/payments/${p.id}`)} />
+          <DataTable startIndex={(page - 1) * pageSize + 1} columns={paymentColumns} rows={payments.data?.items ?? []} rowKey={(p) => p.id} loading={payments.loading} emptyTitle="No payments yet" onRowClick={(p) => navigate(`/purchase/payments/${p.id}`)} />
         ) : (
           <DataTable
-            startIndex={(page - 1) * 20 + 1}
+            startIndex={(page - 1) * pageSize + 1}
             columns={billColumns}
             rows={bills.data?.items ?? []}
             rowKey={(b) => b.id}
@@ -96,7 +98,7 @@ export function PurchaseListPage() {
             onRowClick={(b) => navigate(`/purchase/${b.id}`)}
           />
         )}
-        {total > 20 && <Pagination page={page} pageSize={20} total={total} onPageChange={setPage} />}
+        {total > 0 && <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />}
       </Card>
     </>
   )

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, StatCard } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
@@ -14,6 +15,7 @@ import { useApiQuery } from '@/lib/useApiQuery'
 import { useDebounce } from '@/lib/useDebounce'
 import { reportsApi } from '../api/reports.api'
 import type { Owes, StockRow } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
 const owesColumns: Column<Owes>[] = [
   { key: 'name', header: 'Customer', mobile: 'title', render: (o) => <span className="block min-w-0"><span className="block font-medium text-ink">{o.name}</span><span className="block text-xs text-muted">{o.code}{o.phone ? ` · ${o.phone}` : ''}</span></span> },
@@ -42,7 +44,7 @@ export function WhoOwesView() {
         </div>
       )}
       <Card bodyClassName="p-0">
-        {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : <DataTable columns={owesColumns} rows={r?.items ?? []} rowKey={(o) => o.customerId} loading={q.loading && !r} emptyTitle="Nobody owes the shop" emptyDescription="All bills and job balances are paid." onRowClick={(o) => navigate(`/customers/${o.customerId}`)} />}
+        {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : <PagedTable columns={owesColumns} rows={r?.items ?? []} rowKey={(o) => o.customerId} loading={q.loading && !r} emptyTitle="Nobody owes the shop" emptyDescription="All bills and job balances are paid." onRowClick={(o) => navigate(`/customers/${o.customerId}`)} />}
       </Card>
       <p className="mt-2 text-xs text-muted">Age = days since the bill / job date. "Old balance / advance" = balance from before the ERP minus any unused advance. Total matches the customer's statement.</p>
     </>
@@ -65,9 +67,10 @@ export function StockReportView({ slow }: { slow: boolean }) {
   const [days, setDays] = useState('90')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize(50)
   const debounced = useDebounce(search.trim())
-  const q = useApiQuery(['stock-report', slow, date, days, debounced, page], () =>
-    slow ? reportsApi.slowMoving({ days: Number(days), search: debounced || undefined, page }) : reportsApi.stockOnDate({ date, search: debounced || undefined, page }),
+  const q = useApiQuery(['stock-report', slow, date, days, debounced, page, pageSize], () =>
+    slow ? reportsApi.slowMoving({ days: Number(days), search: debounced || undefined, page, pageSize }) : reportsApi.stockOnDate({ date, search: debounced || undefined, page, pageSize }),
   )
   const r = q.data ?? q.lastData
   return (
@@ -92,8 +95,8 @@ export function StockReportView({ slow }: { slow: boolean }) {
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
           <>
-            <DataTable startIndex={(page - 1) * 50 + 1} columns={stockColumns(slow)} rows={r?.items ?? []} rowKey={(s) => s.variantId} loading={q.loading && !r} emptyTitle={slow ? 'Every item in stock sold recently' : 'No stock on this date'} onRowClick={(s) => navigate(`/stock/items/${s.variantId}`)} />
-            {(r?.total ?? 0) > 50 && <Pagination page={page} pageSize={50} total={r!.total} onPageChange={setPage} />}
+            <DataTable startIndex={(page - 1) * pageSize + 1} columns={stockColumns(slow)} rows={r?.items ?? []} rowKey={(s) => s.variantId} loading={q.loading && !r} emptyTitle={slow ? 'Every item in stock sold recently' : 'No stock on this date'} onRowClick={(s) => navigate(`/stock/items/${s.variantId}`)} />
+            {(r?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={r!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

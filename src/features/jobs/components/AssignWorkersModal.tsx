@@ -71,7 +71,7 @@ export function AssignWorkersModal({ job, onClose, onDone }: Props) {
   }
 
   return (
-    <Modal open onClose={onClose} size="lg" title={`Assign workers — ${job.docNo}`} description={`${job.customerName} · ready by ${new Date(job.expectedDate).toLocaleDateString('en-IN')}`}
+    <Modal open onClose={onClose} size="lg" title={`Assign workers — ${job.docNo}`} description={`${job.customerName} · expected delivery ${new Date(job.expectedDate).toLocaleDateString('en-IN')}`}
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></>}>
       <div className="flex flex-col gap-3">
         {all.length === 0 && !workers.loading && <p className="rounded-control bg-warn-tint px-3 py-2 text-sm text-warn">No workers yet — in Staff & salary, turn on "Does job work" for your tailors.</p>}

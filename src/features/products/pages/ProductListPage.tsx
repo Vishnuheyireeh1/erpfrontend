@@ -1,4 +1,4 @@
-import { IconFileImport, IconPackage, IconPlus, IconSearch } from '@tabler/icons-react'
+import { IconDownload, IconFileUpload, IconPackage, IconPlus, IconSearch } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -10,14 +10,17 @@ import { EmptyState } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { Select } from '@/components/ui/Select'
+import { useToast } from '@/components/ui/toast-context'
 import { useDebounce } from '@/lib/useDebounce'
+import { importApi } from '../api/import.api'
+import { ProductImportModal } from '../components/import/ProductImportModal'
 import { ownMadeColumns } from '../config/ownMadeColumns'
 import { productColumns } from '../config/productColumns'
 import { useProductList } from '../hooks/useProductList'
 import { useProductOptions } from '../hooks/useProductOptions'
 import type { ProductListParams } from '../types'
+import { usePageSize } from '@/lib/usePageSize'
 
-const PAGE_SIZE = 20
 
 const statusOptions = [
   { value: 'all', label: 'All statuses' },
@@ -35,7 +38,11 @@ export function ProductListPage() {
   const [categoryId, setCategoryId] = useState('')
   const [status, setStatus] = useState<ProductListParams['status']>('all')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const { options } = useProductOptions()
+  const toast = useToast()
+  const [uploading, setUploading] = useState(false)
+  const template = () => importApi.downloadTemplate().catch(() => toast.error('Could not download the template'))
   // /products?type=FINISHED (back from an own-made product) → starts on the first type that works like it.
   const kindParam = params.get('type')
   const typeId = chosenType ?? String(options.productTypes.find((t) => kindParam && t.kind === kindParam)?.id ?? '')
@@ -48,7 +55,7 @@ export function ProductListPage() {
     categoryId: categoryId ? Number(categoryId) : undefined,
     status,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
   })
 
   // Any filter change → back to page 1.
@@ -66,10 +73,10 @@ export function ProductListPage() {
         subtitle="Everything you sell, stitch with or make."
         actions={
           <>
-            <ExportButton path="/products/export" params={{ search: debounced || undefined, productTypeId: typeId || undefined, categoryId: categoryId || undefined, status }} />
-            <Button icon={IconFileImport} onClick={() => navigate('/products/import')}>
-              Import
-            </Button>
+            {/* Download list = what is in the system (report). Template + Upload = adding many items from Excel. */}
+            <ExportButton label="Download list" path="/products/export" params={{ search: debounced || undefined, productTypeId: typeId || undefined, categoryId: categoryId || undefined, status }} />
+            <Button icon={IconDownload} onClick={template}>Download template</Button>
+            <Button icon={IconFileUpload} onClick={() => setUploading(true)}>Upload Excel</Button>
             <Button variant="primary" icon={IconPlus} onClick={() => navigate(ownMade ? '/products/new?type=FINISHED&from=own-made' : '/products/new')}>
               {ownMade ? 'Add own-made product' : 'Add product'}
             </Button>
@@ -128,7 +135,7 @@ export function ProductListPage() {
         ) : (
           <>
             <DataTable
-              startIndex={(page - 1) * PAGE_SIZE + 1}
+              startIndex={(page - 1) * pageSize + 1}
               columns={ownMade ? ownMadeColumns : productColumns}
               rows={list.items}
               rowKey={(p) => p.id}
@@ -137,13 +144,14 @@ export function ProductListPage() {
               emptyDescription="Try a different search or filter."
               onRowClick={(p) => navigate(`/products/${p.id}${ownMade ? '?from=own-made' : ''}`)}
             />
-            {list.total > PAGE_SIZE && (
-              <Pagination page={page} pageSize={PAGE_SIZE} total={list.total} onPageChange={setPage} />
+            {list.total > 0 && (
+              <Pagination page={page} pageSize={pageSize} total={list.total} onPageChange={setPage} />
             )}
           </>
         )}
       </Card>
       {ownMade && <p className="mt-3 text-xs text-muted">Cost / piece = average cost of the pieces in stock (cloth + tailor + paid out). Open a product to record more pieces made.</p>}
+      {uploading && <ProductImportModal onClose={() => setUploading(false)} onImported={list.reload} />}
     </>
   )
 }

@@ -35,10 +35,10 @@ export type JobInput = {
 export type JobProductInput = { variantId: number; qty: number; rate: number; discountPct: number; included: boolean }
 export type NewJob = JobInput & { customerId: number; docDate: string; parentJobId?: number | null; tenders: TenderInput[]; useAdvance: boolean; products: JobProductInput[] }
 export type CostBody = { categoryId: number; date: string; description?: string; qty: number; rate: number; paidBy: CostPaidBy; mode: string | null; tailorId: number | null }
-export type JobFilters = { view: string; search?: string; tailorId?: number; customerId?: number; from?: string; to?: string; page: number }
+export type JobFilters = { view: string; search?: string; tailorId?: number; customerId?: number; from?: string; to?: string; page: number; pageSize?: number }
 
 export const jobsApi = {
-  list: (p: JobFilters) => api.get<Paged<JobSummary> & { counts: JobCounts }>(`/jobs?${qs({ ...p, pageSize: 20 })}`),
+  list: (p: JobFilters) => api.get<Paged<JobSummary> & { counts: JobCounts }>(`/jobs?${qs({ pageSize: 20, ...p })}`),
   chargeKinds: () => api.get<{ items: string[] }>('/jobs/charge-kinds').then((r) => r.items),
   get: (id: number) => api.get<{ item: Job }>(`/jobs/${id}`).then((r) => r.item),
   create: (body: NewJob) => api.post<{ item: Job }>('/jobs', body).then((r) => r.item),

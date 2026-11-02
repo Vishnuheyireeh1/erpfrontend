@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
+import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange, type DateRangeValue } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
@@ -20,6 +21,7 @@ import { usePrintFee } from '../print/usePrintFee'
 import type { FeeReceiptFull, PendingFee } from '../types'
 import { FeeModal } from './FeeModal'
 import { useListOrder } from '@/lib/useListOrder'
+import { usePageSize } from '@/lib/usePageSize'
 
 // Training → "Fees pending": who still owes, biggest first, with "Receive".
 export function FeesPendingList() {
@@ -48,7 +50,7 @@ export function FeesPendingList() {
       </div>
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
-          <DataTable columns={columns} rows={q.data?.items ?? []} rowKey={(p) => p.enrolmentId} loading={q.loading} emptyTitle="No fees pending" emptyDescription="Everyone has paid in full." onRowClick={(p) => navigate(`/training/students/${p.studentId}`)} />
+          <PagedTable columns={columns} rows={q.data?.items ?? []} rowKey={(p) => p.enrolmentId} loading={q.loading} emptyTitle="No fees pending" emptyDescription="Everyone has paid in full." onRowClick={(p) => navigate(`/training/students/${p.studentId}`)} />
         )}
       </Card>
       {paying && <FeeModal enrolmentId={paying.enrolmentId} title={`${paying.name} · ${paying.course}`} due={paying.due} onClose={() => setPaying(null)} onSaved={() => { setPaying(null); q.reload() }} />}
@@ -64,10 +66,11 @@ export function FeeReceiptsList() {
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [order, setOrder] = useListOrder('fees')
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize()
   const [cancelling, setCancelling] = useState<FeeReceiptFull | null>(null)
   const debounced = useDebounce(search.trim())
   const filters = { order, search: debounced || undefined, from: range.from || undefined, to: range.to || undefined }
-  const q = useApiQuery(['fee-receipts', filters, page], () => trainingApi.receipts({ ...filters, page }))
+  const q = useApiQuery(['fee-receipts', filters, page, pageSize], () => trainingApi.receipts({ ...filters, page, pageSize }))
   const columns: Column<FeeReceiptFull>[] = [
     { key: 'docNo', header: 'Receipt', mobile: 'title', render: (r) => <span className="font-medium text-ink">{r.docNo}</span> },
     { key: 'student', header: 'Student', mobile: 'subtitle', render: (r) => `${r.enrolment.student.name} · ${r.enrolment.batch.course.name}` },
@@ -98,8 +101,8 @@ export function FeeReceiptsList() {
       <Card bodyClassName="p-0">
         {q.error ? <EmptyState title="Couldn't load" description={q.error} /> : (
           <>
-            <DataTable startIndex={(page - 1) * 20 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(r) => r.id} loading={q.loading} emptyTitle="No fees received yet" onRowClick={(r) => navigate(`/training/students/${r.enrolment.student.id}`)} />
-            {(q.data?.total ?? 0) > 20 && <Pagination page={page} pageSize={20} total={q.data!.total} onPageChange={setPage} />}
+            <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(r) => r.id} loading={q.loading} emptyTitle="No fees received yet" onRowClick={(r) => navigate(`/training/students/${r.enrolment.student.id}`)} />
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>

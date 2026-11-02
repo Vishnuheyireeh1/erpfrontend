@@ -13,6 +13,7 @@ import { Select } from '@/components/ui/Select'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { useDebounce } from '@/lib/useDebounce'
 import { systemApi, type Activity } from '../api/system.api'
+import { usePageSize } from '@/lib/usePageSize'
 
 const when = (iso: string) => new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 const label = (entity: string) => entity.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
@@ -30,9 +31,10 @@ export function ActivityPage() {
   const [entity, setEntity] = useState('')
   const [range, setRange] = useState<DateRangeValue>({ from: '', to: '' })
   const [page, setPage] = useState(1)
+  const [pageSize] = usePageSize(50)
   const debounced = useDebounce(search.trim())
   const filters = { search: debounced || undefined, entity: entity || undefined, from: range.from || undefined, to: range.to || undefined }
-  const q = useApiQuery(['activity', filters, page], () => systemApi.activity({ ...filters, page }))
+  const q = useApiQuery(['activity', filters, page, pageSize], () => systemApi.activity({ ...filters, page, pageSize }))
   const entities = (q.data ?? q.lastData)?.entities ?? []
 
   return (
@@ -48,8 +50,8 @@ export function ActivityPage() {
           <EmptyState title="Couldn't load the activity log" description={q.error} action={<Button onClick={q.reload}>Try again</Button>} />
         ) : (
           <>
-            <DataTable startIndex={(page - 1) * 50 + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(a) => a.id} loading={q.loading} emptyTitle="Nothing found" />
-            {(q.data?.total ?? 0) > 50 && <Pagination page={page} pageSize={50} total={q.data!.total} onPageChange={setPage} />}
+            <DataTable startIndex={(page - 1) * pageSize + 1} columns={columns} rows={q.data?.items ?? []} rowKey={(a) => a.id} loading={q.loading} emptyTitle="Nothing found" />
+            {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}
           </>
         )}
       </Card>
