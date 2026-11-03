@@ -21,7 +21,8 @@ const ORDER: ItemKind[] = ['SALE', 'STITCHING', 'BRAND']
 const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2))
 
 // Reports → "Profit by item": every garment stitched and product sold — pieces, rate, income before GST,
-// tailor pay, embroidery, other work, cloth / item cost and the profit left.
+// cloth / item cost and the profit left. Tailor, embroidery and other work show only where they can apply: a sale item
+// has none, so the Sale items view leaves them out.
 export function ItemProfitView() {
   const { range, setRange, from, to } = useReportRange()
   const [kind, setKind] = useState<'' | ItemKind>('SALE') // opens on sale items; All types is in the list
@@ -33,16 +34,19 @@ export function ItemProfitView() {
   // Totals follow the search (all rows when it is empty).
   const t = r && (term ? { pieces: rows.reduce((a, x) => a + x.pieces, 0), total: rows.reduce((a, x) => a + x.total, 0), tailor: rows.reduce((a, x) => a + x.tailor, 0), embroidery: rows.reduce((a, x) => a + x.embroidery, 0), other: rows.reduce((a, x) => a + x.other, 0), cloth: rows.reduce((a, x) => a + x.cloth, 0), profit: rows.reduce((a, x) => a + x.profit, 0) } : r.totals)
 
+  const saleOnly = kind === 'SALE'
   const columns: Column<ItemProfitRow>[] = [
     { key: 'item', header: 'Item', mobile: 'title', render: (x) => <span className="font-medium text-ink">{x.item}</span> },
     { key: 'kind', header: 'Type', mobile: 'subtitle', render: (x) => KIND[x.kind] },
     { key: 'pieces', header: 'Pieces / qty', align: 'right', render: (x) => qtyText(x.pieces) },
     { key: 'rate', header: 'Avg rate', align: 'right', render: (x) => formatINR(x.avgRate) },
     { key: 'total', header: 'Total', align: 'right', render: (x) => formatINR(x.total) },
-    { key: 'tailor', header: 'Tailor', align: 'right', render: (x) => formatINR(x.tailor) },
-    { key: 'emb', header: 'Embroidery', align: 'right', render: (x) => formatINR(x.embroidery) },
-    { key: 'other', header: 'Other cost', align: 'right', render: (x) => formatINR(x.other) },
-    { key: 'cloth', header: 'Cloth / item cost', align: 'right', render: (x) => formatINR(x.cloth) },
+    ...(saleOnly ? [] : [
+      { key: 'tailor', header: 'Tailor', align: 'right', render: (x) => formatINR(x.tailor) },
+      { key: 'emb', header: 'Embroidery', align: 'right', render: (x) => formatINR(x.embroidery) },
+      { key: 'other', header: 'Other cost', align: 'right', render: (x) => formatINR(x.other) },
+    ] satisfies Column<ItemProfitRow>[]),
+    { key: 'cloth', header: saleOnly ? 'Item cost' : 'Cloth / item cost', align: 'right', render: (x) => formatINR(x.cloth) },
     {
       key: 'profit', header: 'Profit', align: 'right', mobile: 'badge',
       render: (x) => <span className={cn('font-semibold', x.profit < 0 ? 'text-danger' : 'text-success')}>{formatINR(x.profit)}<span className="block text-xs font-normal text-muted">{x.marginPct}%</span></span>,
@@ -56,10 +60,10 @@ export function ItemProfitView() {
           options={[{ value: '', label: 'All types' }, ...ORDER.map((k) => ({ value: k, label: KIND_FILTER[k] }))]} />
         <Input icon={IconSearch} aria-label="Search item" placeholder="Search item (e.g. blouse)" className="sm:w-56" value={search} onChange={(e) => setSearch(e.target.value)} />
       </ReportToolbar>
-      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className={cn('mb-4 grid grid-cols-2 gap-3', saleOnly ? 'lg:grid-cols-3' : 'lg:grid-cols-4')}>
         <StatCard label="Total (before GST)" value={t ? formatINR(t.total) : '…'} note={t ? `${qtyText(t.pieces)} pieces / qty` : undefined} />
-        <StatCard label="Tailor + embroidery + other" value={t ? formatINR(t.tailor + t.embroidery + t.other) : '…'} />
-        <StatCard label="Cloth / item cost" value={t ? formatINR(t.cloth) : '…'} />
+        {!saleOnly && <StatCard label="Tailor + embroidery + other" value={t ? formatINR(t.tailor + t.embroidery + t.other) : '…'} />}
+        <StatCard label={saleOnly ? 'Item cost' : 'Cloth / item cost'} value={t ? formatINR(t.cloth) : '…'} />
         <StatCard label="Profit" value={t ? formatINR(t.profit) : '…'} note={t && t.total > 0 ? `${Math.round((t.profit / t.total) * 100)}% of total` : undefined} noteTone="success" />
       </div>
       <Card bodyClassName="p-0">
