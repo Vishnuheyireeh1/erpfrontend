@@ -3,6 +3,7 @@ import { itemTitle } from '@/features/inventory/constants'
 import type { CostDraft, ItemDraft } from '@/features/jobs/jobDrafts'
 import { formatINR } from '@/lib/format'
 import type { SaleLineDraft } from './SaleLineRow'
+import { itemChargeAmount } from '@/features/jobs/jobDrafts'
 
 type Props = {
   lines: SaleLineDraft[]
@@ -50,8 +51,8 @@ export function BillSummary({ lines, amountOf, stitch, charges }: Props) {
           {stitch.map((d) => (
             <Fragment key={d.key}>
               <Line name={d.description || 'Garment'} detail={`${qtyText(d.qty)} × ${formatINR(Number(d.chargeRate) || 0)}`} amount={formatINR((Number(d.qty) || 0) * (Number(d.chargeRate) || 0))} />
-              {(d.charges ?? []).filter((c) => Number(c.amount) > 0).map((c) => (
-                <Line key={c.key} name={`+ ${c.name.trim() || 'Charge'}`} detail={`for ${d.description || 'garment'}`} amount={formatINR(Number(c.amount))} />
+              {(d.charges ?? []).filter((c) => itemChargeAmount(c) > 0).map((c) => (
+                <Line key={c.key} name={`+ ${c.name.trim() || 'Charge'}`} detail={`${qtyText(c.qty)} × ${formatINR(Number(c.rate) || 0)} · for ${d.description || 'garment'}`} amount={formatINR(itemChargeAmount(c))} />
               ))}
             </Fragment>
           ))}

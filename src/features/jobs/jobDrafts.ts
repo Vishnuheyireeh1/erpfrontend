@@ -22,10 +22,10 @@ export type ItemDraft = {
   charges?: ItemCharge[] // billing page: this garment's additional charges (empty amount = not charged)
 }
 // One additional charge inside a garment on the bill: picked from the garment type's options, or typed (a new one is
-// added to the garment's options when the bill is booked).
-export type ItemCharge = { key: string; name: string; amount: string; other?: boolean } // other = not in the garment's list yet
+// added to the garment's options, with its rate, when the bill is booked). Rate changes here stay on this bill.
+export type ItemCharge = { key: string; name: string; qty: string; rate: string; other?: boolean } // other = not in the garment's list yet
 // Extra charge on the bill (embroidery ₹500 …). Shop costs are added on the job page.
-export type CostDraft = { key: string; kind: string; description: string; charge: string }
+export type CostDraft = { key: string; kind: string; description: string; charge: string; qty?: string; rate?: string }
 
 let seq = 0
 export const newItem = (): ItemDraft => ({ key: `i${++seq}`, garmentTypeId: '', description: '', qty: '1', chargeRate: '', tailorId: '', labourRate: '', measurements: {}, instructions: '', ownFabric: false })
@@ -48,19 +48,20 @@ export const garmentPatch = (gid: string, garments: GarmentType[], tailors: Tail
     charges: [], // added on the bill only when needed (+ Add charge)
   }
 }
-export const newItemCharge = (name = ''): ItemCharge => ({ key: `k${++seq}`, name, amount: '', other: !name })
-export const itemChargesTotal = (d: ItemDraft) => (d.charges ?? []).reduce((s, c) => s + (Number(c.amount) || 0), 0)
+export const newItemCharge = (name = ''): ItemCharge => ({ key: `k${++seq}`, name, qty: '1', rate: '', other: !name })
+export const itemChargeAmount = (c: ItemCharge) => Math.round((Number(c.qty) || 0) * (Number(c.rate) || 0) * 100) / 100
+export const itemChargesTotal = (d: ItemDraft) => (d.charges ?? []).reduce((s, c) => s + itemChargeAmount(c), 0)
 
-// Charges typed on the bill that the garment doesn't list yet → [garmentTypeId, name] to add to it after booking.
+// Charges typed on the bill that the garment doesn't list yet → [garmentTypeId, name, rate] to add to it after booking.
 export const newGarmentCharges = (items: ItemDraft[]) => {
   const seen = new Set<string>()
-  return items.flatMap((d) => (d.charges ?? []).filter((c) => c.other && c.name.trim() && Number(c.amount) > 0).map((c) => [Number(d.garmentTypeId), c.name.trim()] as const))
+  return items.flatMap((d) => (d.charges ?? []).filter((c) => c.other && c.name.trim() && itemChargeAmount(c) > 0).map((c) => [Number(d.garmentTypeId), c.name.trim(), Number(c.rate) || 0] as const))
     .filter(([g, n]) => !seen.has(`${g}|${n.toLowerCase()}`) && !!seen.add(`${g}|${n.toLowerCase()}`))
 }
 
 // Garments' charges with an amount → job bill charges, printed as "Lining (Blouse)".
 export const itemChargeCosts = (items: ItemDraft[]): CostDraft[] =>
-  items.flatMap((d) => (d.charges ?? []).filter((c) => Number(c.amount) > 0 && c.name.trim()).map((c) => ({ key: c.key, kind: c.name.trim(), description: d.description, charge: c.amount })))
+  items.flatMap((d) => (d.charges ?? []).filter((c) => itemChargeAmount(c) > 0 && c.name.trim()).map((c) => ({ key: c.key, kind: c.name.trim(), description: d.description, charge: String(itemChargeAmount(c)), qty: c.qty, rate: c.rate })))
 
 export function itemError(d: ItemDraft) {
   if (!d.garmentTypeId) return 'Choose the garment'
@@ -69,6 +70,9 @@ export function itemError(d: ItemDraft) {
   if (d.chargeRate === '' || Number(d.chargeRate) < 0) return 'Enter the charge'
   return undefined
 }
+
+// Qty and rate go with a charge only while they still make its amount (the job form edits the amount itself).
+const costQtyRate = (c: CostDraft) => (c.rate && Math.abs((Number(c.qty) || 0) * Number(c.rate) - Number(c.charge)) < 0.01 ? { qty: Number(c.qty), rate: Number(c.rate) } : {})
 
 export function toJobInput(f: { expectedDate: string; gstApplied: boolean; discount: string; notes: string; internalNotes: string; bookNo?: string }, items: ItemDraft[], costs: CostDraft[]): JobInput {
   return {
@@ -91,7 +95,7 @@ export function toJobInput(f: { expectedDate: string; gstApplied: boolean; disco
       ownFabric: d.ownFabric,
       measuredById: d.measuredById ? Number(d.measuredById) : null,
     })),
-    costs: costs.filter((c) => Number(c.charge) > 0 && c.kind.trim()).map((c) => ({ kind: c.kind.trim(), description: c.description.trim() || undefined, charge: Number(c.charge) })),
+    costs: costs.filter((c) => Number(c.charge) > 0 && c.kind.trim()).map((c) => ({ kind: c.kind.trim(), description: c.description.trim() || undefined, charge: Number(c.charge), ...costQtyRate(c) })),
   }
 }
 
@@ -103,7 +107,7 @@ export function fromJob(job: Job) {
       chargeRate: String(Number(i.chargeRate)), tailorId: i.tailorId ? String(i.tailorId) : '', labourRate: String(Number(i.labourRate)),
       measurements: { ...i.measurements }, instructions: i.instructions ?? '', ownFabric: i.ownFabric, measuredById: i.measuredById ? String(i.measuredById) : '',
     })),
-    costs: job.costs.map<CostDraft>((c) => ({ key: `c${++seq}`, kind: c.kind, description: c.description ?? '', charge: String(Number(c.charge)) })),
+    costs: job.costs.map<CostDraft>((c) => ({ key: `c${++seq}`, kind: c.kind, description: c.description ?? '', charge: String(Number(c.charge)), qty: c.qty === undefined ? undefined : String(Number(c.qty)), rate: c.rate === null || c.rate === undefined ? undefined : String(Number(c.rate)) })),
   }
 }
 

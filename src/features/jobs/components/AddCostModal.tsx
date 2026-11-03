@@ -6,13 +6,15 @@ import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/toast-context'
 import { todayISO } from '@/features/inventory/constants'
 import { paymentModeOptions } from '@/features/purchase/api/purchase.api'
-import { costCategoryApi, tailorApi } from '@/features/workshop/api/workshop.api'
+import { tailorApi } from '@/features/workshop/api/workshop.api'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { jobsApi } from '../api/jobs.api'
 import type { CostPaidBy, Job, JobCostEntry } from '../types'
+import { useCostKind } from '../hooks/useCostKind'
+import { CostKindField } from './CostKindField'
 
 type Props = { job: Job; entry?: JobCostEntry | null; onClose: () => void; onDone: () => void }
 
@@ -26,11 +28,9 @@ const PAY: [CostPaidBy, string, string][] = [
 // Opened from the job page (Job work card) — add a new line or change one (e.g. set who did the cutting).
 export function AddCostModal({ job, entry, onClose, onDone }: Props) {
   const toast = useToast()
-  const cats = useApiQuery('cost-categories', () => costCategoryApi.list())
+  const kind = useCostKind(entry?.category.name ?? '')
   const workers = useApiQuery('tailor-options', () => tailorApi.options())
-  const active = (cats.data ?? []).filter((c) => c.isActive || c.id === entry?.categoryId)
   const pieces = job.items.reduce((s, i) => s + i.qty, 0)
-  const [categoryId, setCategoryId] = useState(entry ? String(entry.categoryId) : '')
   const [tailorId, setTailorId] = useState(entry?.tailorId ? String(entry.tailorId) : '')
   const [qty, setQty] = useState(entry ? String(Number(entry.qty)) : String(pieces || 1))
   // A paid-out cost is edited as one amount (qty 1).
@@ -45,9 +45,8 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
   const amount = Math.round((Number(qty) || 0) * (Number(rate) || 0) * 100) / 100
   const worker = (workers.data ?? []).find((w) => String(w.id) === tailorId)
 
-  const choose = (id: string) => {
-    setCategoryId(id)
-    const c = active.find((x) => String(x.id) === id)
+  const choose = (name: string) => {
+    const c = kind.match(name)
     if (c && !worker) setPaidBy(c.defaultPaidBy)
   }
   // Choosing the person sets how they are paid: per-piece worker → owed to them; salaried → cost only.
@@ -57,12 +56,12 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
     if (w) setPaidBy(w.payType === 'PIECE' ? 'WORKER' : 'SALARIED')
   }
   const save = async () => {
-    if (!categoryId) return toast.error('Choose what the cost is for')
+    if (!kind.name.trim()) return toast.error('Choose or type what the cost is for')
     if (simple) {
       if (!(Number(rate) > 0)) return toast.error('Enter the amount')
       setBusy(true)
       try {
-        const body = { categoryId: Number(categoryId), date, description: description.trim() || undefined, qty: 1, rate: Number(rate), paidBy: 'PAID' as CostPaidBy, mode, tailorId: null }
+        const body = { categoryId: await kind.resolve(), date, description: description.trim() || undefined, qty: 1, rate: Number(rate), paidBy: 'PAID' as CostPaidBy, mode, tailorId: null }
         if (entry) await jobsApi.updateCost(job.id, entry.id, body)
         else await jobsApi.addCost(job.id, body)
         toast.success(entry ? 'Cost saved' : `Cost ${formatINR(Number(rate))} added`)
@@ -78,7 +77,7 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
     if (paidBy === 'WORKER' && worker?.payType === 'SALARY') return toast.error(`${worker.name} is on salary — choose "Salaried staff"`)
     setBusy(true)
     try {
-      const body = { categoryId: Number(categoryId), date, description: description.trim() || undefined, qty: Number(qty), rate: Number(rate), paidBy, mode: paidBy === 'PAID' ? mode : null, tailorId: tailorId ? Number(tailorId) : null }
+      const body = { categoryId: await kind.resolve(), date, description: description.trim() || undefined, qty: Number(qty), rate: Number(rate), paidBy, mode: paidBy === 'PAID' ? mode : null, tailorId: tailorId ? Number(tailorId) : null }
       if (entry) await jobsApi.updateCost(job.id, entry.id, body)
       else await jobsApi.addCost(job.id, body)
       toast.success(entry ? 'Work line saved' : `Work ${formatINR(amount)} added`)
@@ -93,7 +92,7 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
     <Modal open onClose={onClose} title={`${entry ? 'Change cost' : 'Add cost'} — ${job.docNo}`} description="Money the shop paid for this job (e.g. outside embroidery). The customer's bill does not change."
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>{entry ? 'Save' : `Add${Number(rate) > 0 ? ` ${formatINR(Number(rate))}` : ''}`}</Button></>}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Select label="For" required placeholder={cats.loading ? 'Loading…' : 'Choose'} value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={active.map((c) => ({ value: String(c.id), label: c.name }))} />
+        <CostKindField label="For" kind={kind} />
         <Input label="Amount ₹" type="number" inputMode="decimal" min={0} value={rate} onChange={(e) => setRate(e.target.value)} autoFocus={!entry} />
         <Select label="Paid by" value={mode} onChange={(e) => setMode(e.target.value)} options={paymentModeOptions} />
         <Input label="Date" type="date" max={todayISO()} value={date} onChange={(e) => setDate(e.target.value)} />
@@ -111,7 +110,7 @@ export function AddCostModal({ job, entry, onClose, onDone }: Props) {
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>{entry ? 'Save' : `Add ${amount > 0 ? formatINR(amount) : ''}`}</Button></>}
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Select label="Work done" required placeholder={cats.loading ? 'Loading…' : 'Choose'} value={categoryId} onChange={(e) => choose(e.target.value)} options={active.map((c) => ({ value: String(c.id), label: c.name }))} />
+        <CostKindField label="Work done" kind={kind} onChange={choose} />
         <Select label="Who did it" placeholder="Someone outside / not decided" value={tailorId} onChange={(e) => pickWorker(e.target.value)}
           options={(workers.data ?? []).map((w) => ({ value: String(w.id), label: `${w.name}${w.speciality ? ` — ${w.speciality}` : ''}${w.payType === 'SALARY' ? ' (salary)' : ''}` }))} />
         <Input label="Pieces / qty" type="number" inputMode="decimal" min={0} value={qty} onChange={(e) => setQty(e.target.value)} />

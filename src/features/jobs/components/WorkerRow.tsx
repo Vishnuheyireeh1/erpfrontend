@@ -9,7 +9,7 @@ export type WorkPick = { tailorId: string; rate: string; note: string }
 type Props = {
   label: string
   empty: string // "Not decided" / "Not needed"
-  people: TailorOption[]
+  people: (TailorOption & { role?: string })[] // role = designation, shown beside the name
   value: WorkPick
   qty: number
   presetFor: (tailorId: string) => string // their usual pay per piece for this work ('' = none)
@@ -33,7 +33,7 @@ export function WorkerRow({ label, empty, people, value, qty, presetFor, onChang
         onChange={(e) => onChange({ tailorId: e.target.value, rate: e.target.value ? String(Number(presetFor(e.target.value))) : '0', note: '' })}
         className="col-span-2 sm:col-span-1"
         placeholder={empty}
-        options={people.map((p) => ({ value: String(p.id), label: `${p.name}${p.payType === 'SALARY' ? ' (salaried)' : ''}` }))}
+        options={people.map((p) => ({ value: String(p.id), label: `${p.name}${p.role ? ` · ${p.role}` : ''}${p.payType === 'SALARY' ? ' (salaried)' : ''}` }))}
       />
       {who && !piece && <span className="col-span-2 text-xs text-muted">Salaried — no pay, only who did it</span>}
       {piece && (

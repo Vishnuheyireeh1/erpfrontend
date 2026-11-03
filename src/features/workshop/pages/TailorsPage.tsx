@@ -120,7 +120,7 @@ export function TailorsPage() {
                   rowKey={(t) => t.id}
                   loading={q.loading}
                   emptyTitle={tab === 'inactive' ? 'No inactive workers' : 'No workers yet'}
-                  emptyDescription={tab === 'active' ? 'Add people in Staff & salary and turn on "Does job work".' : undefined}
+                  emptyDescription={tab === 'active' ? 'Add people in Staff & salary and tick the work they do.' : undefined}
                   onRowClick={(t) => navigate(`/tailors/${t.id}`)}
                 />
                 {(q.data?.total ?? 0) > 0 && <Pagination page={page} pageSize={pageSize} total={q.data!.total} onPageChange={setPage} />}

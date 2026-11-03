@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/toast-context'
+import { useWorkPeople } from '@/features/jobs/hooks/useWorkPeople'
 import { labourFor } from '@/features/jobs/jobDrafts'
 import { AddWorkInline } from '@/features/jobs/components/AddWorkInline'
 import { WorkerRow, type WorkPick } from '@/features/jobs/components/WorkerRow'
@@ -32,23 +33,23 @@ export function BrandAssignModal({ order, onClose, onDone }: Props) {
   const [busy, setBusy] = useState(false)
   const [extra, setExtra] = useState<number[]>([])
   const all = workers.data ?? []
+  const staffList = useWorkPeople(all)
   const setRow = (id: number, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)))
   const usual = (tailorId: string, categoryId: number) => all.find((w) => String(w.id) === tailorId)?.works.find((x) => x.categoryId === categoryId)?.rate ?? ''
   const saved = new Set([...extra, ...rows.flatMap((r) => Object.keys(r.works).map(Number))])
   const doers = (categoryId: number) => all.filter((w) => w.works.some((x) => x.categoryId === categoryId))
   const workTypes = (cats.data ?? []).filter((c) => saved.has(c.id) || (c.isActive && doers(c.id).length > 0))
   const hidden = (cats.data ?? []).filter((c) => c.isActive && !workTypes.includes(c))
-  const keep = (list: typeof all, current: string) => all.filter((w) => list.includes(w) || String(w.id) === current)
 
   const save = async () => {
     setBusy(true)
     try {
-      await brandOrderApi.setWorkers(order.id, rows.map((r) => ({
+      await brandOrderApi.setWorkers(order.id, await Promise.all(rows.map(async (r) => ({
         id: r.id,
-        tailorId: r.stitch.tailorId ? Number(r.stitch.tailorId) : null,
+        tailorId: (await staffList.resolve(r.stitch.tailorId)),
         labourRate: Number(r.stitch.rate) || 0,
-        works: Object.entries(r.works).filter(([, p]) => p.tailorId).map(([c, p]) => ({ categoryId: Number(c), tailorId: Number(p.tailorId), rate: Number(p.rate) || 0 })),
-      })))
+        works: await Promise.all(Object.entries(r.works).filter(([, p]) => p.tailorId).map(async ([c, p]) => ({ categoryId: Number(c), tailorId: (await staffList.resolve(p.tailorId))!, rate: Number(p.rate) || 0 }))),
+      }))))
       toast.success('Workers saved')
       onDone()
     } catch (err) {
@@ -61,16 +62,16 @@ export function BrandAssignModal({ order, onClose, onDone }: Props) {
     <Modal open onClose={onClose} size="lg" title={`Assign workers — ${order.docNo}`} description={order.brandName}
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></>}>
       <div className="flex flex-col gap-3">
-        {all.length === 0 && !workers.loading && <p className="rounded-control bg-warn-tint px-3 py-2 text-sm text-warn">No workers yet — in Staff & salary, turn on "Does job work" for your tailors.</p>}
+        {all.length === 0 && !workers.loading && <p className="rounded-control bg-warn-tint px-3 py-2 text-sm text-warn">No workers yet — in Staff & salary, tick the work your tailors do.</p>}
         {left.map((i, n) => {
           const r = rows.find((x) => x.id === i.id)!
           return (
             <div key={i.id} className="flex flex-col gap-3 rounded-card border border-line p-3">
               <p className="font-medium text-ink">{n + 1}. {i.qty} × {i.description}{i.endCustomer ? ` · for ${i.endCustomer}` : ''}</p>
-              <WorkerRow label="Stitching" empty="Not decided" noNote people={keep(all.filter((w) => w.stitches), r.stitch.tailorId)} value={r.stitch} qty={i.qty}
+              <WorkerRow label="Stitching" empty="Not decided" noNote people={staffList.people} value={r.stitch} qty={i.qty}
                 presetFor={(t) => labourFor(all, garments.data ?? [], t, String(i.garmentTypeId))} onChange={(v) => setRow(i.id, { stitch: v })} />
               {workTypes.map((c) => (
-                <WorkerRow key={c.id} label={c.name} empty="Not needed" noNote people={doers(c.id).length ? keep(doers(c.id), r.works[c.id]?.tailorId ?? '') : all}
+                <WorkerRow key={c.id} label={c.name} empty="Not needed" noNote people={staffList.people}
                   value={r.works[c.id] ?? none} qty={i.qty} presetFor={(t) => usual(t, c.id)} onChange={(v) => setRow(i.id, { works: { ...r.works, [c.id]: v } })} />
               ))}
             </div>

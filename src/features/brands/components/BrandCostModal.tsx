@@ -6,7 +6,9 @@ import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/toast-context'
 import { todayISO } from '@/features/inventory/constants'
 import { paymentModeOptions } from '@/features/purchase/api/purchase.api'
-import { costCategoryApi, tailorApi } from '@/features/workshop/api/workshop.api'
+import { CostKindField } from '@/features/jobs/components/CostKindField'
+import { useCostKind } from '@/features/jobs/hooks/useCostKind'
+import { tailorApi } from '@/features/workshop/api/workshop.api'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
@@ -25,9 +27,8 @@ const PAY: [CostPaidBy, string, string][] = [
 // Other work / cost on a brand order (embroidery, hand work, cutting …): what, which piece, who did it, pieces × rate, how paid.
 export function BrandCostModal({ order, onClose, onDone }: Props) {
   const toast = useToast()
-  const cats = useApiQuery('cost-categories', () => costCategoryApi.list())
+  const kind = useCostKind()
   const workers = useApiQuery('tailor-options', () => tailorApi.options())
-  const [categoryId, setCategoryId] = useState('')
   const [itemId, setItemId] = useState('')
   const [tailorId, setTailorId] = useState('')
   const [qty, setQty] = useState('1')
@@ -53,14 +54,14 @@ export function BrandCostModal({ order, onClose, onDone }: Props) {
     else setPaidBy('PAID')
   }
   const save = async () => {
-    if (!categoryId) return toast.error('Choose the work done')
+    if (!kind.name.trim()) return toast.error('Choose or type the work done')
     if (!(Number(qty) > 0) || !(Number(rate) > 0)) return toast.error('Enter the pieces and rate')
     if (paidBy !== 'PAID' && !tailorId) return toast.error('Choose who did the work')
     if (paidBy === 'WORKER' && worker?.payType === 'SALARY') return toast.error(`${worker.name} is on salary — choose "Salaried staff"`)
     setBusy(true)
     try {
       await brandOrderApi.addCost(order.id, {
-        categoryId: Number(categoryId), itemId: itemId ? Number(itemId) : null, date, description: description.trim() || undefined,
+        categoryId: await kind.resolve(), itemId: itemId ? Number(itemId) : null, date, description: description.trim() || undefined,
         qty: Number(qty), rate: Number(rate), paidBy, mode: paidBy === 'PAID' ? mode : null, tailorId: tailorId ? Number(tailorId) : null,
       })
       toast.success(`Cost ${formatINR(amount)} added`)
@@ -80,8 +81,7 @@ export function BrandCostModal({ order, onClose, onDone }: Props) {
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Add{amount > 0 ? ` ${formatINR(amount)}` : ''}</Button></>}
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Select label="Work done" required placeholder={cats.loading ? 'Loading…' : 'Choose'} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
-          options={(cats.data ?? []).filter((c) => c.isActive).map((c) => ({ value: String(c.id), label: c.name }))} />
+        <CostKindField label="Work done" kind={kind} />
         <Select label="For which piece" placeholder="Whole order" value={itemId} onChange={(e) => pickItem(e.target.value)}
           options={order.items.map((i) => ({ value: String(i.id), label: `${i.qty} × ${i.description}${i.endCustomer ? ` · ${i.endCustomer}` : ''}` }))} />
         <Select label="Who did it" placeholder="Someone outside" value={tailorId} onChange={(e) => pickWorker(e.target.value)}

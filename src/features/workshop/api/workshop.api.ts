@@ -16,6 +16,7 @@ export type TailorOption = {
 export const tailorApi = {
   list: (p: { search?: string; status?: string; work?: string; from?: string; to?: string; page?: number; pageSize?: number }) => api.get<Paged<Tailor>>(`/tailors?${qs(p)}`),
   options: () => api.get<{ items: TailorOption[] }>('/tailors/options').then((r) => r.items),
+  fromStaff: (staffId: number) => api.post<{ item: Tailor }>(`/tailors/from-staff/${staffId}`, {}).then((r) => r.item),
   get: (id: number) => api.get<{ item: Tailor }>(`/tailors/${id}`).then((r) => r.item),
   statement: (id: number) => api.get<TailorStatement>(`/tailors/${id}/statement`),
 }
@@ -33,7 +34,7 @@ export const garmentApi = {
   create: (body: unknown) => api.post<{ item: GarmentType }>('/garment-types', body).then((r) => r.item),
   update: (id: number, body: unknown) => api.put<{ item: GarmentType }>(`/garment-types/${id}`, body).then((r) => r.item),
   // A charge typed on a bill → added to the garment's charge options (no-op if already there).
-  addCharge: (id: number, name: string) => api.post<{ charges: string[] }>(`/garment-types/${id}/charges`, { name }).then((r) => r.charges),
+  addCharge: (id: number, name: string, rate: number) => api.post(`/garment-types/${id}/charges`, { name, rate }),
   remove: (id: number) => api.delete(`/garment-types/${id}`),
 }
 

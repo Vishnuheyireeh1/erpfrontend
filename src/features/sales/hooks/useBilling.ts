@@ -190,7 +190,7 @@ export function useBilling() {
       const buyer = (await resolveCustomer())!
       const job = await jobsApi.create(jobFromBill({ customerId: buyer.id, docDate: meta.docDate, deliveryDate, discount: meta.billDiscount, notes: meta.notes, bookNo: meta.bookNo ?? '', gstApplied: jobGst, stitch, charges: allCharges, lines, tenders, useAdvance: buyer.id === customer?.id && useAdvance && advanceAvailable > 0 }))
       // New charge names typed here → the garment's list, so they show next time (a failure here doesn't matter).
-      await Promise.allSettled(newGarmentCharges(stitch).map(([g, n]) => garmentApi.addCharge(g, n)))
+      await Promise.allSettled(newGarmentCharges(stitch).map(([g, n, r]) => garmentApi.addCharge(g, n, r)))
       clearBillDraft()
       toast.success(`${job.docNo} booked`)
       if (autoPrint && profile && settings) printText(jobBillText(job, profile, settings['billing.print'].columns), settings['billing.print'])

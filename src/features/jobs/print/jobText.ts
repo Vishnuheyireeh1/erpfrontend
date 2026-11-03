@@ -61,7 +61,7 @@ export function jobBillText(job: Job, p: BusinessProfile, cols: number) {
   L.push(row('Sl#', 'Particulars', 'Rate', 'Qty', 'Amount'), rule)
   const lines = [
     ...job.items.map((i) => ({ n: i.description, r: Number(i.chargeRate), q: qty(i.qty), a: i.qty * Number(i.chargeRate) })),
-    ...job.costs.filter((c) => Number(c.charge) > 0).map((c) => ({ n: c.description ? `${c.kind} (${c.description})` : c.kind, r: Number(c.charge), q: qty(1), a: Number(c.charge) })),
+    ...job.costs.filter((c) => Number(c.charge) > 0).map((c) => ({ n: c.description ? `${c.kind} (${c.description})` : c.kind, r: Number(c.rate ?? c.charge), q: qty(c.qty ?? 1), a: Number(c.charge) })),
     // Items sold on the job (used fabric is not printed).
     ...job.materials.filter((m) => !m.included).map((m) => ({
       n: `${m.description}${Number(m.discountPct) ? ` (-${Number(m.discountPct)}%)` : ''}${Number(m.returnedQty) > 0 ? ` [${Number(m.returnedQty)} returned]` : ''}`,
@@ -134,7 +134,7 @@ export function jobCostSheetText(job: Job, p: BusinessProfile, cols: number) {
   const add = (name: string, pcs: number | string, rate: number, tot: number | null, cost: number | null) =>
     L.push(row(String(++n), name, String(pcs), money(rate), tot === null ? '' : money(tot), cost === null ? '' : money(cost)))
   for (const i of job.items) add(i.description, i.qty, Number(i.chargeRate), i.qty * Number(i.chargeRate), null)
-  for (const c of job.costs) add(c.description ? `${c.kind} (${c.description})` : c.kind, 1, Number(c.charge), Number(c.charge), null)
+  for (const c of job.costs) add(c.description ? `${c.kind} (${c.description})` : c.kind, Number(c.qty ?? 1), Number(c.rate ?? c.charge), Number(c.charge), null)
   for (const i of job.items.filter((x) => x.tailor && Number(x.labourRate) > 0)) add(`Tailor fee (${i.tailor!.name})`, i.qty, Number(i.labourRate), null, i.qty * Number(i.labourRate))
   for (const e of job.costEntries) add(`${e.category.name}${e.description ? ` - ${e.description}` : ''}`, Number(e.qty), Number(e.rate), null, Number(e.amount))
   for (const m of job.materials.filter((x) => x.included)) add(`${m.description} (given free)`, Number(m.qty), Number(m.unitCost), null, Number(m.qty) * Number(m.unitCost))

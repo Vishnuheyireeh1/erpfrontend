@@ -17,6 +17,7 @@ type Props = { garment: GarmentType | null; onClose: () => void; onSaved: () => 
 
 let seq = 0
 type Field = { key: string; label: string }
+type ChargeRow = Field & { rate: string }
 const toFields = (labels: string[]): Field[] => labels.map((label) => ({ key: `f${++seq}`, label }))
 
 
@@ -29,7 +30,7 @@ export function GarmentFormModal({ garment, onClose, onSaved, onDelete }: Props)
   const [labour, setLabour] = useState(String(Number(garment?.defaultLabour ?? 0)))
   const [active, setActive] = useState(garment?.isActive ?? true)
   const [fields, setFields] = useState<Field[]>(() => toFields(garment?.fields ?? []))
-  const [charges, setCharges] = useState<Field[]>(() => toFields(garment?.charges ?? []))
+  const [charges, setCharges] = useState<ChargeRow[]>(() => (garment?.charges ?? []).map((c) => ({ key: `f${++seq}`, label: c.name, rate: c.rate ? String(c.rate) : '' })))
   const [error, setError] = useState('')
   const [presets, setPresets] = useState(() => !garment?.fields.length) // open for a new garment
   const same = (f: Field, label: string) => f.label.trim().toLowerCase() === label.toLowerCase()
@@ -51,7 +52,7 @@ export function GarmentFormModal({ garment, onClose, onSaved, onDelete }: Props)
     setSaving(true)
     try {
       const body = { name: name.trim(), fields: fields.map((f) => f.label.trim()).filter(Boolean), defaultCharge: Number(charge) || 0, defaultLabour: Number(labour) || 0,
-        charges: charges.map((c) => c.label.trim()).filter(Boolean),
+        charges: charges.filter((c) => c.label.trim()).map((c) => ({ name: c.label.trim(), rate: Number(c.rate) || 0 })),
         costDefaults: (garment?.costDefaults ?? []).map((c) => ({ categoryId: c.categoryId, rate: Number(c.rate) })), // kept as saved
         sortOrder: garment?.sortOrder ?? 500, isActive: active }
       if (garment) await garmentApi.update(garment.id, body)
@@ -80,17 +81,18 @@ export function GarmentFormModal({ garment, onClose, onSaved, onDelete }: Props)
       </div>
 
       <p className="mb-1 mt-5 text-sm font-medium text-ink">Additional charges ({charges.length})</p>
-      <p className="mb-2 text-xs text-muted">Just the names (Lining, Piping …). On the bill they show inside this garment — staff type the amount there.</p>
+      <p className="mb-2 text-xs text-muted">Name and usual rate (Lining ₹100 …). On the bill they show inside this garment; staff choose the quantity, and a rate changed there stays on that bill.</p>
       <ul className="flex flex-col gap-2">
         {charges.map((c, i) => (
           <li key={c.key} className="flex items-center gap-2">
             <input list="garment-charge-kinds" aria-label={`Charge ${i + 1} name`} placeholder="Charge, e.g. Lining" maxLength={40} value={c.label} onChange={(e) => setCharges((cs) => cs.map((x) => (x.key === c.key ? { ...x, label: e.target.value } : x)))} className={cn(controlClass(), 'h-9 min-w-0 flex-1')} />
+            <input type="number" inputMode="decimal" min={0} aria-label={`Charge ${i + 1} rate`} placeholder="Rate ₹" value={c.rate} onChange={(e) => setCharges((cs) => cs.map((x) => (x.key === c.key ? { ...x, rate: e.target.value } : x)))} className={cn(controlClass(), 'h-10 w-28 shrink-0 text-right')} />
             <button type="button" aria-label={`Remove charge ${i + 1}`} onClick={() => setCharges((cs) => cs.filter((x) => x.key !== c.key))} className="rounded-control p-1.5 text-muted hover:bg-page hover:text-ink"><IconX size={16} /></button>
           </li>
         ))}
       </ul>
       <datalist id="garment-charge-kinds">{chargeKinds.map((k) => <option key={k} value={k} />)}</datalist>
-      <button type="button" onClick={() => setCharges((cs) => [...cs, ...toFields([''])])} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
+      <button type="button" onClick={() => setCharges((cs) => [...cs, { key: `f${++seq}`, label: '', rate: '' }])} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
         <IconPlus size={15} /> Add charge
       </button>
 

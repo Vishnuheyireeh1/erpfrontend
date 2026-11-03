@@ -61,7 +61,7 @@ export type JobMaterial = {
 }
 
 // Extra charge printed on the bill (embroidery ₹500 …).
-export type JobCost = { id?: number; kind: string; description: string | null; charge: string | number }
+export type JobCost = { id?: number; kind: string; description: string | null; qty?: string | number; rate?: string | number | null; charge: string | number }
 
 // WORKER = our per-piece worker did it (owed to them at Ready) · SALARIED = cost only · PAID = paid out now
 export type CostPaidBy = 'WORKER' | 'SALARIED' | 'PAID'
