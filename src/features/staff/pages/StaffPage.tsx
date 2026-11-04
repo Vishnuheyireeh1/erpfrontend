@@ -63,7 +63,7 @@ export function StaffPage() {
     },
     { key: 'phone', header: 'Phone', mobile: 'subtitle', render: (s) => s.phone ?? '—' },
     { key: 'dept', header: 'Works in', mobile: 'hidden', render: (s) => deptLabels[s.dept] },
-    { key: 'salary', header: 'Monthly salary', align: 'right', render: (s) => formatINR(Number(s.salary)) },
+    { key: 'salary', header: 'Salary', align: 'right', render: (s) => (Number(s.dayRate) > 0 ? `${formatINR(Number(s.dayRate))} / day` : formatINR(Number(s.salary))) },
     {
       key: 'paid',
       header: 'Paid this month',

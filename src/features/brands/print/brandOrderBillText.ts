@@ -2,7 +2,7 @@ import type { BusinessProfile } from '@/lib/gst'
 import type { BrandMaterial, BrandOrder, BrandPiece } from '../types'
 
 // Brand order bill, printed when the order is taken: ONE bill per customer of the brand ("To PRIYA / C/o SANISH"):
-// stitching fee of each piece, the items charged on it, and the total. No money moves or GST here — the brand is
+// stitching fee of each piece, its additional charges, the items charged on it, and the total. No money moves or GST here — the brand is
 // billed on delivery.
 
 const center = (s: string, w: number) => ' '.repeat(Math.max(0, Math.floor((w - s.slice(0, w).length) / 2))) + s.slice(0, w)
@@ -29,6 +29,10 @@ function oneBill(order: BrandOrder, customer: string, pieces: BrandPiece[], mate
     const fee = Number(i.chargeRate) * i.qty
     total += fee
     L.push(`STITCHING FEE - ${i.description}`.toUpperCase().slice(0, W), row(`  ${i.qty} X ${plain(Number(i.chargeRate))}`, plain(fee)))
+    for (const c of i.charges ?? []) {
+      total += Number(c.amount)
+      L.push(c.name.toUpperCase().slice(0, W), row(`  ${Number(c.qty)} X ${plain(Number(c.rate))}`, plain(Number(c.amount))))
+    }
     for (const m of materials.filter((x) => x.itemId === i.id && x.charged)) {
       total += Number(m.amount)
       const disc = Number(m.discountPct) ? ` - ${Number(m.discountPct)}%` : ''

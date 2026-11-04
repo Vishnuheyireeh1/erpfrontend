@@ -1,4 +1,4 @@
-import { itemError, newItem, productError, type ItemDraft, type ProductDraft } from '@/features/jobs/jobDrafts'
+import { itemChargeAmount, itemChargesTotal, itemError, newItem, newItemCharge, productError, type ItemDraft, type ProductDraft } from '@/features/jobs/jobDrafts'
 import type { MaterialInput, OrderInput, PieceInput } from './api/brandOrder.api'
 import type { BrandOrder } from './types'
 
@@ -16,9 +16,10 @@ export const newPiece = (): PieceDraft => ({ ...newItem(), endCustomer: '', mate
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 export const pieceAmount = (d: PieceDraft) =>
-  r2((Number(d.qty) || 0) * (Number(d.chargeRate) || 0) + d.materials.reduce((s, m) => s + (m.included ? 0 : (Number(m.qty) || 0) * (Number(m.rate) || 0) * (1 - (Number(m.discountPct) || 0) / 100)), 0))
+  r2((Number(d.qty) || 0) * (Number(d.chargeRate) || 0) + itemChargesTotal(d) + d.materials.reduce((s, m) => s + (m.included ? 0 : (Number(m.qty) || 0) * (Number(m.rate) || 0) * (1 - (Number(m.discountPct) || 0) / 100)), 0))
 
 export function pieceError(d: PieceDraft) {
+  if ((d.charges ?? []).some((c) => itemChargeAmount(c) > 0 && !c.name.trim())) return 'Name the additional charge'
   return itemError(d) ?? d.materials.map(productError).find(Boolean)
 }
 
@@ -46,6 +47,7 @@ export function toOrderInput(f: OrderForm, pieces: PieceDraft[]): OrderInput {
       labourRate: Number(d.labourRate) || 0,
       measuredById: d.measuredById ? Number(d.measuredById) : null,
       cutting: d.cutTailorId ? { tailorId: Number(d.cutTailorId), rate: Number(d.cutRate) || 0 } : null,
+      charges: (d.charges ?? []).filter((c) => c.name.trim() && itemChargeAmount(c) > 0).map((c) => ({ name: c.name.trim(), qty: Number(c.qty), rate: Number(c.rate) })),
       materials: d.id ? [] : d.materials.map(toMaterialInput),
     })),
   }
@@ -65,6 +67,7 @@ export function fromOrder(o: BrandOrder) {
       tailorId: i.tailorId ? String(i.tailorId) : '', labourRate: String(Number(i.labourRate)), measurements: { ...i.measurements },
       instructions: i.instructions ?? '', ownFabric: i.brandCloth, endCustomer: i.endCustomer ?? '', materials: [], stage: i.stage,
       measuredById: i.measuredById ? String(i.measuredById) : '', cutTailorId: cutOf(i.id)?.tailorId ? String(cutOf(i.id)!.tailorId) : '', cutRate: String(Number(cutOf(i.id)?.rate ?? 0)),
+      charges: i.charges.map((c) => ({ ...newItemCharge(c.name), qty: String(Number(c.qty)), rate: String(Number(c.rate)), other: false })),
     }))
   return { form, pieces }
 }

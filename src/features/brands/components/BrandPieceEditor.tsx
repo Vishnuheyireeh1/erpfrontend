@@ -1,6 +1,7 @@
 import { IconCopy, IconPackage } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
+import { ItemChargesEditor } from '@/features/jobs/components/ItemChargesEditor'
 import { JobItemEditor } from '@/features/jobs/components/JobItemEditor'
 import { ProductLinesEditor } from '@/features/jobs/components/ProductLinesEditor'
 import type { TailorOption } from '@/features/workshop/api/workshop.api'
@@ -21,13 +22,14 @@ type Props = {
 }
 
 // One piece of a brand order: the job garment editor (measurements, rate, tailor, brand's cloth) + who it is for +
-// cutting master and who measured (under the tailor) +
+// cutting master and who measured (under the tailor) + additional charges (billed with the piece) +
 // cloth / lining from OUR stock (leaves stock when the order is saved).
 export function BrandPieceEditor({ index, draft, garments, tailors, error, onChange, onRemove, onCopy }: Props) {
   const [showStock, setShowStock] = useState(draft.materials.length > 0)
   const forInput = (
     <Input label="For (their customer)" className="col-span-2" value={draft.endCustomer} onChange={(e) => onChange({ endCustomer: e.target.value })} placeholder="e.g. Priya" maxLength={120} />
   )
+  const garment = garments.find((g) => String(g.id) === draft.garmentTypeId)
   const extraTotal = pieceAmount(draft) - (Number(draft.qty) || 0) * (Number(draft.chargeRate) || 0)
 
   return (
@@ -46,6 +48,11 @@ export function BrandPieceEditor({ index, draft, garments, tailors, error, onCha
         extra={forInput}
         afterTailor={<BrandCuttingFields draft={draft} workers={tailors} onChange={onChange} />}
       />
+      {garment && (
+        <div className="@container px-1">
+          <ItemChargesEditor garment={garment.name} options={garment.charges ?? []} charges={draft.charges ?? []} onChange={(charges) => onChange({ charges })} />
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-sm">
         {!draft.id && (
           <button type="button" onClick={() => setShowStock((s) => !s)} className="inline-flex items-center gap-1 font-medium text-brand">
@@ -56,7 +63,7 @@ export function BrandPieceEditor({ index, draft, garments, tailors, error, onCha
         <button type="button" onClick={onCopy} className="inline-flex items-center gap-1 font-medium text-ink-soft hover:text-brand">
           <IconCopy size={16} /> Add another like this
         </button>
-        {extraTotal > 0 && <span className="ml-auto text-xs text-muted">+ items {formatINR(extraTotal)}</span>}
+        {extraTotal > 0 && <span className="ml-auto text-xs text-muted">+ extras {formatINR(extraTotal)}</span>}
       </div>
       {showStock && !draft.id && (
         <div className="rounded-card border border-dashed border-line p-3">

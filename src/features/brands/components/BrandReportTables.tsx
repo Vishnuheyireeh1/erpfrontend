@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/Badge'
 import type { Column } from '@/components/ui/DataTable'
 import { cn } from '@/lib/cn'
 import { formatDate, formatINR } from '@/lib/format'
-import type { ClothRow, PendingRow, ProfitRow, SummaryRow } from '../moneyTypes'
+import type { ClothRow, CustomerRow, PendingRow, ProfitRow, SummaryRow } from '../moneyTypes'
 
 // Columns of the brand reports (Brand orders → Reports).
 
@@ -16,6 +16,15 @@ export const summaryCols: Column<SummaryRow>[] = [
   { key: 'income', header: 'Income (before GST)', align: 'right', mobile: 'hidden', render: (r) => formatINR(r.income) },
   { key: 'received', header: 'Received', align: 'right', render: (r) => <span className="text-success">{formatINR(r.received)}</span> },
   { key: 'pending', header: 'Pending today', align: 'right', mobile: 'badge', render: (r) => <span className={cn('font-semibold', r.pending > 0.004 ? 'text-warn' : 'text-success')}>{formatINR(r.pending)}</span> },
+]
+
+export const customerCols: Column<CustomerRow>[] = [
+  { key: 'customer', header: 'Customer', mobile: 'title', render: (r) => <span className="font-medium text-brand">{r.customer}<span className="block text-xs font-normal text-muted">{r.brands}</span></span> },
+  { key: 'orders', header: 'Orders', align: 'right', mobile: 'subtitle', render: (r) => `${r.orders} order${r.orders === 1 ? '' : 's'}` },
+  { key: 'pieces', header: 'Pieces', align: 'right', mobile: 'hidden', render: (r) => r.pieces },
+  { key: 'delivered', header: 'Delivered', align: 'right', mobile: 'hidden', render: (r) => r.delivered },
+  { key: 'pending', header: 'Pending', align: 'right', mobile: 'subtitle', render: (r) => <span className={cn(r.pending > 0 && 'text-warn')}>{r.pending} pending</span> },
+  { key: 'amount', header: 'Bill amount', align: 'right', mobile: 'badge', render: (r) => <span className="font-semibold">{formatINR(r.amount)}</span> },
 ]
 
 export const pendingCols: Column<PendingRow>[] = [

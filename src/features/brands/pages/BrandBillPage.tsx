@@ -73,7 +73,7 @@ export function BrandBillPage() {
               {bill.lines.map((l, i) => (
                 <tr key={l.id} className="border-b border-line">
                   <td className="px-4 py-2 text-muted">{l.kind === 'PIECE' ? bill.lines.slice(0, i + 1).filter((x) => x.kind === 'PIECE').length : ''}</td>
-                  <td className={l.kind === 'ITEM' ? 'pl-4 text-ink-soft' : ''}>{l.kind === 'ITEM' ? '+ ' : ''}{l.description}{l.endCustomer && <span className="text-ink-soft"> · {l.endCustomer}</span>}</td>
+                  <td className={l.kind !== 'PIECE' ? 'pl-4 text-ink-soft' : ''}>{l.kind !== 'PIECE' ? '+ ' : ''}{l.description}{l.endCustomer && <span className="text-ink-soft"> · {l.endCustomer}</span>}</td>
                   <td className="text-right">{formatINR(Number(l.rate))}</td>
                   <td className="text-right">{Number(l.qty)} {l.unit}</td>
                   <td className="px-4 text-right font-medium">{formatINR(Number(l.amount))}</td>

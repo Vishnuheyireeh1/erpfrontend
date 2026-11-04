@@ -61,7 +61,7 @@ export function jobBillText(job: Job, p: BusinessProfile, cols: number) {
   L.push(row('Sl#', 'Particulars', 'Rate', 'Qty', 'Amount'), rule)
   const lines = [
     ...job.items.map((i) => ({ n: i.description, r: Number(i.chargeRate), q: qty(i.qty), a: i.qty * Number(i.chargeRate) })),
-    ...job.costs.filter((c) => Number(c.charge) > 0).map((c) => ({ n: c.description ? `${c.kind} (${c.description})` : c.kind, r: Number(c.rate ?? c.charge), q: qty(c.qty ?? 1), a: Number(c.charge) })),
+    ...job.costs.filter((c) => Number(c.charge) > 0).map((c) => ({ n: c.kind, r: Number(c.rate ?? c.charge), q: qty(c.qty ?? 1), a: Number(c.charge) })),
     // Items sold on the job (used fabric is not printed).
     ...job.materials.filter((m) => !m.included).map((m) => ({
       n: `${m.description}${Number(m.discountPct) ? ` (-${Number(m.discountPct)}%)` : ''}${Number(m.returnedQty) > 0 ? ` [${Number(m.returnedQty)} returned]` : ''}`,

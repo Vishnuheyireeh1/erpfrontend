@@ -5,7 +5,7 @@ import type { Brand } from './types'
 
 export type BrandDocStatus = 'POSTED' | 'CANCELLED'
 
-export type BrandBillLine = { id: number; kind: 'PIECE' | 'ITEM'; description: string; endCustomer: string | null; qty: string; unit: string; rate: string; amount: string }
+export type BrandBillLine = { id: number; kind: 'PIECE' | 'ITEM' | 'CHARGE'; description: string; endCustomer: string | null; qty: string; unit: string; rate: string; amount: string }
 
 export type BrandBillSummary = {
   id: number
@@ -70,3 +70,7 @@ export type SummaryRow = { brandId: number; code: string; name: string; orders: 
 export type PendingRow = { orderId: number; docNo: string; brand: string; theirOrderNo: string | null; due: string; late: boolean; piece: string; endCustomer: string | null; qty: number; tailor: string | null; stage: 'IN_WORK' | 'READY'; value: number }
 export type ProfitRow = { orderId: number; docNo: string; docDate: string; brand: string; status: string; pieces: number; delivered: number; billed: number; ourCloth: number; tailorPay: number; otherCosts: number; profit: number }
 export type ClothRow = ClothLine & { orderId: number; docNo: string; brand: string; orderStatus: string }
+
+// Brand reports → By customer: one row per customer name, with the pieces behind it.
+export type CustomerPiece = { itemId: number; orderId: number; docNo: string; docDate: string; brand: string; piece: string; qty: number; stage: 'IN_WORK' | 'READY' | 'DELIVERED'; amount: number }
+export type CustomerRow = { customer: string; brands: string; orders: number; pieces: number; delivered: number; pending: number; amount: number; list: CustomerPiece[] }

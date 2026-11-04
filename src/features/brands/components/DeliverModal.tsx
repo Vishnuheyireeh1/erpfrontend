@@ -31,7 +31,7 @@ export function DeliverModal({ order, onClose, onDone }: Props) {
 
   const amountOf = (id: number) => {
     const i = order.items.find((x) => x.id === id)!
-    return i.qty * Number(i.chargeRate) + order.materials.filter((m) => m.itemId === id && m.charged).reduce((s, m) => s + Number(m.amount), 0)
+    return i.qty * Number(i.chargeRate) + i.charges.reduce((s, c) => s + Number(c.amount), 0) + order.materials.filter((m) => m.itemId === id && m.charged).reduce((s, m) => s + Number(m.amount), 0)
   }
   const gross = r2(picked.reduce((s, id) => s + amountOf(id), 0))
   const rate = registered ? Number(gstRate) : 0

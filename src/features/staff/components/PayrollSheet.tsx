@@ -23,9 +23,10 @@ type Props = { version: number; onAdvance: (staffId: number, month: string) => v
 
 // Staff & salary → "Monthly salary": everyone's pay for a month — salary − leave cut − advance taken + per-piece work —
 // type the leave right in the list, Pay (makes a payslip), print the payslip, or give an advance.
+// Paid per day: type the days worked in the same box; pay = amount per day × days.
 // Filter: a person on salary who also does per-piece work shows under both.
-type Show = 'all' | 'salary' | 'piece'
-const SHOW = [{ value: 'all', label: 'All staff' }, { value: 'salary', label: 'Monthly salary' }, { value: 'piece', label: 'Per piece' }]
+type Show = 'all' | 'salary' | 'day' | 'piece'
+const SHOW = [{ value: 'all', label: 'All staff' }, { value: 'salary', label: 'Monthly salary' }, { value: 'day', label: 'Per day' }, { value: 'piece', label: 'Per piece' }]
 export function PayrollSheet({ version, onAdvance }: Props) {
   const toast = useToast()
   const [month, setMonth] = useState(() => todayISO().slice(0, 7))
@@ -35,7 +36,7 @@ export function PayrollSheet({ version, onAdvance }: Props) {
   const q = useApiQuery(['payroll', month, version], () => payrollApi.sheet(month))
   const pdf = (id: number) => fetchFile(payrollApi.pdfPath(id)).catch((e) => toast.error(e instanceof Error ? e.message : 'Could not download'))
   const data = q.data ?? q.lastData // keep the list on screen while it refreshes (the cursor stays in its box)
-  const rows = (data?.rows ?? []).filter((r) => show === 'all' || (show === 'salary' ? r.salary > 0 : r.isPiece))
+  const rows = (data?.rows ?? []).filter((r) => show === 'all' || (show === 'salary' ? r.dayRate === 0 && r.salary > 0 : show === 'day' ? r.dayRate > 0 : r.isPiece))
   const sum = (f: (r: PayrollRow) => number) => rows.reduce((s, r) => s + f(r), 0)
   const t = { toPay: sum((r) => (r.payslip ? 0 : r.toPay)), paid: sum((r) => Number(r.payslip?.netPaid ?? 0)), people: rows.length, done: rows.filter((r) => r.payslip).length }
 
@@ -51,11 +52,21 @@ export function PayrollSheet({ version, onAdvance }: Props) {
         </span>
       ),
     },
-    { key: 'salary', header: 'Salary', align: 'right', render: (r) => (r.salary > 0 ? formatINR(r.salary) : <span className="text-muted">—</span>) },
+    {
+      key: 'salary',
+      header: 'Salary',
+      align: 'right',
+      render: (r) => (r.dayRate > 0 ? (
+        <span className="block">
+          <span className="block">{formatINR(r.salary)}</span>
+          <span className="block text-xs text-muted">{r.workedDays} days × {formatINR(r.dayRate)}</span>
+        </span>
+      ) : r.salary > 0 ? formatINR(r.salary) : <span className="text-muted">—</span>),
+    },
     {
       key: 'leave',
-      header: 'Leave days',
-      render: (r) => (r.salary > 0 ? <LeaveBox key={`${r.staff.id}-${month}`} row={r} month={month} onSaved={q.reload} /> : <span className="text-muted">—</span>),
+      header: 'Leave / days worked',
+      render: (r) => (r.dayRate > 0 || r.salary > 0 ? <LeaveBox key={`${r.staff.id}-${month}`} row={r} month={month} onSaved={q.reload} /> : <span className="text-muted">—</span>),
     },
     { key: 'cut', header: 'Leave cut', align: 'right', render: (r) => (r.leaveCut > 0 ? <span className="text-danger">− {formatINR(r.leaveCut)}</span> : <span className="text-muted">—</span>) },
     { key: 'advance', header: 'Advance taken', align: 'right', render: (r) => (r.advance > 0 ? <span className="text-danger">− {formatINR(r.advance)}</span> : <span className="text-muted">—</span>) },

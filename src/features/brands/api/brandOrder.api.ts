@@ -22,6 +22,7 @@ export type PieceInput = {
   labourRate: number
   measuredById: number | null
   cutting: { tailorId: number; rate: number } | null // cutting master (see BrandCuttingFields)
+  charges: { name: string; qty: number; rate: number }[]
   materials: MaterialInput[]
 }
 export type CostInput = { categoryId: number; itemId: number | null; date: string; description?: string; qty: number; rate: number; paidBy: CostPaidBy; mode: string | null; tailorId: number | null }

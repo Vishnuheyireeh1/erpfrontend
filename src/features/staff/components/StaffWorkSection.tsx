@@ -11,7 +11,7 @@ import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
 
-export type PayKind = 'SALARY' | 'PIECE' | 'BOTH'
+export type PayKind = 'SALARY' | 'DAY' | 'PIECE' | 'BOTH'
 export type WorkForm = {
   pay: PayKind
   stitches: boolean
@@ -20,7 +20,7 @@ export type WorkForm = {
   openingBalance: string
 }
 
-type Props = { work: WorkForm; onChange: (w: WorkForm) => void; hasHistory: boolean; salary: string; onSalary: (v: string) => void }
+type Props = { work: WorkForm; onChange: (w: WorkForm) => void; hasHistory: boolean; salary: string; onSalary: (v: string) => void; dayRate: string; onDayRate: (v: string) => void }
 
 const STITCHING = 0 // chip value for Stitching (other chips are work type ids)
 const rateBox = (label: string, value: string, onChange: (v: string) => void, placeholder = '0') => (
@@ -29,9 +29,9 @@ const rateBox = (label: string, value: string, onChange: (v: string) => void, pl
   </div>
 )
 
-// Staff form → HOW they are paid (monthly salary / per piece) and WHAT work they do (Stitching, Cutting … — tick).
+// Staff form → HOW they are paid (monthly salary / per day / per piece) and WHAT work they do (Stitching, Cutting … — tick).
 // Only the boxes for that answer show. Per piece → their usual pay per piece, filled in on jobs (can be changed there).
-export function StaffWorkSection({ work, onChange, hasHistory, salary, onSalary }: Props) {
+export function StaffWorkSection({ work, onChange, hasHistory, salary, onSalary, dayRate, onDayRate }: Props) {
   const toast = useToast()
   const garments = useApiQuery('garments', () => garmentApi.list())
   const cats = useApiQuery('cost-categories', () => costCategoryApi.list())
@@ -39,7 +39,7 @@ export function StaffWorkSection({ work, onChange, hasHistory, salary, onSalary 
   const [adding, setAdding] = useState(false)
   const [wasBoth] = useState(work.pay === 'BOTH') // no longer offered; only someone already paid both ways still sees it
   const set = (patch: Partial<WorkForm>) => onChange({ ...work, ...patch })
-  const perPiece = work.pay !== 'SALARY'
+  const perPiece = work.pay === 'PIECE' || work.pay === 'BOTH'
   const ticked = (cats.data ?? []).filter((c) => c.id in work.works)
 
   const toggle = (v: number) => {
@@ -77,11 +77,13 @@ export function StaffWorkSection({ work, onChange, hasHistory, salary, onSalary 
           <p className="mb-1.5 text-sm font-medium text-ink">How is this person paid?</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             {choice('SALARY', 'Monthly salary', 'A fixed amount every month')}
+            {choice('DAY', 'Per day', 'An amount for each day they work')}
             {choice('PIECE', 'Per piece', 'Paid for each piece they finish')}
             {wasBoth && choice('BOTH', 'Both', 'Fixed salary and money for each piece')}
           </div>
         </div>
-        {work.pay !== 'PIECE' && <Input label="Salary per month ₹" required type="number" inputMode="decimal" min={0} value={salary} onChange={(e) => onSalary(e.target.value)} hint="Paid every month with a payslip" className="sm:w-80" />}
+        {work.pay === 'DAY' && <Input label="Amount per day ₹" required type="number" inputMode="decimal" min={0} value={dayRate} onChange={(e) => onDayRate(e.target.value)} hint="Type the days worked each month in Monthly salary. Pay = amount × days" className="sm:w-80" />}
+        {(work.pay === 'SALARY' || work.pay === 'BOTH') && <Input label="Salary per month ₹" required type="number" inputMode="decimal" min={0} value={salary} onChange={(e) => onSalary(e.target.value)} hint="Paid every month with a payslip" className="sm:w-80" />}
         <div>
           <ChipSelect
             label="What work do they do?"
@@ -89,7 +91,7 @@ export function StaffWorkSection({ work, onChange, hasHistory, salary, onSalary 
             selected={[...(work.stitches ? [STITCHING] : []), ...ticked.map((c) => c.id)]}
             onToggle={toggle}
           />
-          {work.pay === 'SALARY' && !work.stitches && !Object.keys(work.works).length && (
+          {!perPiece && !work.stitches && !Object.keys(work.works).length && (
             <p className="mt-1.5 text-xs text-muted">{hasHistory ? 'Nothing ticked — their old job work and balance are kept' : "Leave empty if they don't do this work (sales staff, teachers …)"}</p>
           )}
           {newWork === null ? (

@@ -78,9 +78,9 @@ export function SalaryPayModal({ staffId, month: forMonth, onClose, onSaved }: P
       {person && month && (
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-control bg-page px-3 py-2 text-sm">
           <span className="text-muted">{monthLabel(month)}:</span>
-          <span>Salary <b>{formatINR(salary)}</b></span>
+          {Number(person.dayRate) > 0 ? <span>Per day <b>{formatINR(Number(person.dayRate))}</b></span> : <span>Salary <b>{formatINR(salary)}</b></span>}
           <span>Paid <b>{formatINR(already)}</b></span>
-          <span>Left <b className={left > 0 ? 'text-warn' : 'text-success'}>{formatINR(left)}</b></span>
+          {Number(person.dayRate) === 0 && <span>Left <b className={left > 0 ? 'text-warn' : 'text-success'}>{formatINR(left)}</b></span>}
           {left > 0 && !amount && <button type="button" onClick={() => setAmount(String(left))} className="text-brand underline-offset-2 hover:underline">Pay {formatINR(left)}</button>}
         </div>
       )}

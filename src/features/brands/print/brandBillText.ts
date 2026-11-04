@@ -44,7 +44,7 @@ export function brandBillText(bill: BrandBill, p: BusinessProfile, cols: number)
   L.push(row('Sl#', 'Particulars', 'Rate', 'Qty', 'Amount'), rule)
   let sl = 0
   for (const l of bill.lines) {
-    const name = `${l.kind === 'ITEM' ? '  + ' : ''}${l.description}${l.endCustomer ? ` - ${l.endCustomer}` : ''}`.toUpperCase()
+    const name = `${l.kind !== 'PIECE' ? '  + ' : ''}${l.description}${l.endCustomer ? ` - ${l.endCustomer}` : ''}`.toUpperCase()
     const parts = wrap(name, wName)
     L.push(row(l.kind === 'PIECE' ? String(++sl) : '', parts[0] ?? '', plain(l.rate), `${Number(l.qty).toFixed(3)} ${l.unit.toUpperCase()}`, plain(l.amount)))
     for (const extra of parts.slice(1)) L.push(row('', extra, '', '', ''))

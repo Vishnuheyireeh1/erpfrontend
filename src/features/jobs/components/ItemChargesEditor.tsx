@@ -10,7 +10,7 @@ type Props = { garment: string; options: GarmentCharge[]; charges: ItemCharge[];
 
 // Inside one garment on the bill: "+ Add charge" → charge name (the garment type's list, or typed), quantity, rate, amount.
 // Picking a name fills its usual rate; changing the rate here is for this bill only — the garment type keeps its rate.
-// A newly typed name joins the garment's list, with its rate, once the bill is booked. Printed as "Lining (Blouse)".
+// A newly typed name joins the garment's list, with its rate, once the bill is booked.
 export function ItemChargesEditor({ garment, options, charges, onChange }: Props) {
   const find = (name: string) => options.find((o) => o.name.toLowerCase() === name.trim().toLowerCase())
   const set = (key: string, patch: Partial<ItemCharge>) => onChange(charges.map((c) => (c.key === key ? { ...c, ...patch } : c)))

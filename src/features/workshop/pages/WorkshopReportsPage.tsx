@@ -8,9 +8,10 @@ import { PagedTable } from '@/components/ui/PagedTable'
 import { DateRange, type DateRangeValue } from '@/components/ui/DateRange'
 import { ExportButton } from '@/components/ui/ExportButton'
 import { EmptyState } from '@/components/ui/Feedback'
+import { Input } from '@/components/ui/Input'
 import { todayISO } from '@/features/inventory/constants'
 import { api } from '@/lib/api'
-import { formatINR } from '@/lib/format'
+import { formatDate, formatINR } from '@/lib/format'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { payTypeLabels } from '../api/workshop.api'
 import { DirectExpensesSection } from '../components/DirectExpensesSection'
@@ -35,7 +36,7 @@ const tailorColumns: Column<TailorRow>[] = [
   { key: 'pieces', header: 'Pieces', align: 'right', render: (t) => t.pieces },
   { key: 'labour', header: 'Pay earned', align: 'right', mobile: 'badge', render: (t) => formatINR(t.labour) },
   { key: 'paidAmt', header: 'Paid in period', align: 'right', render: (t) => formatINR(t.paid) },
-  { key: 'balance', header: 'Balance now', align: 'right', render: (t) => (t.balance === null ? '—' : formatINR(t.balance)) },
+  { key: 'balance', header: 'Balance at cutoff', align: 'right', render: (t) => (t.balance === null ? '—' : formatINR(t.balance)) },
 ]
 const garmentColumns: Column<GarmentRow>[] = [
   { key: 'garment', header: 'Garment', mobile: 'title', render: (g) => <span className="font-medium text-ink">{g.garment}</span> },
@@ -51,7 +52,11 @@ const qs = (r: DateRangeValue) => new URLSearchParams({ from: r.from, to: r.to }
 export function WorkshopReportsPage() {
   const navigate = useNavigate()
   const [range, setRange] = useState<DateRangeValue>(() => ({ from: `${todayISO().slice(0, 8)}01`, to: todayISO() }))
-  const work = useApiQuery(['tailor-work', range], () => api.get<TailorWork>(`/reports/workshop/tailor-work?${qs(range)}`))
+  // Cutoff date: tailor work and balance are counted up to it (empty or before the From date = the To date).
+  const [cutoffText, setCutoffText] = useState('')
+  const cutoff = cutoffText && cutoffText >= range.from ? cutoffText : range.to
+  const workRange = { from: range.from, to: cutoff }
+  const work = useApiQuery(['tailor-work', workRange], () => api.get<TailorWork>(`/reports/workshop/tailor-work?${qs(workRange)}`))
   const profit = useApiQuery(['job-profit', range], () => api.get<JobProfit>(`/reports/workshop/job-profit?${qs(range)}`))
   const t = (profit.data ?? profit.lastData)?.totals
 
@@ -86,9 +91,15 @@ export function WorkshopReportsPage() {
 
       <DirectExpensesSection range={range} />
 
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-ink">Tailor work <span className="text-sm font-normal text-muted">(by the day jobs got Ready)</span></h2>
-        <ExportButton path="/reports/workshop/tailor-work/export" params={range} />
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-ink">Tailor work <span className="text-sm font-normal text-muted">(by the day jobs got Ready)</span></h2>
+          <p className="text-sm text-muted">Cutoff date: <b className="text-ink">{formatDate(cutoff)}</b> — work and balance are counted up to this date.</p>
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <Input label="Cutoff date" type="date" min={range.from} max={todayISO()} value={cutoff} onChange={(e) => setCutoffText(e.target.value)} className="w-44" />
+          <ExportButton path="/reports/workshop/tailor-work/export" params={workRange} />
+        </div>
       </div>
       <Card bodyClassName="p-0">
         {work.error ? (

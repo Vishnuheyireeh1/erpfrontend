@@ -1,5 +1,5 @@
 import { IconArrowLeft, IconPlus } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -9,7 +9,7 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/toast-context'
 import { todayISO } from '@/features/inventory/constants'
-import { newItem } from '@/features/jobs/jobDrafts'
+import { newGarmentCharges, newItem, newItemCharge } from '@/features/jobs/jobDrafts'
 import { garmentApi, tailorApi } from '@/features/workshop/api/workshop.api'
 import { ApiError } from '@/lib/api'
 import { formatINR } from '@/lib/format'
@@ -21,6 +21,7 @@ import { brandApi } from '../api/brand.api'
 import { brandOrderApi } from '../api/brandOrder.api'
 import { BrandOrderSummary } from '../components/BrandOrderSummary'
 import { BrandPieceEditor } from '../components/BrandPieceEditor'
+import { clearDraft, draftText, loadDraft, saveDraft } from '../orderDraftStore'
 import { fromOrder, newPiece, pieceAmount, pieceError, toOrderInput, type OrderForm, type PieceDraft } from '../orderDrafts'
 import type { BrandOrder } from '../types'
 
@@ -50,9 +51,27 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
   const brands = useApiQuery('brand-options', () => brandApi.list({ status: 'active', pageSize: 100 }))
   const initial = order ? fromOrder(order) : null
   const [sp] = useSearchParams()
-  const [brandId, setBrandId] = useState(sp.get('brand') ?? '')
-  const [form, setForm] = useState<OrderForm>(() => initial?.form ?? { theirOrderNo: '', docDate: todayISO(), expectedDate: inDays(10), labelNote: '', notes: '' })
-  const [pieces, setPieces] = useState<PieceDraft[]>(() => initial?.pieces ?? [newPiece()])
+  const [start] = useState(() => {
+    const brand = sp.get('brand') ?? ''
+    const blank = { brandId: brand, form: initial?.form ?? { theirOrderNo: '', docDate: todayISO(), expectedDate: inDays(10), labelNote: '', notes: '' }, pieces: initial?.pieces ?? [newPiece()] }
+    return { blank, draft: loadDraft(order?.id, order?.updatedAt) }
+  })
+  const [brandId, setBrandId] = useState(sp.get('brand') || (start.draft?.brandId ?? ''))
+  const [form, setForm] = useState<OrderForm>(() => start.draft?.form ?? start.blank.form)
+  const [pieces, setPieces] = useState<PieceDraft[]>(() => start.draft?.pieces ?? start.blank.pieces)
+  const [restored, setRestored] = useState(!!start.draft)
+  // Keep what is typed in this browser until saved (see orderDraftStore).
+  const blankText = useRef(draftText(start.blank.brandId, start.blank.form, start.blank.pieces))
+  const finished = useRef(false)
+  useEffect(() => {
+    if (finished.current) return
+    if (draftText(brandId, form, pieces) === blankText.current) clearDraft(order?.id)
+    else saveDraft(order?.id, { brandId, form, pieces, stamp: order?.updatedAt })
+  }, [brandId, form, pieces, order?.id, order?.updatedAt])
+  const startFresh = () => {
+    clearDraft(order?.id)
+    setBrandId(start.blank.brandId); setForm(start.blank.form); setPieces(start.blank.pieces); setRestored(false); setShowErrors(false); setError('')
+  }
   const [showErrors, setShowErrors] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -62,7 +81,7 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
   const setPiece = (key: string, p: Partial<PieceDraft>) => { setPieces((xs) => xs.map((x) => (x.key === key ? { ...x, ...p } : x))); setError('') }
   // Same garment, rate, tailor and cloth — new person, fresh measurements.
   const copyPiece = (d: PieceDraft) => {
-    const copy: PieceDraft = { ...d, ...newItem(), garmentTypeId: d.garmentTypeId, description: d.description, qty: d.qty, chargeRate: d.chargeRate, tailorId: d.tailorId, labourRate: d.labourRate, instructions: d.instructions, ownFabric: d.ownFabric, endCustomer: '', materials: [], id: undefined, stage: undefined }
+    const copy: PieceDraft = { ...d, ...newItem(), garmentTypeId: d.garmentTypeId, description: d.description, qty: d.qty, chargeRate: d.chargeRate, tailorId: d.tailorId, labourRate: d.labourRate, instructions: d.instructions, ownFabric: d.ownFabric, charges: (d.charges ?? []).map((c) => ({ ...newItemCharge(c.name), qty: c.qty, rate: c.rate, other: c.other })), endCustomer: '', materials: [], id: undefined, stage: undefined }
     setPieces((xs) => { const at = xs.findIndex((x) => x.key === d.key); return [...xs.slice(0, at + 1), copy, ...xs.slice(at + 1)] })
   }
   const count = pieces.reduce((s, d) => s + (Number(d.qty) || 0), 0)
@@ -77,6 +96,10 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
     try {
       const body = toOrderInput(form, pieces)
       const saved = order ? await brandOrderApi.update(order.id, body) : await brandOrderApi.create({ ...body, brandId: Number(brandId), docDate: form.docDate })
+      finished.current = true
+      clearDraft(order?.id)
+      // New charge names typed here → the garment's list, so they show next time (a failure here doesn't matter).
+      await Promise.allSettled(newGarmentCharges(pieces).map(([g, n, r]) => garmentApi.addCharge(g, n, r)))
       toast.success(order ? 'Order updated' : `Order ${saved.docNo} saved`)
       // A new order prints its bill at once (one per customer); after an edit, print from the order page.
       if (!order && profile && settings) printText(brandOrderBillText(saved, profile, settings['billing.print'].columns), settings['billing.print'])
@@ -96,6 +119,12 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
         <IconArrowLeft size={16} /> {order ? order.docNo : 'Brand orders'}
       </button>
       <PageHeader title={order ? `Edit ${order.docNo}` : 'New brand order'} subtitle="Each piece with who it is for, measurements, rate, tailor and whose cloth." />
+      {restored && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-control bg-brand-tint px-3 py-2 text-sm text-ink">
+          <span>Your unsaved entries are back. Check them and save.</span>
+          <button type="button" onClick={startFresh} className="font-medium text-brand hover:underline">Start fresh</button>
+        </div>
+      )}
       <div className="flex min-w-0 flex-col gap-5">
         <Card>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

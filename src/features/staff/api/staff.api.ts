@@ -10,7 +10,7 @@ function qs(params: Record<string, string | number | undefined>) {
 export const staffApi = {
   list: (p: { search?: string; status?: string; page: number; pageSize?: number }) => api.get<Paged<Staff>>(`/staff?${qs({ pageSize: 50, ...p })}`),
   get: (id: number) => api.get<{ item: Staff }>(`/staff/${id}`).then((r) => r.item),
-  options: () => api.get<{ items: Pick<Staff, 'id' | 'code' | 'name' | 'role' | 'salary'>[] }>('/staff/options').then((r) => r.items),
+  options: () => api.get<{ items: Pick<Staff, 'id' | 'code' | 'name' | 'role' | 'salary' | 'dayRate'>[] }>('/staff/options').then((r) => r.items),
   create: (body: StaffInput) => api.post<{ item: Staff }>('/staff', body).then((r) => r.item),
   update: (id: number, body: StaffInput) => api.put<{ item: Staff }>(`/staff/${id}`, body).then((r) => r.item),
   remove: (id: number) => api.delete(`/staff/${id}`),
@@ -32,6 +32,7 @@ export const monthLabel = (m: string) => new Date(`${m.slice(0, 7)}-01T00:00:00Z
 export const payrollApi = {
   sheet: (month: string) => api.get<PayrollSheet & { success: boolean }>(`/payroll?${qs({ month })}`),
   setLeave: (staffId: number, month: string, days: number) => api.put('/payroll/leave', { staffId, month, days }),
+  setWorkDays: (staffId: number, month: string, days: number) => api.put('/payroll/days', { staffId, month, days }),
   pay: (body: { staffId: number; month: string; docDate: string; bonus: number; deduction: number; deductionNote?: string; piecePaid: number; mode: string; reference?: string; notes?: string }) =>
     api.post<{ item: Payslip }>('/payroll/payslips', body).then((r) => r.item),
   cancel: (id: number, reason: string) => api.post(`/payroll/payslips/${id}/cancel`, { reason }),

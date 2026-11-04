@@ -14,8 +14,9 @@ import { StaffWorkSection, type WorkForm } from './StaffWorkSection'
 type Props = { staff: Staff | null; onClose: () => void; onSaved: () => void }
 
 const roles = ['Sales staff', 'Tailor', 'Cutting master', 'Embroidery', 'Hand work', 'Helper', 'Teacher', 'Accountant']
-// Salaried staff with nothing ticked (sales, teachers …) do no job work; per-piece staff always do.
-const doesJobWork = (w: WorkForm) => w.pay !== 'SALARY' || w.stitches || Object.keys(w.works).length > 0
+// Salaried / per-day staff with nothing ticked (sales, teachers …) do no job work; per-piece staff always do.
+const isPerPiece = (w: WorkForm) => w.pay === 'PIECE' || w.pay === 'BOTH'
+const doesJobWork = (w: WorkForm) => isPerPiece(w) || w.stitches || Object.keys(w.works).length > 0
 const toRates = (r: Record<number, string>) => Object.entries(r).filter(([, v]) => v.trim() !== '').map(([id, v]) => [Number(id), Number(v) || 0] as const)
 
 // Add / edit anyone who works here — sales staff, tailors, cutting master, teachers … — with how they are paid.
@@ -29,6 +30,7 @@ export function StaffFormModal({ staff, onClose, onSaved }: Props) {
     role: staff?.role ?? '',
     dept: (staff?.dept ?? 'SHOP') as StaffDept,
     salary: staff ? String(Number(staff.salary)) : '',
+    dayRate: Number(staff?.dayRate) > 0 ? String(Number(staff?.dayRate)) : '',
     joinDate: staff?.joinDate?.slice(0, 10) ?? '',
     notes: staff?.notes ?? '',
     isActive: staff?.isActive ?? true,
@@ -36,13 +38,13 @@ export function StaffFormModal({ staff, onClose, onSaved }: Props) {
   const w = staff?.worker
   const [work, setWork] = useState<WorkForm>(() => ({
     // No job work now (or turned off earlier) = salaried with nothing ticked; saving that keeps the old balance.
-    pay: !w?.isActive || w.payType === 'SALARY' ? 'SALARY' : Number(staff?.salary) > 0 ? 'BOTH' : 'PIECE',
+    pay: Number(staff?.dayRate) > 0 ? 'DAY' : !w?.isActive || w.payType === 'SALARY' ? 'SALARY' : Number(staff?.salary) > 0 ? 'BOTH' : 'PIECE',
     stitches: !!w?.isActive && w.stitches,
     works: w?.isActive ? Object.fromEntries(w.works.map((r) => [r.categoryId, Number(r.rate) ? String(Number(r.rate)) : ''])) : {},
     rates: Object.fromEntries((w?.rates ?? []).map((r) => [r.garmentTypeId, String(Number(r.rate))])),
     openingBalance: w ? String(Number(w.openingBalance)) : '',
   }))
-  const pieceOnly = work.pay === 'PIECE'
+  const hasSalary = work.pay === 'SALARY' || work.pay === 'BOTH'
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -51,13 +53,14 @@ export function StaffFormModal({ staff, onClose, onSaved }: Props) {
   const save = async () => {
     if (!f.name.trim()) return setError('Enter the name')
     if (!f.role.trim()) return setError('Enter their role (Sales staff, Tailor …)')
-    if (!pieceOnly && !(Number(f.salary) > 0)) return setError('Enter the salary per month')
-    if (work.pay !== 'SALARY' && !work.stitches && !Object.keys(work.works).length) return setError('Tick the work they do (Stitching, Cutting …)')
+    if (hasSalary && !(Number(f.salary) > 0)) return setError('Enter the salary per month')
+    if (work.pay === 'DAY' && !(Number(f.dayRate) > 0)) return setError('Enter the amount per day')
+    if (isPerPiece(work) && !work.stitches && !Object.keys(work.works).length) return setError('Tick the work they do (Stitching, Cutting …)')
     setSaving(true)
     try {
-      const perPiece = work.pay !== 'SALARY'
+      const perPiece = isPerPiece(work)
       const body = {
-        ...f, salary: pieceOnly ? 0 : Number(f.salary) || 0, joinDate: f.joinDate || null,
+        ...f, salary: hasSalary ? Number(f.salary) || 0 : 0, dayRate: work.pay === 'DAY' ? Number(f.dayRate) || 0 : 0, joinDate: f.joinDate || null,
         work: doesJobWork(work) ? {
           payType: perPiece ? ('PIECE' as const) : ('SALARY' as const),
           openingBalance: perPiece ? Number(work.openingBalance) || 0 : 0,
@@ -115,7 +118,7 @@ export function StaffFormModal({ staff, onClose, onSaved }: Props) {
         <Textarea label="Address" rows={2} value={f.address} onChange={(e) => set('address', e.target.value)} className="sm:col-span-2" />
         <Textarea label="Notes" rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} className="sm:col-span-2" placeholder="ID proof, bank account, emergency contact …" />
       </div>
-      <StaffWorkSection work={work} salary={f.salary} onSalary={(v) => set('salary', v)} onChange={(v) => { setWork(v); setError(''); if (doesJobWork(v) && !doesJobWork(work)) setF((x) => ({ ...x, dept: 'WORKSHOP' })) }} hasHistory={!!w} />
+      <StaffWorkSection work={work} salary={f.salary} onSalary={(v) => set('salary', v)} dayRate={f.dayRate} onDayRate={(v) => set('dayRate', v)} onChange={(v) => { setWork(v); setError(''); if (doesJobWork(v) && !doesJobWork(work)) setF((x) => ({ ...x, dept: 'WORKSHOP' })) }} hasHistory={!!w} />
       {staff && <div className="mt-4"><Switch label="Active" hint="Turn off when they leave" checked={f.isActive} onChange={(v) => set('isActive', v)} /></div>}
       {error && <p role="alert" className="mt-4 rounded-control bg-danger-tint px-3 py-2 text-sm text-danger">{error}</p>}
       <ConfirmDialog open={confirmDelete} title={`Delete ${staff?.name ?? ''}?`} message="Only possible while no salary was paid to them. Otherwise make them Inactive." confirmLabel="Delete" danger loading={saving} onConfirm={remove} onCancel={() => setConfirmDelete(false)} />

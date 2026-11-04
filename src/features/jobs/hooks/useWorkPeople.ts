@@ -14,7 +14,7 @@ export function useWorkPeople(workers: TailorOption[]) {
     const w = workers.find((x) => x.staffId === s.id)
     return w
       ? { ...w, role: s.role }
-      : { id: -s.id, code: s.code, name: s.name, role: s.role, payType: Number(s.salary) > 0 ? 'SALARY' : 'PIECE', stitches: true, speciality: s.role, staffId: s.id, rates: [], works: [] }
+      : { id: -s.id, code: s.code, name: s.name, role: s.role, payType: Number(s.salary) > 0 || Number(s.dayRate) > 0 ? 'SALARY' : 'PIECE', stitches: true, speciality: s.role, staffId: s.id, rates: [], works: [] }
   })
   // Workers not linked to a staff record stay on the list.
   const others = workers.filter((w) => !w.staffId)

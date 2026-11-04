@@ -12,6 +12,7 @@ export type Staff = {
   role: string
   dept: StaffDept
   salary: string
+  dayRate: string // paid per day: amount per day (0 = not paid per day)
   joinDate: string | null
   notes: string | null
   isActive: boolean
@@ -43,6 +44,7 @@ export type StaffInput = {
   role: string
   dept: StaffDept
   salary: number
+  dayRate: number
   joinDate: string | null
   notes: string
   isActive: boolean
@@ -74,7 +76,9 @@ export type SalaryPayment = {
 export type WorkLine = { docNo: string; date: string; detail: string; pieces: number; amount: number }
 export type PayrollRow = {
   staff: { id: number; code: string; name: string; role: string; dept: StaffDept; salary: string; isActive: boolean }
-  salary: number
+  salary: number // paid per day: day rate × days worked
+  dayRate: number
+  workedDays: number // days worked this month (paid per day)
   leaveDays: number // leave taken this month
   leaveCut: number // salary ÷ 30 × leave days
   advance: number // salary already paid for the month (advance / part)

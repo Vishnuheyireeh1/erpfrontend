@@ -71,7 +71,7 @@ export function PayslipModal({ row, month, onClose, onPaid }: Props) {
     >
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div className="rounded-card border border-line p-3">
-          {row.salary > 0 && <Line label="Monthly salary" value={row.salary} />}
+          {row.salary > 0 && <Line label={row.dayRate > 0 ? `${row.workedDays} days × ${formatINR(row.dayRate)}` : 'Monthly salary'} value={row.salary} />}
           {row.advance > 0 && <Line label="Advance already paid" value={row.advance} minus />}
           {b > 0 && <Line label="Bonus / extra" value={b} />}
           {d > 0 && <Line label={`Deduction${deductionNote ? ` (${deductionNote})` : ''}`} value={d} minus />}

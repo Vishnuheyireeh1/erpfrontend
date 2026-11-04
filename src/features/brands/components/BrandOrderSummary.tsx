@@ -1,5 +1,5 @@
 import { itemTitle } from '@/features/inventory/constants'
-import { productAmount } from '@/features/jobs/jobDrafts'
+import { itemChargeAmount, productAmount } from '@/features/jobs/jobDrafts'
 import type { GarmentType } from '@/features/workshop/types'
 import { formatINR } from '@/lib/format'
 import { pieceAmount, type PieceDraft } from '../orderDrafts'
@@ -11,7 +11,7 @@ const Line = ({ label, value }: { label: string; value: number }) => (
   <div className="flex justify-between gap-3 text-ink-soft"><span className="min-w-0">{label}</span><span className="shrink-0 text-ink">{formatINR(value)}</span></div>
 )
 
-// Above the Save button on the brand order form: each piece's stitching fee, the items it buys, and the total.
+// Above the Save button on the brand order form: each piece's stitching fee, its charges, the items it buys, and the total.
 export function BrandOrderSummary({ brandName, theirOrderNo, expectedDate, pieces, garments }: Props) {
   const total = pieces.reduce((s, d) => s + pieceAmount(d), 0)
   return (
@@ -24,6 +24,9 @@ export function BrandOrderSummary({ brandName, theirOrderNo, expectedDate, piece
           return (
             <div key={d.key} className="flex flex-col gap-0.5">
               <Line label={`Stitching fee — ${garment}${d.endCustomer.trim() ? ` (${d.endCustomer.trim()})` : ''} · ${num(d.qty)} × ${formatINR(num(d.chargeRate))}`} value={num(d.qty) * num(d.chargeRate)} />
+              {(d.charges ?? []).filter((c) => itemChargeAmount(c) > 0).map((c) => (
+                <Line key={c.key} label={`${c.name.trim() || 'Charge'} · ${num(c.qty)} × ${formatINR(num(c.rate))}`} value={itemChargeAmount(c)} />
+              ))}
               {d.materials.filter((m) => !m.included).map((m) => (
                 <Line key={m.key} label={`${itemTitle(m.item)} · ${num(m.qty)} ${m.item.product.unit.code} × ${formatINR(num(m.rate))}${num(m.discountPct) ? ` − ${num(m.discountPct)}%` : ''}`} value={productAmount(m)} />
               ))}

@@ -46,7 +46,7 @@ export function BrandPiecesCard({ order, onChanged, onAddItems, onAssign }: Prop
                     <p className="font-medium text-ink">{i.qty} × {i.description}{i.endCustomer && <span className="font-normal text-ink-soft"> · for {i.endCustomer}</span>}</p>
                     <span className="flex items-center gap-2">
                       <Badge tone={stageTone[i.stage]}>{stageLabel[i.stage]}{i.readyOn && i.stage === 'READY' ? ` ${formatDate(i.readyOn)}` : ''}</Badge>
-                      <span className="text-sm font-semibold">{formatINR(i.qty * Number(i.chargeRate))}</span>
+                      <span className="text-sm font-semibold">{formatINR(i.qty * Number(i.chargeRate) + i.charges.reduce((s, c) => s + Number(c.amount), 0))}</span>
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-ink-soft">
@@ -64,6 +64,16 @@ export function BrandPiecesCard({ order, onChanged, onAddItems, onAssign }: Prop
                     </dl>
                   )}
                   {i.instructions && <p className="mt-2 text-sm text-ink-soft">Design: {i.instructions}</p>}
+                  {i.charges.length > 0 && (
+                    <ul className="mt-2 flex flex-col gap-1 border-t border-line pt-2 text-sm">
+                      {i.charges.map((c) => (
+                        <li key={c.id} className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 truncate">{c.name} <span className="text-xs text-muted">{Number(c.qty)} × {formatINR(Number(c.rate))}</span></span>
+                          <span className="font-medium">{formatINR(Number(c.amount))}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {mats.length > 0 && (
                     <ul className="mt-2 flex flex-col gap-1 border-t border-line pt-2 text-sm">
                       {mats.map((m) => (

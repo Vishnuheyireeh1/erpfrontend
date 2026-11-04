@@ -69,6 +69,7 @@ export type BrandPiece = {
   stage: PieceStage
   readyOn: string | null
   billId: number | null
+  charges: { id: number; name: string; qty: string; rate: string; amount: string }[] // additional charges (Sarifal, Interlock …)
 }
 
 export type BrandMaterial = {
@@ -93,6 +94,7 @@ export type BrandOrder = BrandOrderSummary & {
   cancelledBy: string | null
   cancelledAt: string | null
   cancelReason: string | null
+  updatedAt: string
   items: BrandPiece[]
   materials: BrandMaterial[]
   bills: OrderBillRef[]
