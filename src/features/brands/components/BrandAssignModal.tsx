@@ -68,10 +68,10 @@ export function BrandAssignModal({ order, onClose, onDone }: Props) {
           return (
             <div key={i.id} className="flex flex-col gap-3 rounded-card border border-line p-3">
               <p className="font-medium text-ink">{n + 1}. {i.qty} × {i.description}{i.endCustomer ? ` · for ${i.endCustomer}` : ''}</p>
-              <WorkerRow label="Stitching" empty="Not decided" noNote people={staffList.people} value={r.stitch} qty={i.qty}
+              <WorkerRow label="Designer" empty="Not decided" noNote people={staffList.people} value={r.stitch} qty={i.qty}
                 presetFor={(t) => labourFor(all, garments.data ?? [], t, String(i.garmentTypeId))} onChange={(v) => setRow(i.id, { stitch: v })} />
               {workTypes.map((c) => (
-                <WorkerRow key={c.id} label={c.name} empty="Not needed" noNote people={staffList.people}
+                <WorkerRow key={c.id} label={c.name} salariedPay={/^cutting$/i.test(c.name)} empty="Not needed" noNote people={staffList.people}
                   value={r.works[c.id] ?? none} qty={i.qty} presetFor={(t) => usual(t, c.id)} onChange={(v) => setRow(i.id, { works: { ...r.works, [c.id]: v } })} />
               ))}
             </div>

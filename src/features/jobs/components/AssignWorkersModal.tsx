@@ -84,10 +84,10 @@ export function AssignWorkersModal({ job, onClose, onDone }: Props) {
                 <p className="font-medium text-ink">{n + 1}. {i.description}</p>
                 <p className="text-xs text-muted">{i.qty} pc · stitching charge {formatINR(i.qty * Number(i.chargeRate))}{i.ownFabric ? " · customer's cloth" : ''}</p>
               </div>
-              <WorkerRow label="Stitching" empty="Not decided" people={staffList.people} value={r.stitch} qty={i.qty}
+              <WorkerRow label="Designer" empty="Not decided" people={staffList.people} value={r.stitch} qty={i.qty}
                 presetFor={(t) => labourFor(all, garments.data ?? [], t, String(i.garmentTypeId))} onChange={(v) => setRow(i.id, { stitch: v })} />
               {workTypes.map((c) => (
-                <WorkerRow key={c.id} label={c.name} empty="Not needed" people={staffList.people}
+                <WorkerRow key={c.id} label={c.name} salariedPay={/^cutting$/i.test(c.name)} empty="Not needed" people={staffList.people}
                   value={r.works[c.id] ?? none} qty={i.qty} presetFor={(t) => usual(t, c.id)} onChange={(v) => setRow(i.id, { works: { ...r.works, [c.id]: v } })} />
               ))}
             </div>

@@ -15,11 +15,12 @@ type Props = {
   presetFor: (tailorId: string) => string // their usual pay per piece for this work ('' = none)
   onChange: (v: WorkPick) => void
   noNote?: boolean // brand orders: pay can be changed without a reason
+  salariedPay?: boolean // Cutting: a salaried person can get an amount too, on top of salary
 }
 
 // One work on a garment (Stitching, Cutting, Embroidery …): who did it → per-piece people get their usual pay filled
-// in (change it + write why); salaried people get no pay — the job only records who did it.
-export function WorkerRow({ label, empty, people, value, qty, presetFor, onChange, noNote = false }: Props) {
+// in (change it + write why); salaried people get no pay — the job only records who did it (Cutting: optional extra pay).
+export function WorkerRow({ label, empty, people, value, qty, presetFor, onChange, noNote = false, salariedPay = false }: Props) {
   const who = people.find((p) => String(p.id) === value.tailorId)
   const piece = who?.payType === 'PIECE'
   const preset = presetFor(value.tailorId)
@@ -35,7 +36,18 @@ export function WorkerRow({ label, empty, people, value, qty, presetFor, onChang
         placeholder={empty}
         options={people.map((p) => ({ value: String(p.id), label: `${p.name}${p.role ? ` · ${p.role}` : ''}${p.payType === 'SALARY' ? ' (salaried)' : ''}` }))}
       />
-      {who && !piece && <span className="col-span-2 text-xs text-muted">Salaried — no pay, only who did it</span>}
+      {who && !piece && !salariedPay && <span className="col-span-2 text-xs text-muted">Salaried — no pay, only who did it</span>}
+      {who && !piece && salariedPay && (
+        <>
+          <label className="flex items-center gap-1 text-xs text-muted">
+            ₹
+            <input type="number" inputMode="decimal" min={0} aria-label={`${label} pay per piece`} placeholder="Optional" value={Number(value.rate) ? value.rate : ''} onChange={(e) => onChange({ ...value, rate: e.target.value })} className={cn(controlClass(), 'h-10 w-full text-right')} />
+          </label>
+          <span className="col-span-2 text-xs text-muted sm:col-span-1">
+            {Number(value.rate) > 0 ? <>{qty} pc × {formatINR(Number(value.rate))} = <b className="text-ink">{formatINR(qty * Number(value.rate))}</b> on top of salary</> : 'Salaried — leave empty for no extra pay'}
+          </span>
+        </>
+      )}
       {piece && (
         <>
           <label className="flex items-center gap-1 text-xs text-muted">
