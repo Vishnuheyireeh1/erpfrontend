@@ -35,7 +35,7 @@ export function BrandPiecesCard({ order, onChanged, onAddItems, onAssign }: Prop
     <Card title={`Pieces (${order.pieces})`} className="mb-5">
       <ul className="flex flex-col gap-3">
         {order.items.map((i) => {
-          const values = orderedValues(i.measurements, i.garmentType.fields)
+          const values = orderedValues(i.measurements, i.garmentType?.fields ?? [])
           const mats = order.materials.filter((m) => m.itemId === i.id)
           const canTick = open && i.stage !== 'DELIVERED'
           return (

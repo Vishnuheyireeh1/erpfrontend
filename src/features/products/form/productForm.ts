@@ -22,6 +22,7 @@ export type ProductFormState = {
   type: ProductType | '' // the chosen type's kind (making card, labels …)
   productTypeId: string
   categoryId: string
+  supplierId: string
   unitId: string
   taxRateId: string
   hsnCode: string
@@ -45,7 +46,7 @@ export function emptyVariant(sizeId: number | null = null, colourId: number | nu
 
 export function emptyForm(): ProductFormState {
   return {
-    name: '', type: '', productTypeId: '', categoryId: '', unitId: '', taxRateId: '', hsnCode: '', fabric: '',
+    name: '', type: '', productTypeId: '', categoryId: '', supplierId: '', unitId: '', taxRateId: '', hsnCode: '', fabric: '',
     description: '', isActive: true, hasVariants: false, sizeIds: [], colourIds: [], variants: [emptyVariant()],
   }
 }
@@ -67,7 +68,7 @@ export function fromProduct(product: Product): ProductFormState {
   const p = { ...product, variants: sortVariants(product.variants) }
   const hasVariants = p.variants.some((v) => v.sizeId || v.colourId)
   return {
-    name: p.name, type: p.type, productTypeId: str(p.productTypeId), categoryId: str(p.categoryId), unitId: str(p.unitId),
+    name: p.name, type: p.type, productTypeId: str(p.productTypeId), categoryId: str(p.categoryId), supplierId: str(p.supplierId), unitId: str(p.unitId),
     taxRateId: str(p.taxRateId), hsnCode: str(p.hsnCode), fabric: str(p.fabric), description: str(p.description),
     isActive: p.isActive,
     hasVariants,
@@ -130,7 +131,7 @@ export function toPayload(f: ProductFormState) {
   const id = (v: string) => (v ? Number(v) : null)
   return {
     name: f.name.trim(), productTypeId: id(f.productTypeId), categoryId: id(f.categoryId),
-    unitId: id(f.unitId), taxRateId: id(f.taxRateId), hsnCode: f.hsnCode.trim() || null,
+    supplierId: id(f.supplierId), unitId: id(f.unitId), taxRateId: id(f.taxRateId), hsnCode: f.hsnCode.trim() || null,
     fabric: f.fabric.trim() || null, description: f.description.trim() || null, isActive: f.isActive,
     variants: f.variants.map((v) => ({
       id: v.id, sizeId: v.sizeId, colourId: v.colourId, barcode: v.barcode.trim() || null,

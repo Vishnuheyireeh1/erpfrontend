@@ -31,6 +31,7 @@ export const productColumns: Column<ProductListItem>[] = [
     mobile: 'subtitle',
     render: (p) => (p.category.parent ? `${p.category.parent.name} › ${p.category.name}` : p.category.name),
   },
+  { key: 'supplier', header: 'Supplier', render: (p) => p.supplierName ?? <span className="text-muted">—</span> },
   {
     key: 'type',
     header: 'Type',

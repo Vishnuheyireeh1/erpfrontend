@@ -14,6 +14,7 @@ export type ProductListItem = {
   isActive: boolean
   category: { name: string; parent: { name: string } | null }
   brand: { name: string } | null
+  supplierName: string | null // picked on the product, else the latest purchase bill's supplier
   unit: { code: string }
   variantCount: number
   totalStock: number
@@ -32,6 +33,7 @@ export type ProductListParams = {
   productTypeId?: number
   categoryId?: number
   brandId?: number
+  supplierId?: number
   status: 'all' | 'active' | 'inactive'
   page: number
   pageSize: number
@@ -63,6 +65,7 @@ export type Product = {
   type: ProductType
   categoryId: number
   brandId: number | null
+  supplierId: number | null
   unitId: number
   taxRateId: number | null
   hsnCode: string | null

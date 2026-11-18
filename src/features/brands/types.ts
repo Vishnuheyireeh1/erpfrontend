@@ -52,8 +52,8 @@ export type BrandOrderSummary = Sums & {
 
 export type BrandPiece = {
   id: number
-  garmentTypeId: number
-  garmentType: { id: number; name: string; fields: string[] }
+  garmentTypeId: number | null // null = work only (Saree bleeding …)
+  garmentType: { id: number; name: string; fields: string[] } | null
   description: string
   endCustomer: string | null
   qty: number

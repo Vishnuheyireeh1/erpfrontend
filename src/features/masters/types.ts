@@ -1,5 +1,5 @@
 // Must match the backend's /api/masters/:master keys.
-export type MasterKey = 'productTypes' | 'categories' | 'units' | 'sizes' | 'colours' | 'taxRates'
+export type MasterKey = 'productTypes' | 'categories' | 'units' | 'sizes' | 'colours' | 'taxRates' | 'workCharges'
 
 export type MasterRow = {
   id: number
@@ -18,6 +18,8 @@ export type MasterRow = {
   hexCode?: string | null
   // tax rates (Decimal comes back as a string)
   rate?: string
+  // work charges: usual pay to the worker (rate = usual amount to the brand)
+  labourRate?: string
   // product types
   kind?: string
   _count?: { children?: number; products?: number }

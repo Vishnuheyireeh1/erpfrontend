@@ -36,6 +36,7 @@ export function ProductListPage() {
   const [search, setSearch] = useState(params.get('search') ?? '')
   const [chosenType, setTypeId] = useState<string | null>(null) // null = not picked yet
   const [categoryId, setCategoryId] = useState('')
+  const [supplierId, setSupplierId] = useState('')
   const [status, setStatus] = useState<ProductListParams['status']>('all')
   const [page, setPage] = useState(1)
   const [pageSize] = usePageSize()
@@ -53,6 +54,7 @@ export function ProductListPage() {
     search: debounced || undefined,
     productTypeId: typeId ? Number(typeId) : undefined,
     categoryId: categoryId ? Number(categoryId) : undefined,
+    supplierId: supplierId ? Number(supplierId) : undefined,
     status,
     page,
     pageSize,
@@ -64,7 +66,7 @@ export function ProductListPage() {
     setPage(1)
   }
   const mainCategories = options.categories.filter((c) => !c.parent)
-  const filtered = Boolean(debounced || typeId || categoryId || status !== 'all')
+  const filtered = Boolean(debounced || typeId || categoryId || supplierId || status !== 'all')
 
   return (
     <>
@@ -74,7 +76,7 @@ export function ProductListPage() {
         actions={
           <>
             {/* Download list = what is in the system (report). Template + Upload = adding many items from Excel. */}
-            <ExportButton label="Download list" path="/products/export" params={{ search: debounced || undefined, productTypeId: typeId || undefined, categoryId: categoryId || undefined, status }} />
+            <ExportButton label="Download list" path="/products/export" params={{ search: debounced || undefined, productTypeId: typeId || undefined, categoryId: categoryId || undefined, supplierId: supplierId || undefined, status }} />
             <Button icon={IconDownload} onClick={template}>Download template</Button>
             <Button icon={IconFileUpload} onClick={() => setUploading(true)}>Upload Excel</Button>
             <Button variant="primary" icon={IconPlus} onClick={() => navigate(ownMade ? '/products/new?type=FINISHED&from=own-made' : '/products/new')}>
@@ -84,7 +86,7 @@ export function ProductListPage() {
         }
       />
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]">
         <Input
           icon={IconSearch}
           aria-label="Search products"
@@ -105,6 +107,13 @@ export function ProductListPage() {
           value={categoryId}
           onChange={(e) => reset(setCategoryId)(e.target.value)}
           options={mainCategories.map((c) => ({ value: String(c.id), label: c.name }))}
+        />
+        <Select
+          aria-label="Supplier"
+          placeholder="All suppliers"
+          value={supplierId}
+          onChange={(e) => reset(setSupplierId)(e.target.value)}
+          options={options.suppliers.map((s) => ({ value: String(s.id), label: s.name }))}
         />
         <Select
           aria-label="Status"

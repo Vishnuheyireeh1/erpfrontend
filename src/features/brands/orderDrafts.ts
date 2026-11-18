@@ -6,21 +6,31 @@ import type { BrandOrder } from './types'
 // cloth / lining from our stock (new pieces only; later on the order page).
 
 // cutTailorId / cutRate: the cutting master and their pay per piece (per-piece workers only).
-export type PieceDraft = ItemDraft & { endCustomer: string; materials: ProductDraft[]; stage?: string; cutTailorId: string; cutRate: string }
+// work = a line without a garment (Saree bleeding …): description is the work; saveRate = keep its amounts for next time.
+export type PieceDraft = ItemDraft & { endCustomer: string; materials: ProductDraft[]; stage?: string; cutTailorId: string; cutRate: string; work?: boolean; saveRate?: boolean }
 export type OrderForm = { theirOrderNo: string; docDate: string; expectedDate: string; labelNote: string; notes: string }
 
 // Wording of stock lines on brand orders.
 export const BRAND_LINE_LABELS = { sold: 'Charged to brand', used: 'Used free', usedNote: 'Not billed — its stock cost counts in the order profit.' }
 
 export const newPiece = (): PieceDraft => ({ ...newItem(), endCustomer: '', materials: [], cutTailorId: '', cutRate: '0' })
+export const newWorkPiece = (): PieceDraft => ({ ...newPiece(), work: true })
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 export const pieceAmount = (d: PieceDraft) =>
   r2((Number(d.qty) || 0) * (Number(d.chargeRate) || 0) + itemChargesTotal(d) + d.materials.reduce((s, m) => s + (m.included ? 0 : (Number(m.qty) || 0) * (Number(m.rate) || 0) * (1 - (Number(m.discountPct) || 0) / 100)), 0))
 
+function workError(d: PieceDraft) {
+  if (!d.description.trim()) return 'Pick or type the work'
+  const q = Number(d.qty)
+  if (!Number.isInteger(q) || q < 1) return 'Pieces must be a whole number, 1 or more'
+  if (d.chargeRate === '' || Number(d.chargeRate) < 0) return 'Enter the amount'
+  return undefined
+}
+
 export function pieceError(d: PieceDraft) {
   if ((d.charges ?? []).some((c) => itemChargeAmount(c) > 0 && !c.name.trim())) return 'Name the additional charge'
-  return itemError(d) ?? d.materials.map(productError).find(Boolean)
+  return (d.work ? workError(d) : itemError(d)) ?? d.materials.map(productError).find(Boolean)
 }
 
 export const toMaterialInput = (m: ProductDraft): MaterialInput => ({
@@ -35,7 +45,7 @@ export function toOrderInput(f: OrderForm, pieces: PieceDraft[]): OrderInput {
     notes: f.notes.trim() || undefined,
     items: pieces.map<PieceInput>((d) => ({
       id: d.id,
-      garmentTypeId: Number(d.garmentTypeId),
+      garmentTypeId: d.work ? null : Number(d.garmentTypeId),
       description: d.description.trim() || undefined,
       endCustomer: d.endCustomer.trim() || undefined,
       qty: Number(d.qty),
@@ -63,7 +73,7 @@ export function fromOrder(o: BrandOrder) {
   const pieces = o.items
     .filter((i) => i.stage !== 'DELIVERED')
     .map<PieceDraft>((i) => ({
-      ...newItem(), id: i.id, garmentTypeId: String(i.garmentTypeId), description: i.description, qty: String(i.qty), chargeRate: String(Number(i.chargeRate)),
+      ...newItem(), id: i.id, work: i.garmentTypeId === null, garmentTypeId: i.garmentTypeId ? String(i.garmentTypeId) : '', description: i.description, qty: String(i.qty), chargeRate: String(Number(i.chargeRate)),
       tailorId: i.tailorId ? String(i.tailorId) : '', labourRate: String(Number(i.labourRate)), measurements: { ...i.measurements },
       instructions: i.instructions ?? '', ownFabric: i.brandCloth, endCustomer: i.endCustomer ?? '', materials: [], stage: i.stage,
       measuredById: i.measuredById ? String(i.measuredById) : '', cutTailorId: cutOf(i.id)?.tailorId ? String(cutOf(i.id)!.tailorId) : '', cutRate: String(Number(cutOf(i.id)?.rate ?? 0)),

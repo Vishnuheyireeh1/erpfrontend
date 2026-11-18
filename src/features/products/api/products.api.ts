@@ -10,6 +10,7 @@ function toQuery(p: ProductListParams) {
   if (p.productTypeId) q.set('productTypeId', String(p.productTypeId))
   if (p.categoryId) q.set('categoryId', String(p.categoryId))
   if (p.brandId) q.set('brandId', String(p.brandId))
+  if (p.supplierId) q.set('supplierId', String(p.supplierId))
   return q.toString()
 }
 

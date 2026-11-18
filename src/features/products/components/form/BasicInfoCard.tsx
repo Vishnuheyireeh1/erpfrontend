@@ -91,6 +91,14 @@ export function BasicInfoCard({ form, errors, options, set, onTypeAdded }: Props
           value={form.taxRateId}
           onChange={(e) => set('taxRateId', e.target.value)}
         />
+        <Select
+          label="Supplier"
+          placeholder="Not set"
+          options={toOptions(options.suppliers)}
+          value={form.supplierId}
+          onChange={(e) => set('supplierId', e.target.value)}
+          hint="Who you usually buy it from. Empty = taken from the latest purchase bill."
+        />
         <Input
           label="HSN code"
           inputMode="numeric"

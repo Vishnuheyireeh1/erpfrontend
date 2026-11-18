@@ -10,7 +10,7 @@ function qs(params: Record<string, string | number | boolean | undefined>) {
 export type MaterialInput = { variantId: number; qty: number; rate: number; discountPct: number; charged: boolean }
 export type PieceInput = {
   id?: number
-  garmentTypeId: number
+  garmentTypeId: number | null // null = work only
   description?: string
   endCustomer?: string
   qty: number

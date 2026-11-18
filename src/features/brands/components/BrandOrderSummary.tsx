@@ -20,7 +20,7 @@ export function BrandOrderSummary({ brandName, theirOrderNo, expectedDate, piece
       <p className="mb-2 text-xs text-muted">{brandName || 'No brand chosen'}{theirOrderNo.trim() ? ` · Order no. ${theirOrderNo.trim()}` : ''}{expectedDate ? ` · Due ${new Date(expectedDate).toLocaleDateString('en-IN')}` : ''}</p>
       <div className="flex flex-col gap-2">
         {pieces.map((d) => {
-          const garment = garments.find((g) => String(g.id) === d.garmentTypeId)?.name ?? 'Garment'
+          const garment = d.work ? d.description.trim() || 'Work' : garments.find((g) => String(g.id) === d.garmentTypeId)?.name ?? 'Garment'
           return (
             <div key={d.key} className="flex flex-col gap-0.5">
               <Line label={`Stitching fee — ${garment}${d.endCustomer.trim() ? ` (${d.endCustomer.trim()})` : ''} · ${num(d.qty)} × ${formatINR(num(d.chargeRate))}`} value={num(d.qty) * num(d.chargeRate)} />

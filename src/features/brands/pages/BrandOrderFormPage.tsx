@@ -1,4 +1,4 @@
-import { IconArrowLeft, IconPlus } from '@tabler/icons-react'
+import { IconArrowLeft, IconPlus, IconTool } from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -22,7 +22,9 @@ import { brandOrderApi } from '../api/brandOrder.api'
 import { BrandOrderSummary } from '../components/BrandOrderSummary'
 import { BrandPieceEditor } from '../components/BrandPieceEditor'
 import { clearDraft, draftText, loadDraft, saveDraft } from '../orderDraftStore'
-import { fromOrder, newPiece, pieceAmount, pieceError, toOrderInput, type OrderForm, type PieceDraft } from '../orderDrafts'
+import { fromOrder, newPiece, newWorkPiece, pieceAmount, pieceError, toOrderInput, type OrderForm, type PieceDraft } from '../orderDrafts'
+import { learnWork, workOptions } from '../workOptions'
+import { mastersApi } from '@/features/masters/api/masters.api'
 import type { BrandOrder } from '../types'
 
 const inDays = (n: number) => {
@@ -49,6 +51,8 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
   const garments = useApiQuery('garments', () => garmentApi.list())
   const tailors = useApiQuery('tailor-options', () => tailorApi.options())
   const brands = useApiQuery('brand-options', () => brandApi.list({ status: 'active', pageSize: 100 }))
+  const savedWork = useApiQuery('work-charges', () => mastersApi.options('workCharges').catch(() => []))
+  const works = workOptions(savedWork.data ?? [], garments.data ?? [])
   const initial = order ? fromOrder(order) : null
   const [sp] = useSearchParams()
   const [start] = useState(() => {
@@ -81,9 +85,12 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
   const setPiece = (key: string, p: Partial<PieceDraft>) => { setPieces((xs) => xs.map((x) => (x.key === key ? { ...x, ...p } : x))); setError('') }
   // Same garment, rate, tailor and cloth — new person, fresh measurements.
   const copyPiece = (d: PieceDraft) => {
-    const copy: PieceDraft = { ...d, ...newItem(), garmentTypeId: d.garmentTypeId, description: d.description, qty: d.qty, chargeRate: d.chargeRate, tailorId: d.tailorId, labourRate: d.labourRate, instructions: d.instructions, ownFabric: d.ownFabric, charges: (d.charges ?? []).map((c) => ({ ...newItemCharge(c.name), qty: c.qty, rate: c.rate, other: c.other })), endCustomer: '', materials: [], id: undefined, stage: undefined }
+    const copy: PieceDraft = { ...d, ...newItem(), garmentTypeId: d.garmentTypeId, description: d.description, qty: d.qty, chargeRate: d.chargeRate, tailorId: d.tailorId, labourRate: d.labourRate, instructions: d.instructions, ownFabric: d.ownFabric, work: d.work, charges: (d.charges ?? []).map((c) => ({ ...newItemCharge(c.name), qty: c.qty, rate: c.rate, other: c.other })), endCustomer: '', materials: [], id: undefined, stage: undefined }
     setPieces((xs) => { const at = xs.findIndex((x) => x.key === d.key); return [...xs.slice(0, at + 1), copy, ...xs.slice(at + 1)] })
   }
+  // Adding a work line drops untouched blank garment pieces (the empty one the form starts with).
+  const blankGarment = (d: PieceDraft) => !d.id && !d.work && !d.garmentTypeId && !d.description.trim() && !d.chargeRate && !d.endCustomer.trim() && !d.materials.length
+  const addWork = () => setPieces((xs) => [...xs.filter((x) => !blankGarment(x)), newWorkPiece()])
   const count = pieces.reduce((s, d) => s + (Number(d.qty) || 0), 0)
   const total = pieces.reduce((s, d) => s + pieceAmount(d), 0)
 
@@ -99,7 +106,7 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
       finished.current = true
       clearDraft(order?.id)
       // New charge names typed here → the garment's list, so they show next time (a failure here doesn't matter).
-      await Promise.allSettled(newGarmentCharges(pieces).map(([g, n, r]) => garmentApi.addCharge(g, n, r)))
+      await Promise.allSettled([...newGarmentCharges(pieces.filter((d) => !d.work)).map(([g, n, r]) => garmentApi.addCharge(g, n, r)), learnWork(pieces, works)])
       toast.success(order ? 'Order updated' : `Order ${saved.docNo} saved`)
       // A new order prints its bill at once (one per customer); after an edit, print from the order page.
       if (!order && profile && settings) printText(brandOrderBillText(saved, profile, settings['billing.print'].columns), settings['billing.print'])
@@ -151,6 +158,7 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
                 index={i}
                 draft={d}
                 garments={garments.data!}
+                works={works}
                 tailors={tailors.data!}
                 error={showErrors ? pieceError(d) : undefined}
                 onChange={(p) => setPiece(d.key, p)}
@@ -158,7 +166,10 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
                 onCopy={() => copyPiece(d)}
               />
             ))}
-            <Button icon={IconPlus} onClick={() => setPieces((xs) => [...xs, newPiece()])} className="w-fit">Add piece</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button icon={IconPlus} onClick={() => setPieces((xs) => [...xs, newPiece()])} className="w-fit">Add piece</Button>
+              <Button icon={IconTool} onClick={addWork} className="w-fit">Add work (no garment)</Button>
+            </div>
           </div>
         </Card>
 

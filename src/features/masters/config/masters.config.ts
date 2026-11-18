@@ -5,6 +5,7 @@ import {
   IconReceiptTax,
   IconRuler,
   IconShirt,
+  IconTool,
   type Icon,
 } from '@tabler/icons-react'
 import type { FieldDef, MasterKey } from '../types'
@@ -98,6 +99,19 @@ export const masters: MasterMeta[] = [
     fields: [
       { name: 'name', label: 'Name', type: 'text', required: true, placeholder: 'GST 5%' },
       { name: 'rate', label: 'Rate (%)', type: 'number', required: true, placeholder: '5' },
+      active,
+    ],
+  },
+  {
+    key: 'workCharges',
+    label: 'Work charges',
+    singular: 'work charge',
+    icon: IconTool,
+    description: 'Work on brand orders without a garment (Saree bleeding, Fall & pico …) with its usual amounts.',
+    fields: [
+      { name: 'name', label: 'Work', type: 'text', required: true, placeholder: 'Saree bleeding' },
+      { name: 'rate', label: 'Amount to brand ₹', type: 'number', placeholder: '150', hint: 'Filled in when the work is picked on an order' },
+      { name: 'labourRate', label: 'Pay to worker ₹', type: 'number', placeholder: '60', hint: 'Per piece, for per-piece workers' },
       active,
     ],
   },

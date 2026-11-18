@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/Badge'
+import { formatINR } from '@/lib/format'
 import type { Column } from '@/components/ui/DataTable'
 import { kindLabel } from '@/features/products/constants'
 import type { ProductType } from '@/features/products/types'
@@ -65,6 +66,12 @@ export const masterColumns: Record<MasterKey, Col[]> = {
   taxRates: [
     nameCol,
     { key: 'rate', header: 'Rate', align: 'right', mobile: 'subtitle', render: (r) => `${Number(r.rate)}%` },
+    statusCol,
+  ],
+  workCharges: [
+    nameCol,
+    { key: 'rate', header: 'Amount to brand', align: 'right', mobile: 'subtitle', render: (r) => formatINR(Number(r.rate ?? 0)) },
+    { key: 'labourRate', header: 'Pay to worker', align: 'right', render: (r) => formatINR(Number(r.labourRate ?? 0)) },
     statusCol,
   ],
 }

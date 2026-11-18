@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { supplierApi } from '@/features/purchase/api/purchase.api'
 import { productsApi } from '../api/products.api'
 import type { Option } from '../types'
 
@@ -9,9 +10,10 @@ export type ProductOptions = {
   taxRates: Option[]
   sizes: Option[]
   colours: Option[]
+  suppliers: Option[] // active suppliers (Purchase → Suppliers)
 }
 
-const EMPTY: ProductOptions = { productTypes: [], categories: [], units: [], taxRates: [], sizes: [], colours: [] }
+const EMPTY: ProductOptions = { productTypes: [], categories: [], units: [], taxRates: [], sizes: [], colours: [], suppliers: [] }
 
 // Loads every dropdown the product screens need, in parallel, once.
 export function useProductOptions() {
@@ -20,10 +22,11 @@ export function useProductOptions() {
 
   useEffect(() => {
     let cancelled = false
-    const keys = Object.keys(EMPTY) as (keyof ProductOptions)[]
-    Promise.all(keys.map((k) => productsApi.options(k).catch(() => [] as Option[]))).then((lists) => {
+    const keys = (Object.keys(EMPTY) as (keyof ProductOptions)[]).filter((k) => k !== 'suppliers')
+    const suppliers = supplierApi.list({ status: 'active', pageSize: 100 }).then((r) => r.items.map((s) => ({ id: s.id, name: s.name }))).catch(() => [] as Option[])
+    Promise.all([...keys.map((k) => productsApi.options(k).catch(() => [] as Option[])), suppliers]).then((lists) => {
       if (cancelled) return
-      setOptions(Object.fromEntries(keys.map((k, i) => [k, lists[i]])) as ProductOptions)
+      setOptions({ ...(Object.fromEntries(keys.map((k, i) => [k, lists[i]])) as Omit<ProductOptions, 'suppliers'>), suppliers: lists[keys.length] })
       setReady(true)
     })
     return () => {
