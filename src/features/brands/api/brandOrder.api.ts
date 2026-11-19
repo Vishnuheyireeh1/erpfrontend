@@ -38,6 +38,7 @@ export const brandOrderApi = {
   update: (id: number, body: OrderInput) => api.put<{ item: BrandOrder }>(`/brand-orders/${id}`, body).then(item),
   stage: (id: number, itemIds: number[], stage: 'IN_WORK' | 'READY') => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/stage`, { itemIds, stage }).then(item),
   cancel: (id: number, reason: string) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/cancel`, { reason }).then(item),
+  setMeasurements: (id: number, itemId: number, measurements: Record<string, string>) => api.put<{ item: BrandOrder }>(`/brand-orders/${id}/items/${itemId}/measurements`, { measurements }).then(item),
   addMaterials: (id: number, itemId: number, lines: MaterialInput[]) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/materials`, { itemId, lines }).then(item),
   setWorkers: (id: number, items: { id: number; tailorId: number | null; labourRate: number; works: { categoryId: number; tailorId: number; rate: number }[] }[]) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/workers`, { items }).then(item),
   addCost: (id: number, body: CostInput) => api.post<{ item: BrandOrder }>(`/brand-orders/${id}/costs`, body).then(item),

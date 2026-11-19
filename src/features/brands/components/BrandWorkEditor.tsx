@@ -13,6 +13,7 @@ type Props = {
   index: number
   draft: PieceDraft
   works: WorkOption[]
+  showCustomer?: boolean // only older orders with a customer per piece
   tailors: TailorOption[]
   error?: string
   onChange: (patch: Partial<PieceDraft>) => void
@@ -24,7 +25,7 @@ const num = (v: string | number) => String(Number(v) || 0)
 // A brand order line WITHOUT a garment (Saree bleeding, Fall & pico …): the work, who it is for, pieces, amount to the
 // brand, and the worker with their pay. The work list mixes saved Work charges with every garment's charges; the
 // "Show" box narrows it. Picking a work fills its usual amounts; "save amounts" keeps changed ones for next time.
-export function BrandWorkEditor({ index, draft, works, tailors, error, onChange, onRemove }: Props) {
+export function BrandWorkEditor({ index, draft, works, showCustomer = false, tailors, error, onChange, onRemove }: Props) {
   const [show, setShow] = useState('all')
   const sources = [...new Set(works.map((w) => w.source))]
   const shown = show === 'all' ? works : works.filter((w) => w.source === show)
@@ -69,7 +70,7 @@ export function BrandWorkEditor({ index, draft, works, tailors, error, onChange,
             detail={(n) => { const w = findWork(shown, n); return w ? `${formatINR(w.rate)}${show === 'all' && w.source !== 'Work charges' ? ` · ${w.source}` : ''}` : '' }}
             placeholder="Pick or type, e.g. Saree bleeding" newNote="new, saved to Work charges when the order is saved" inputClassName="h-11" onChange={pick} />
         </div>
-        <Input label="For (their customer)" className="col-span-2" value={draft.endCustomer} onChange={(e) => onChange({ endCustomer: e.target.value })} placeholder="e.g. Priya" maxLength={120} />
+        {showCustomer && <Input label="For (their customer)" className="col-span-2" value={draft.endCustomer} onChange={(e) => onChange({ endCustomer: e.target.value })} placeholder="e.g. Priya" maxLength={120} />}
         <Input label="Pieces" type="number" inputMode="numeric" min={1} step={1} value={draft.qty} onChange={(e) => onChange({ qty: e.target.value })} />
         <Input label="Amount / piece ₹" type="number" inputMode="decimal" min={0} value={draft.chargeRate} onChange={(e) => onChange({ chargeRate: e.target.value })} />
         <Select label="Worker" placeholder="Decide later" value={draft.tailorId} onChange={(e) => onChange({ tailorId: e.target.value })}

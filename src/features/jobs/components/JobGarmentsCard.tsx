@@ -1,4 +1,4 @@
-import { IconPhoto, IconTrash } from '@tabler/icons-react'
+import { IconPhoto, IconRuler, IconTrash } from '@tabler/icons-react'
 import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Select } from '@/components/ui/Select'
@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/toast-context'
 import { staffApi } from '@/features/staff/api/staff.api'
 import { orderedValues } from '@/features/workshop/api/workshop.api'
+import { ItemMeasurementsModal } from '@/features/workshop/components/ItemMeasurementsModal'
 import { useApiQuery } from '@/lib/useApiQuery'
 import { ApiError } from '@/lib/api'
 import { formatINR } from '@/lib/format'
@@ -20,6 +21,7 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploadFor, setUploadFor] = useState<number | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
+  const [measureFor, setMeasureFor] = useState<Job['items'][number] | null>(null)
   const canPhoto = job.status !== 'CANCELLED'
   const staff = useApiQuery('staff-options', () => staffApi.options())
   // Who took the measurements — can be filled any time after booking.
@@ -100,6 +102,11 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
                 ) : (
                   <p className="text-sm text-muted">No measurements.</p>
                 )}
+                {canPhoto && (
+                  <button type="button" onClick={() => setMeasureFor(i)} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
+                    <IconRuler size={15} /> {values.length ? 'Edit measurements' : 'Add measurements'}
+                  </button>
+                )}
                 {i.instructions && <p className="mt-2 whitespace-pre-line text-sm text-ink">{i.instructions}</p>}
               </div>
               <div className="flex flex-col items-start gap-2 md:items-stretch">
@@ -123,6 +130,11 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
           )
         })}
       </ul>
+      {measureFor && (
+        <ItemMeasurementsModal title={`${measureFor.description} — ${job.customerName}`} fields={measureFor.garmentType.fields} values={measureFor.measurements} onClose={() => setMeasureFor(null)}
+          note="In inches, as on the tape. Only the measurements change — the bill stays the same. Saved to the customer too, for next time."
+          onSave={(m) => jobsApi.setMeasurements(job.id, measureFor.id, m).then(onChanged)} />
+      )}
     </Card>
   )
 }

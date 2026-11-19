@@ -17,6 +17,7 @@ type Props = {
   draft: PieceDraft
   garments: GarmentType[]
   works: WorkOption[]
+  perPieceCustomer?: boolean // older orders with a different customer per piece
   tailors: TailorOption[]
   error?: string
   onChange: (patch: Partial<PieceDraft>) => void
@@ -27,9 +28,9 @@ type Props = {
 // One piece of a brand order: the job garment editor (measurements, rate, tailor, brand's cloth) + who it is for +
 // cutting master and who measured (under the tailor) + additional charges (billed with the piece) +
 // cloth / lining from OUR stock (leaves stock when the order is saved).
-export function BrandPieceEditor({ index, draft, garments, works, tailors, error, onChange, onRemove, onCopy }: Props) {
+export function BrandPieceEditor({ index, draft, garments, works, perPieceCustomer = false, tailors, error, onChange, onRemove, onCopy }: Props) {
   const [showStock, setShowStock] = useState(draft.materials.length > 0)
-  const forInput = (
+  const forInput = perPieceCustomer && (
     <Input label="For (their customer)" className="col-span-2" value={draft.endCustomer} onChange={(e) => onChange({ endCustomer: e.target.value })} placeholder="e.g. Priya" maxLength={120} />
   )
   const garment = garments.find((g) => String(g.id) === draft.garmentTypeId)
@@ -38,7 +39,7 @@ export function BrandPieceEditor({ index, draft, garments, works, tailors, error
   return (
     <div className="flex flex-col gap-2">
       {draft.work ? (
-        <BrandWorkEditor index={index} draft={draft} works={works} tailors={tailors} error={error} onChange={onChange} onRemove={onRemove} />
+        <BrandWorkEditor index={index} draft={draft} works={works} showCustomer={perPieceCustomer} tailors={tailors} error={error} onChange={onChange} onRemove={onRemove} />
       ) : (
       <JobItemEditor
         index={index}

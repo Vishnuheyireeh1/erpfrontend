@@ -59,6 +59,7 @@ export const jobsApi = {
     if (!res.ok) throw new ApiError(res.status, data.message ?? 'Could not upload the photo')
     return data.imagePath as string
   },
+  setMeasurements: (id: number, itemId: number, measurements: Record<string, string>) => api.put<{ item: Job }>(`/jobs/${id}/items/${itemId}/measurements`, { measurements }).then((r) => r.item),
   setMeasuredBy: (id: number, itemId: number, staffId: number | null) => api.post<{ item: Job }>(`/jobs/${id}/items/${itemId}/measured-by`, { staffId }).then((r) => r.item),
   removePhoto: (id: number, itemId: number) => api.delete(`/jobs/${id}/items/${itemId}/photo`),
   addCost: (id: number, body: CostBody) => api.post<{ item: Job }>(`/jobs/${id}/costs`, body).then((r) => r.item),

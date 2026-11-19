@@ -57,11 +57,11 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
   const [sp] = useSearchParams()
   const [start] = useState(() => {
     const brand = sp.get('brand') ?? ''
-    const blank = { brandId: brand, form: initial?.form ?? { theirOrderNo: '', docDate: todayISO(), expectedDate: inDays(10), labelNote: '', notes: '' }, pieces: initial?.pieces ?? [newPiece()] }
+    const blank = { brandId: brand, form: initial?.form ?? { theirOrderNo: '', docDate: todayISO(), expectedDate: inDays(10), labelNote: '', notes: '', customer: '' }, pieces: initial?.pieces ?? [newPiece()] }
     return { blank, draft: loadDraft(order?.id, order?.updatedAt) }
   })
   const [brandId, setBrandId] = useState(sp.get('brand') || (start.draft?.brandId ?? ''))
-  const [form, setForm] = useState<OrderForm>(() => start.draft?.form ?? start.blank.form)
+  const [form, setForm] = useState<OrderForm>(() => (start.draft ? { ...start.blank.form, ...start.draft.form } : start.blank.form))
   const [pieces, setPieces] = useState<PieceDraft[]>(() => start.draft?.pieces ?? start.blank.pieces)
   const [restored, setRestored] = useState(!!start.draft)
   // Keep what is typed in this browser until saved (see orderDraftStore).
@@ -142,6 +142,7 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
                 options={(brands.data?.items ?? []).map((b) => ({ value: String(b.id), label: b.name }))}
                 hint={!brands.loading && !brands.data?.items.length ? 'Add the brand first in Workshop → Brands' : undefined} />
             )}
+            {!form.perPiece && <Input label="Customer name" value={form.customer} maxLength={120} onChange={(e) => set({ customer: e.target.value })} placeholder="Their customer, e.g. Priya" hint="Printed on the bill for every piece" />}
             <Input label="Order no. / Bill number" value={form.theirOrderNo} maxLength={40} onChange={(e) => set({ theirOrderNo: e.target.value })} placeholder="e.g. ZK-1123" />
             {!order && <Input label="Received on" type="date" max={todayISO()} value={form.docDate} onChange={(e) => set({ docDate: e.target.value })} />}
             <Input label="Due date" type="date" min={form.docDate} value={form.expectedDate} onChange={(e) => set({ expectedDate: e.target.value })} />
@@ -159,6 +160,7 @@ function OrderFormView({ order }: { order: BrandOrder | null }) {
                 draft={d}
                 garments={garments.data!}
                 works={works}
+                perPieceCustomer={!!form.perPiece}
                 tailors={tailors.data!}
                 error={showErrors ? pieceError(d) : undefined}
                 onChange={(p) => setPiece(d.key, p)}

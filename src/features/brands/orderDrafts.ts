@@ -8,7 +8,9 @@ import type { BrandOrder } from './types'
 // cutTailorId / cutRate: the cutting master and their pay per piece (per-piece workers only).
 // work = a line without a garment (Saree bleeding …): description is the work; saveRate = keep its amounts for next time.
 export type PieceDraft = ItemDraft & { endCustomer: string; materials: ProductDraft[]; stage?: string; cutTailorId: string; cutRate: string; work?: boolean; saveRate?: boolean }
-export type OrderForm = { theirOrderNo: string; docDate: string; expectedDate: string; labelNote: string; notes: string }
+// customer = their customer for the whole order (every piece gets it → one bill). perPiece = an older order whose pieces
+// are for different people: then each piece keeps its own name.
+export type OrderForm = { theirOrderNo: string; docDate: string; expectedDate: string; labelNote: string; notes: string; customer: string; perPiece?: boolean }
 
 // Wording of stock lines on brand orders.
 export const BRAND_LINE_LABELS = { sold: 'Charged to brand', used: 'Used free', usedNote: 'Not billed — its stock cost counts in the order profit.' }
@@ -47,7 +49,7 @@ export function toOrderInput(f: OrderForm, pieces: PieceDraft[]): OrderInput {
       id: d.id,
       garmentTypeId: d.work ? null : Number(d.garmentTypeId),
       description: d.description.trim() || undefined,
-      endCustomer: d.endCustomer.trim() || undefined,
+      endCustomer: (f.perPiece ? d.endCustomer : f.customer).trim() || undefined,
       qty: Number(d.qty),
       chargeRate: Number(d.chargeRate) || 0,
       brandCloth: d.ownFabric,
@@ -65,7 +67,9 @@ export function toOrderInput(f: OrderForm, pieces: PieceDraft[]): OrderInput {
 
 // Saved order → form state (edit screen). Delivered pieces are left out — they can't change.
 export function fromOrder(o: BrandOrder) {
+  const names = [...new Set(o.items.map((i) => (i.endCustomer ?? '').trim()).filter(Boolean))]
   const form: OrderForm = {
+    customer: names.length === 1 ? names[0] : '', perPiece: names.length > 1,
     theirOrderNo: o.theirOrderNo ?? '', docDate: o.docDate.slice(0, 10), expectedDate: o.expectedDate.slice(0, 10), labelNote: o.labelNote ?? '', notes: o.notes ?? '',
   }
   // The piece's cutting line (first "Cutting" work with a worker) fills the cutting master boxes.

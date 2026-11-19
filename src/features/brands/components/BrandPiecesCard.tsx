@@ -1,10 +1,11 @@
-import { IconPackage, IconTrash } from '@tabler/icons-react'
+import { IconPackage, IconRuler, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/toast-context'
 import { orderedValues } from '@/features/workshop/api/workshop.api'
+import { ItemMeasurementsModal } from '@/features/workshop/components/ItemMeasurementsModal'
 import { ApiError } from '@/lib/api'
 import { formatDate, formatINR } from '@/lib/format'
 import { brandOrderApi } from '../api/brandOrder.api'
@@ -17,6 +18,7 @@ type Props = { order: BrandOrder; onChanged: () => void; onAddItems: (piece: Bra
 export function BrandPiecesCard({ order, onChanged, onAddItems, onAssign }: Props) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [measureFor, setMeasureFor] = useState<BrandPiece | null>(null)
   const open = order.status === 'OPEN'
   const removeMaterial = async (id: number) => {
     setBusy(true)
@@ -87,15 +89,24 @@ export function BrandPiecesCard({ order, onChanged, onAddItems, onAssign }: Prop
                       ))}
                     </ul>
                   )}
-                  {canTick && (
-                    <button type="button" onClick={() => onAddItems(i)} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand"><IconPackage size={15} /> Cloth / items from our stock</button>
-                  )}
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    {i.garmentType && order.status !== 'CANCELLED' && (
+                      <button type="button" onClick={() => setMeasureFor(i)} className="inline-flex items-center gap-1 text-sm font-medium text-brand"><IconRuler size={15} /> {values.length ? 'Edit measurements' : 'Add measurements'}</button>
+                    )}
+                    {canTick && (
+                      <button type="button" onClick={() => onAddItems(i)} className="inline-flex items-center gap-1 text-sm font-medium text-brand"><IconPackage size={15} /> Cloth / items from our stock</button>
+                    )}
+                  </div>
                 </div>
               </div>
             </li>
           )
         })}
       </ul>
+      {measureFor && (
+        <ItemMeasurementsModal title={`${measureFor.description}${measureFor.endCustomer ? ` — ${measureFor.endCustomer}` : ''}`} fields={measureFor.garmentType?.fields ?? []} values={measureFor.measurements} onClose={() => setMeasureFor(null)}
+          onSave={(m) => brandOrderApi.setMeasurements(order.id, measureFor.id, m).then(onChanged)} />
+      )}
     </Card>
   )
 }
