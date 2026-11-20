@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supplierApi } from '@/features/purchase/api/purchase.api'
 import { productsApi } from '../api/products.api'
-import type { Option } from '../types'
+import { productTypeMeta } from '../constants'
+import type { Option, ProductType } from '../types'
 
 export type ProductOptions = {
   productTypes: Option[]
@@ -38,6 +39,15 @@ export function useProductOptions() {
   const addOption = (key: keyof ProductOptions, opt: Option) => setOptions((o) => ({ ...o, [key]: [...o[key], opt] }))
 
   return { options, ready, addOption }
+}
+
+// Only the 5 main product types (one per kind): the row named like the kind (Ready-made …), else the first of that kind.
+// keep = a type that must stay visible (the one an older product already has).
+export function mainTypes(types: Option[], keep?: string) {
+  const order: ProductType[] = ['READY_MADE', 'FINISHED', 'RAW_MATERIAL', 'ACCESSORY', 'SERVICE']
+  const main = order.map((k) => types.find((t) => t.kind === k && t.name.toLowerCase() === productTypeMeta[k].label.toLowerCase()) ?? types.find((t) => t.kind === k)).filter((t): t is Option => !!t)
+  const extra = keep ? types.filter((t) => String(t.id) === keep && !main.includes(t)) : []
+  return [...main, ...extra]
 }
 
 // "Kurtis › Party wear kurtis" — sorted so subcategories follow their main category.

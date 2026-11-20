@@ -1,3 +1,4 @@
+import { Textarea } from '@/components/ui/Input'
 import type { Customer } from '../types'
 import type { BillMeta } from './BillPaymentPanel'
 import { CustomerQuickField } from './CustomerQuickField'
@@ -27,6 +28,8 @@ export function BillCustomerBar({ customer, onCustomer, meta, onMeta, needsCusto
         showErrors={showErrors}
         phoneRequired={!!needsCustomer}
       />
+      {/* Optional — saved on the customer (new or picked) when the bill is saved. */}
+      <Textarea label="Address (optional)" rows={1} maxLength={255} value={meta.address ?? customer?.address ?? ''} onChange={(e) => onMeta({ address: e.target.value })} placeholder="House name, street, place" />
     </div>
   )
 }

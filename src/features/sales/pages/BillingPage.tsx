@@ -38,6 +38,7 @@ export function BillingPage() {
   // Customer picked → on to Sale items; "Change" → back to the name box.
   const pickCustomer = (c: Parameters<typeof b.setCustomer>[0]) => {
     b.setCustomer(c)
+    b.setMeta({ address: undefined }) // show the newly picked customer's saved address
     window.setTimeout(() => focusBox(c ? TARGET.F2 : TARGET.F3), 0)
   }
 

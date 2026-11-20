@@ -10,7 +10,7 @@ import type { Customer } from '../types'
 
 type Props = { customer: Customer; onClose: () => void; onSaved: (c: Customer) => void }
 
-// Only name, phone, advance and notes are asked. Old fields (GSTIN, state, address …) are kept as they are when editing.
+// Only name, phone, address, advance and notes are asked. Old fields (GSTIN, state, address …) are kept as they are when editing.
 const blank = { name: '', phone: '', email: '', gstin: '', stateCode: '32', address: '', city: '', pincode: '', openingBalance: '0', advance: '', notes: '', isActive: true }
 
 // Edit a customer (new customers are saved from Billing / Stitching jobs). Mount with a key so it resets per customer.
@@ -60,6 +60,7 @@ export function CustomerFormModal({ customer, onClose, onSaved }: Props) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input label="Customer name" required value={String(f.name)} onChange={(e) => set('name', e.target.value)} autoFocus />
         <Input label="Phone" inputMode="tel" value={String(f.phone)} onChange={(e) => set('phone', e.target.value)} hint="Used to find the customer at billing" />
+        <Textarea label="Address (optional)" rows={2} maxLength={255} value={String(f.address)} onChange={(e) => set('address', e.target.value)} className="sm:col-span-2" placeholder="House name, street, place" />
         <Input
           label="Advance ₹"
           type="number"

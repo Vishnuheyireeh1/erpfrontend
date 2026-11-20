@@ -7,16 +7,19 @@ import type { TailorOption } from '@/features/workshop/api/workshop.api'
 import { cn } from '@/lib/cn'
 import { formatINR } from '@/lib/format'
 import { findWork, type WorkOption } from '../workOptions'
-import type { PieceDraft } from '../orderDrafts'
+import type { ItemDraft } from '@/features/jobs/jobDrafts'
+
+// A job line or a brand order piece (pieces also have the brand's customer).
+export type WorkLineDraft = ItemDraft & { endCustomer?: string }
 
 type Props = {
   index: number
-  draft: PieceDraft
+  draft: WorkLineDraft
   works: WorkOption[]
   showCustomer?: boolean // only older orders with a customer per piece
   tailors: TailorOption[]
   error?: string
-  onChange: (patch: Partial<PieceDraft>) => void
+  onChange: (patch: Partial<WorkLineDraft>) => void
   onRemove?: () => void
 }
 
@@ -70,7 +73,7 @@ export function BrandWorkEditor({ index, draft, works, showCustomer = false, tai
             detail={(n) => { const w = findWork(shown, n); return w ? `${formatINR(w.rate)}${show === 'all' && w.source !== 'Work charges' ? ` · ${w.source}` : ''}` : '' }}
             placeholder="Pick or type, e.g. Saree bleeding" newNote="new, saved to Work charges when the order is saved" inputClassName="h-11" onChange={pick} />
         </div>
-        {showCustomer && <Input label="For (their customer)" className="col-span-2" value={draft.endCustomer} onChange={(e) => onChange({ endCustomer: e.target.value })} placeholder="e.g. Priya" maxLength={120} />}
+        {showCustomer && <Input label="For (their customer)" className="col-span-2" value={draft.endCustomer ?? ''} onChange={(e) => onChange({ endCustomer: e.target.value })} placeholder="e.g. Priya" maxLength={120} />}
         <Input label="Pieces" type="number" inputMode="numeric" min={1} step={1} value={draft.qty} onChange={(e) => onChange({ qty: e.target.value })} />
         <Input label="Amount / piece ₹" type="number" inputMode="decimal" min={0} value={draft.chargeRate} onChange={(e) => onChange({ chargeRate: e.target.value })} />
         <Select label="Worker" placeholder="Decide later" value={draft.tailorId} onChange={(e) => onChange({ tailorId: e.target.value })}

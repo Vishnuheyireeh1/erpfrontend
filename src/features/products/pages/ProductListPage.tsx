@@ -17,7 +17,7 @@ import { ProductImportModal } from '../components/import/ProductImportModal'
 import { ownMadeColumns } from '../config/ownMadeColumns'
 import { productColumns } from '../config/productColumns'
 import { useProductList } from '../hooks/useProductList'
-import { useProductOptions } from '../hooks/useProductOptions'
+import { categoryOptions, mainTypes, useProductOptions } from '../hooks/useProductOptions'
 import type { ProductListParams } from '../types'
 import { usePageSize } from '@/lib/usePageSize'
 
@@ -65,7 +65,6 @@ export function ProductListPage() {
     set(v)
     setPage(1)
   }
-  const mainCategories = options.categories.filter((c) => !c.parent)
   const filtered = Boolean(debounced || typeId || categoryId || supplierId || status !== 'all')
 
   return (
@@ -99,14 +98,14 @@ export function ProductListPage() {
           placeholder="All types"
           value={typeId}
           onChange={(e) => reset(setTypeId)(e.target.value)}
-          options={options.productTypes.map((t) => ({ value: String(t.id), label: t.name }))}
+          options={mainTypes(options.productTypes, typeId).map((t) => ({ value: String(t.id), label: t.name }))}
         />
         <Select
           aria-label="Category"
           placeholder="All categories"
           value={categoryId}
           onChange={(e) => reset(setCategoryId)(e.target.value)}
-          options={mainCategories.map((c) => ({ value: String(c.id), label: c.name }))}
+          options={categoryOptions(options.categories)} // main categories and their sub categories (Fabrics › Silk Saree)
         />
         <Select
           aria-label="Supplier"

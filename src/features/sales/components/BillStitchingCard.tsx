@@ -1,10 +1,14 @@
+import { IconTool } from '@tabler/icons-react'
 import { useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
+import { BrandWorkEditor } from '@/features/brands/components/BrandWorkEditor'
+import { useWorkOptions } from '@/features/brands/workOptions'
 import { Spinner } from '@/components/ui/Feedback'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { todayISO } from '@/features/inventory/constants'
 import { JobItemEditor } from '@/features/jobs/components/JobItemEditor'
-import { garmentPatch, itemError, newItem, type ItemDraft } from '@/features/jobs/jobDrafts'
+import { garmentPatch, itemError, newItem, newWorkLine, type ItemDraft } from '@/features/jobs/jobDrafts'
 import { garmentApi, measurementApi, tailorApi } from '@/features/workshop/api/workshop.api'
 import { cn } from '@/lib/cn'
 import { useApiQuery } from '@/lib/useApiQuery'
@@ -35,6 +39,9 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
   const latestFor = (gid: number) => measures.data?.find((m) => m.garmentTypeId === gid)?.values
   const set = (key: string, patch: Partial<ItemDraft>) => onChange(drafts.map((d) => (d.key === key ? { ...d, ...patch } : d)))
   const ready = garments.data && tailors.data
+  const works = useWorkOptions(garments.data)
+  // Work without a garment (Saree fall & pico …): pick from saved work or type a new one.
+  const addWork = () => onChange([...drafts, newWorkLine()])
   const add = (gid: string) => {
     onChange([...drafts, { ...newItem(), ...garmentPatch(gid, garments.data!, tailors.data!, '', latestFor(Number(gid))) }])
     window.setTimeout(() => focusBox('[data-hotkey="measure"]', true), 80) // straight to its measurements
@@ -53,6 +60,7 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
 
   // First garment: chosen at the top. More garments: "Add another garment" sits below the list.
   const picker = ready && (
+    <div className="flex flex-wrap items-end gap-3">
     <Select
       label={drafts.length ? 'Add another garment' : 'Garment to stitch'}
       placeholder="Choose the garment…"
@@ -62,6 +70,8 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
       options={garments.data!.filter((g) => g.isActive).map((g) => ({ value: String(g.id), label: g.name }))}
       className="sm:max-w-sm"
     />
+    <Button icon={IconTool} onClick={addWork}>Add work (no garment)</Button>
+    </div>
   )
 
   return (
@@ -72,7 +82,10 @@ export function BillStitchingCard({ step, drafts, onChange, customerId, delivery
         <div className="flex flex-col gap-4">
           {!drafts.length && picker}
 
-          {drafts.map((d, i) => (
+          {drafts.map((d, i) => d.work ? (
+            <BrandWorkEditor key={d.key} index={i} draft={d} works={works} tailors={tailors.data!} error={showErrors ? itemError(d) : undefined}
+              onChange={(p) => set(d.key, p)} onRemove={() => onChange(drafts.filter((x) => x.key !== d.key))} />
+          ) : (
             <JobItemEditor showMeasuredBy
               key={d.key}
               simple

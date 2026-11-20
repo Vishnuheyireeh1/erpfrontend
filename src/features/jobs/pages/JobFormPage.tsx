@@ -1,4 +1,6 @@
-import { IconArrowLeft, IconPlus } from '@tabler/icons-react'
+import { IconArrowLeft, IconPlus, IconTool } from '@tabler/icons-react'
+import { BrandWorkEditor } from '@/features/brands/components/BrandWorkEditor'
+import { blankGarment, learnWork, useWorkOptions } from '@/features/brands/workOptions'
 import { useMemo, useState } from 'react'
 import { clearBillDraft } from '@/features/sales/billDraft'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -25,7 +27,7 @@ import { jobsApi } from '../api/jobs.api'
 import { JobCostsEditor } from '../components/JobCostsEditor'
 import { JobFormSummary, type JobMeta } from '../components/JobFormSummary'
 import { JobItemEditor } from '../components/JobItemEditor'
-import { fromJob, itemError, newItem, newProduct, productError, productsTotal, toJobInput, toProductInput, type CostDraft, type ItemDraft, type ProductDraft } from '../jobDrafts'
+import { fromJob, itemError, newItem, newProduct, newWorkLine, productError, productsTotal, toJobInput, toProductInput, type CostDraft, type ItemDraft, type ProductDraft } from '../jobDrafts'
 import { ProductLinesEditor } from '../components/ProductLinesEditor'
 import type { StockItem } from '@/features/inventory/types'
 import { calcJob, isOpen } from '../jobUtils'
@@ -62,6 +64,7 @@ function JobForm({ job }: { job: Job | null }) {
   const { profile, settings } = useBusinessProfile()
   const garments = useApiQuery('garments', () => garmentApi.list())
   const tailors = useApiQuery('tailor-options', () => tailorApi.options())
+  const works = useWorkOptions(garments.data)
   const parentId = Number(params.get('parent')) || null
   const presetId = job?.customerId ?? (Number(params.get('customer')) || 0)
   const preset = useApiQuery(['job-customer', presetId], () => (presetId ? customerApi.get(presetId) : Promise.resolve(null)))
@@ -138,6 +141,7 @@ function JobForm({ job }: { job: Job | null }) {
       const saved = job
         ? await jobsApi.update(job.id, body)
         : await jobsApi.create({ ...body, customerId: buyer!.id, docDate: meta.docDate, parentJobId: parentId, tenders: tenderInput(tenders), useAdvance: buyer!.id === customer?.id && useAdvance && (advance.data?.total ?? 0) > 0, products: toProductInput(products) })
+      await learnWork(items, works) // new work names → Work charges (never blocks the job)
       toast.success(job ? `${saved.docNo} updated` : `${saved.docNo} booked`)
       if (!job && fromCounter?.length) clearBillDraft() // the counter items are on this job bill now
       if (!job && autoPrint && profile && settings) printText(jobBillText(saved, profile, settings['billing.print'].columns), settings['billing.print'])
@@ -179,7 +183,10 @@ function JobForm({ job }: { job: Job | null }) {
 
           <Card title={`Garments (${items.length})`}>
             <div className="flex flex-col gap-4">
-              {items.map((d, i) => (
+              {items.map((d, i) => d.work ? (
+                <BrandWorkEditor key={d.key} index={i} draft={d} works={works} tailors={tailors.data!} error={showErrors ? itemError(d) : undefined}
+                  onChange={(p) => setItem(d.key, p)} onRemove={items.length > 1 ? () => setItems((xs) => xs.filter((x) => x.key !== d.key)) : undefined} />
+              ) : (
                 <JobItemEditor showMeasuredBy
                   key={d.key}
                   index={i}
@@ -192,7 +199,10 @@ function JobForm({ job }: { job: Job | null }) {
                   onRemove={items.length > 1 ? () => setItems((xs) => xs.filter((x) => x.key !== d.key)) : undefined}
                 />
               ))}
-              <Button icon={IconPlus} onClick={() => setItems((xs) => [...xs, newItem()])} className="w-fit">Add garment</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button icon={IconPlus} onClick={() => setItems((xs) => [...xs, newItem()])} className="w-fit">Add garment</Button>
+                <Button icon={IconTool} onClick={() => setItems((xs) => [...xs.filter((x) => !blankGarment(x)), newWorkLine()])} className="w-fit">Add work (no garment)</Button>
+              </div>
             </div>
           </Card>
 

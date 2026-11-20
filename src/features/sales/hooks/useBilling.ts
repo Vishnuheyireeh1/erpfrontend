@@ -6,6 +6,7 @@ import type { StockItem } from '@/features/inventory/types'
 import { jobsApi } from '@/features/jobs/api/jobs.api'
 import { itemChargeCosts, itemError, newGarmentCharges, type CostDraft, type ItemDraft } from '@/features/jobs/jobDrafts'
 import { garmentApi } from '@/features/workshop/api/workshop.api'
+import { learnWorkNow } from '@/features/brands/workOptions'
 import { jobBillText } from '@/features/jobs/print/jobText'
 import { useBusinessProfile } from '@/features/settings/hooks/useBusinessProfile'
 import { ApiError } from '@/lib/api'
@@ -17,7 +18,7 @@ import { loadSaleForEdit, type EditInfo } from '../editLoad'
 import { calcSale } from '../calc'
 import type { BillMeta } from '../components/BillPaymentPanel'
 import type { SaleLineDraft } from '../components/SaleLineRow'
-import { ensureCustomer, quickCustomerError } from '../customerQuick'
+import { ensureCustomer, quickCustomerError, saveAddress } from '../customerQuick'
 import { jobBillTotals, jobFromBill } from '../jobBill'
 import { billText } from '../print/billText'
 import { printText } from '../print/printing'
@@ -139,8 +140,9 @@ export function useBilling() {
   const wantsCustomer = !customer && (isJob || typedSomeone)
   const whoError = () => (wantsCustomer ? quickCustomerError(meta.walkInName, meta.walkInPhone, isJob) : null)
   const resolveCustomer = async () => {
-    if (customer || !wantsCustomer) return customer
-    const c = await ensureCustomer(meta.walkInName, meta.walkInPhone)
+    if (customer) { const c = await saveAddress(customer, meta.address); if (c !== customer) setCustomer(c); return c }
+    if (!wantsCustomer) return customer
+    const c = await ensureCustomer(meta.walkInName, meta.walkInPhone, meta.address)
     setCustomer(c)
     return c
   }
@@ -190,7 +192,7 @@ export function useBilling() {
       const buyer = (await resolveCustomer())!
       const job = await jobsApi.create(jobFromBill({ customerId: buyer.id, docDate: meta.docDate, deliveryDate, discount: meta.billDiscount, notes: meta.notes, bookNo: meta.bookNo ?? '', gstApplied: jobGst, stitch, charges: allCharges, lines, tenders, useAdvance: buyer.id === customer?.id && useAdvance && advanceAvailable > 0 }))
       // New charge names typed here → the garment's list, so they show next time (a failure here doesn't matter).
-      await Promise.allSettled(newGarmentCharges(stitch).map(([g, n, r]) => garmentApi.addCharge(g, n, r)))
+      await Promise.allSettled([...newGarmentCharges(stitch).map(([g, n, r]) => garmentApi.addCharge(g, n, r)), learnWorkNow(stitch)])
       clearBillDraft()
       toast.success(`${job.docNo} booked`)
       if (autoPrint && profile && settings) printText(jobBillText(job, profile, settings['billing.print'].columns), settings['billing.print'])

@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/toast-context'
 import { inventoryApi } from '@/features/inventory/api/inventory.api'
 import type { StockItem } from '@/features/inventory/types'
 import { productsApi } from '@/features/products/api/products.api'
-import { categoryOptions, useProductOptions } from '@/features/products/hooks/useProductOptions'
+import { categoryOptions, mainTypes, useProductOptions } from '@/features/products/hooks/useProductOptions'
 import { ApiError } from '@/lib/api'
 
 type Props = { initialName?: string; onClose: () => void; onCreated: (lines: { item: StockItem; qty: string }[]) => void }
@@ -92,7 +92,7 @@ export function QuickProductModal({ initialName = '', onClose, onCreated }: Prop
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input label="Item name" required value={f.name} onChange={(e) => set('name', e.target.value)} className="sm:col-span-2" autoFocus />
-            <Select label="Type" required placeholder="Choose" value={typeId} onChange={(e) => set('productTypeId', e.target.value)} options={options.productTypes.filter((t) => t.kind !== 'SERVICE').map((t) => ({ value: String(t.id), label: t.name }))} />
+            <Select label="Type" required placeholder="Choose" value={typeId} onChange={(e) => set('productTypeId', e.target.value)} options={mainTypes(options.productTypes).filter((t) => t.kind !== 'SERVICE').map((t) => ({ value: String(t.id), label: t.name }))} />
             <Select label="Category" required placeholder="Choose" value={f.categoryId} onChange={(e) => set('categoryId', e.target.value)} options={categoryOptions(options.categories)} />
             <Select label="Unit" required placeholder="Choose" value={f.unitId} onChange={(e) => set('unitId', e.target.value)} options={options.units.map((u) => ({ value: String(u.id), label: `${u.name} (${u.code})` }))} />
             <QtyBoxes sizes={options.sizes.filter((s) => sizes.includes(s.id))} colours={options.colours.filter((c) => colours.includes(c.id))} unit={options.units.find((u) => String(u.id) === f.unitId)?.code ?? ''} qty={qty} onQty={(k, v) => { setQty((q) => ({ ...q, [k]: v })); setError('') }} />

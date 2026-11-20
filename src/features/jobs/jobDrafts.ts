@@ -20,6 +20,9 @@ export type ItemDraft = {
   ownFabric: boolean
   measuredById?: string // staff who took the measurements ('' = not recorded)
   charges?: ItemCharge[] // billing page: this garment's additional charges (empty amount = not charged)
+  // work = a line without a garment (Saree fall & pico …): description is the work. saveRate = keep its amounts for next time.
+  work?: boolean
+  saveRate?: boolean
 }
 // One additional charge inside a garment on the bill: picked from the garment type's options, or typed (a new one is
 // added to the garment's options, with its rate, when the bill is booked). Rate changes here stay on this bill.
@@ -29,6 +32,7 @@ export type CostDraft = { key: string; kind: string; description: string; charge
 
 let seq = 0
 export const newItem = (): ItemDraft => ({ key: `i${++seq}`, garmentTypeId: '', description: '', qty: '1', chargeRate: '', tailorId: '', labourRate: '', measurements: {}, instructions: '', ownFabric: false })
+export const newWorkLine = (): ItemDraft => ({ ...newItem(), work: true })
 export const newCost = (kind = 'Embroidery'): CostDraft => ({ key: `c${++seq}`, kind, description: '', charge: '' })
 
 // Tailor's own rate for this garment, else the garment's usual labour.
@@ -55,7 +59,7 @@ export const itemChargesTotal = (d: ItemDraft) => (d.charges ?? []).reduce((s, c
 // Charges typed on the bill that the garment doesn't list yet → [garmentTypeId, name, rate] to add to it after booking.
 export const newGarmentCharges = (items: ItemDraft[]) => {
   const seen = new Set<string>()
-  return items.flatMap((d) => (d.charges ?? []).filter((c) => c.other && c.name.trim() && itemChargeAmount(c) > 0).map((c) => [Number(d.garmentTypeId), c.name.trim(), Number(c.rate) || 0] as const))
+  return items.filter((d) => !d.work).flatMap((d) => (d.charges ?? []).filter((c) => c.other && c.name.trim() && itemChargeAmount(c) > 0).map((c) => [Number(d.garmentTypeId), c.name.trim(), Number(c.rate) || 0] as const))
     .filter(([g, n]) => !seen.has(`${g}|${n.toLowerCase()}`) && !!seen.add(`${g}|${n.toLowerCase()}`))
 }
 
@@ -64,7 +68,9 @@ export const itemChargeCosts = (items: ItemDraft[]): CostDraft[] =>
   items.flatMap((d) => (d.charges ?? []).filter((c) => itemChargeAmount(c) > 0 && c.name.trim()).map((c) => ({ key: c.key, kind: c.name.trim(), description: d.description, charge: String(itemChargeAmount(c)), qty: c.qty, rate: c.rate })))
 
 export function itemError(d: ItemDraft) {
-  if (!d.garmentTypeId) return 'Choose the garment'
+  if (d.work) {
+    if (!d.description.trim()) return 'Pick or type the work'
+  } else if (!d.garmentTypeId) return 'Choose the garment'
   const q = Number(d.qty)
   if (!Number.isInteger(q) || q < 1) return 'Pieces must be a whole number, 1 or more'
   if (d.chargeRate === '' || Number(d.chargeRate) < 0) return 'Enter the charge'
@@ -84,7 +90,7 @@ export function toJobInput(f: { expectedDate: string; gstApplied: boolean; disco
     internalNotes: f.internalNotes.trim() || undefined,
     items: items.map((d) => ({
       id: d.id,
-      garmentTypeId: Number(d.garmentTypeId),
+      garmentTypeId: d.work ? null : Number(d.garmentTypeId),
       description: d.description.trim() || undefined,
       qty: Number(d.qty),
       chargeRate: Number(d.chargeRate) || 0,
@@ -103,7 +109,7 @@ export function toJobInput(f: { expectedDate: string; gstApplied: boolean; disco
 export function fromJob(job: Job) {
   return {
     items: job.items.map<ItemDraft>((i) => ({
-      key: `i${++seq}`, id: i.id, garmentTypeId: String(i.garmentTypeId), description: i.description, qty: String(i.qty),
+      key: `i${++seq}`, id: i.id, work: i.garmentTypeId === null, garmentTypeId: i.garmentTypeId ? String(i.garmentTypeId) : '', description: i.description, qty: String(i.qty),
       chargeRate: String(Number(i.chargeRate)), tailorId: i.tailorId ? String(i.tailorId) : '', labourRate: String(Number(i.labourRate)),
       measurements: { ...i.measurements }, instructions: i.instructions ?? '', ownFabric: i.ownFabric, measuredById: i.measuredById ? String(i.measuredById) : '',
     })),

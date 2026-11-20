@@ -73,7 +73,7 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
       <ul className="flex flex-col gap-4">
         {job.items.map((i) => {
-          const values = orderedValues(i.measurements, i.garmentType.fields)
+          const values = orderedValues(i.measurements, i.garmentType?.fields ?? [])
           return (
             <li key={i.id} className="grid grid-cols-1 gap-4 rounded-card border border-line p-3 md:grid-cols-[minmax(0,1fr)_140px]">
               <div className="min-w-0">
@@ -102,7 +102,7 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
                 ) : (
                   <p className="text-sm text-muted">No measurements.</p>
                 )}
-                {canPhoto && (
+                {canPhoto && i.garmentType && (
                   <button type="button" onClick={() => setMeasureFor(i)} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
                     <IconRuler size={15} /> {values.length ? 'Edit measurements' : 'Add measurements'}
                   </button>
@@ -131,7 +131,7 @@ export function JobGarmentsCard({ job, onChanged }: Props) {
         })}
       </ul>
       {measureFor && (
-        <ItemMeasurementsModal title={`${measureFor.description} — ${job.customerName}`} fields={measureFor.garmentType.fields} values={measureFor.measurements} onClose={() => setMeasureFor(null)}
+        <ItemMeasurementsModal title={`${measureFor.description} — ${job.customerName}`} fields={measureFor.garmentType?.fields ?? []} values={measureFor.measurements} onClose={() => setMeasureFor(null)}
           note="In inches, as on the tape. Only the measurements change — the bill stays the same. Saved to the customer too, for next time."
           onSave={(m) => jobsApi.setMeasurements(job.id, measureFor.id, m).then(onChanged)} />
       )}

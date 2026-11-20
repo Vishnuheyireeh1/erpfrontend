@@ -10,7 +10,7 @@ function qs(params: Record<string, string | number | boolean | undefined>) {
 
 export type JobItemInput = {
   id?: number
-  garmentTypeId: number
+  garmentTypeId: number | null // null = work only
   description?: string
   qty: number
   chargeRate: number

@@ -7,7 +7,8 @@ import type { Customer } from '../types'
 import { TenderInputs } from './TenderInputs'
 
 // customerMode: "Customer" chosen — walkInName / walkInPhone are then the customer's name + phone (saved with the bill).
-export type BillMeta = { walkInName: string; walkInPhone: string; billDiscount: string; notes: string; docDate: string; bookNo?: string; customerMode?: boolean }
+// address: typed on the bill (optional) — undefined = not touched, the customer's saved address shows.
+export type BillMeta = { walkInName: string; walkInPhone: string; address?: string; billDiscount: string; notes: string; docDate: string; bookNo?: string; customerMode?: boolean }
 
 type Props = {
   customer: Customer | null

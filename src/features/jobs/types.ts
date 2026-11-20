@@ -24,7 +24,7 @@ export type JobSummary = {
 
 export type JobItem = {
   id: number
-  garmentTypeId: number
+  garmentTypeId: number | null // null = work only (Saree fall & pico …)
   description: string
   qty: number
   chargeRate: string
@@ -37,7 +37,7 @@ export type JobItem = {
   measuredById: number | null
   measuredBy: { id: number; name: string } | null
   imagePath: string | null
-  garmentType: { name: string; fields: string[] }
+  garmentType: { name: string; fields: string[] } | null
   tailor: { id: number; name: string; payType: 'PIECE' | 'SALARY' } | null
 }
 

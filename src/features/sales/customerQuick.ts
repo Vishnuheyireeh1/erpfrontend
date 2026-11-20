@@ -16,18 +16,28 @@ export function quickCustomerError(name: string, phone: string, phoneNeeded = tr
   return null
 }
 
+// Address typed on the bill → saved on the customer when it is new or different (empty keeps the saved one).
+export async function saveAddress(c: Customer, address: string | undefined): Promise<Customer> {
+  const a = (address ?? '').trim()
+  if (!a || a === (c.address ?? '').trim()) return c
+  const { name, phone, email, gstin, stateCode, city, pincode, openingBalance, notes, isActive } = c
+  const saved = await customerApi.update(c.id, { name, phone, email, gstin, stateCode, address: a, city, pincode, openingBalance: Number(openingBalance), notes, isActive })
+  return { ...c, ...saved, balance: c.balance }
+}
+
 // The saved customer with this phone, or a new one (name + phone; a shop-only buyer may have no phone).
-export async function ensureCustomer(name: string, phone: string): Promise<Customer> {
+export async function ensureCustomer(name: string, phone: string, address?: string): Promise<Customer> {
+  const addr = address?.trim() || undefined
   if (!phoneDigits(phone)) {
-    const c = await customerApi.create({ name: name.trim() })
+    const c = await customerApi.create({ name: name.trim(), address: addr })
     return { ...c, balance: Number(c.openingBalance) }
   }
   const k = key(phone)
   const found = (await customerApi.list({ search: k, status: 'all', pageSize: 20 })).items.find((c) => key(c.phone) === k)
   if (found) {
     if (!found.isActive) throw new Error(`${phone} belongs to ${found.name} (${found.code}), who is inactive — make them active on the Customers page`)
-    return found
+    return saveAddress(found, addr)
   }
-  const c = await customerApi.create({ name: name.trim(), phone: phoneDigits(phone) })
+  const c = await customerApi.create({ name: name.trim(), phone: phoneDigits(phone), address: addr })
   return { ...c, balance: Number(c.openingBalance) }
 }

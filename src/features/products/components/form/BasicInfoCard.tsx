@@ -1,31 +1,28 @@
-import { IconPlus } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Switch } from '@/components/ui/Switch'
 import { productTypeMeta } from '../../constants'
 import type { FormErrors, ProductFormState } from '../../form/productForm'
-import { categoryOptions, type ProductOptions } from '../../hooks/useProductOptions'
+import { categoryOptions, mainTypes, type ProductOptions } from '../../hooks/useProductOptions'
 import type { Option } from '../../types'
-import { ProductTypeModal } from './ProductTypeModal'
 
 type Props = {
   form: ProductFormState
   errors: FormErrors
   options: ProductOptions
   set: <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) => void
-  onTypeAdded: (type: Option) => void
+  onTypeAdded?: (type: Option) => void // no longer used — types are only added in Masters
 }
 
 const toOptions = (items: { id: number; name: string }[]) =>
   items.map((i) => ({ value: String(i.id), label: i.name }))
 
 // Name, type, category, unit, GST … the product-level details.
-export function BasicInfoCard({ form, errors, options, set, onTypeAdded }: Props) {
-  const [adding, setAdding] = useState(false)
+export function BasicInfoCard({ form, errors, options, set }: Props) {
   const typeHint = form.type ? productTypeMeta[form.type].hint : 'What kind of item is this?'
-  const types = options.productTypes // active types (Masters → Product types)
+  const types = mainTypes(options.productTypes, form.productTypeId) // the 5 main types (+ an older product's own)
   const pickType = (id: string) => {
     set('productTypeId', id)
     set('type', options.productTypes.find((t) => String(t.id) === id)?.kind ?? '')
@@ -61,9 +58,6 @@ export function BasicInfoCard({ form, errors, options, set, onTypeAdded }: Props
             error={errors.productTypeId}
             hint={typeHint}
           />
-          <button type="button" onClick={() => setAdding(true)} className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
-            <IconPlus size={14} /> New type
-          </button>
         </div>
         <Select
           label="Category"
@@ -132,7 +126,6 @@ export function BasicInfoCard({ form, errors, options, set, onTypeAdded }: Props
           />
         </div>
       </div>
-      {adding && <ProductTypeModal onClose={() => setAdding(false)} onCreated={(t) => { onTypeAdded(t); set('productTypeId', String(t.id)); set('type', t.kind ?? ''); setAdding(false) }} />}
     </Card>
   )
 }
